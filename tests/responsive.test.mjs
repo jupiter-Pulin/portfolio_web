@@ -48,6 +48,15 @@ test('the header ask button keeps only its icon below 640px', () => {
   assert.match(phone, /\.btn-ask \.label \{[^}]*display: none/);
 });
 
+test('reduced motion stills the pulse and the shipping spinner', () => {
+  const css = squash(read('../src/app/globals.css'));
+  const at = css.indexOf('@media (prefers-reduced-motion: reduce)');
+  assert.notEqual(at, -1, 'no reduced-motion block');
+  const block = css.slice(at, css.indexOf('}', css.indexOf('}', at) + 1) + 1);
+  assert.match(block, /\*, \*::before, \*::after \{[^}]*animation: none !important/);
+  assert.match(block, /transition: none !important/);
+});
+
 test('globals carry the mock tokens, the grid and both glows', () => {
   const css = squash(read('../src/app/globals.css'));
   assert.match(css, /\[hidden\] \{ display: none !important; \}/);
