@@ -29,6 +29,7 @@ export const PROJECTS: Project[] = [
     "private": true,
     "scope": "Team-built product; the scope shown here is the frontend and backend I delivered. The repository is private — a walkthrough is available on request.",
     "repos": [],
+    "readme": null,
     "qa": {
       "decision": "Why a receipt advances the stage, and not the UI. The wallet’s promise resolves when a transaction is <em>submitted</em>, not when it is mined, so a dropped or replaced transaction would leave the product one stage ahead of the chain. Every transition waits on a receipt and reconciles against it, and the interface only renders what the store has already confirmed. The cost is a few seconds of perceived latency; what it buys is the removal of every state in which the product and the chain disagree.",
       "stack": "Next.js, React and TypeScript on the front; Hono for the API; Ponder over PostgreSQL for indexed reads; wagmi / viem for wallet and live chain reads. Indexed data renders the market; live chain reads authorize quote, balance and ownership right before submission.",
