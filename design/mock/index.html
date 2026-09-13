@@ -1,0 +1,924 @@
+<title>Pulin Tang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#0A0E1A; --bg-2:#0D1322; --surface:#111A2E; --surface-2:#0B1120;
+    --line:rgba(148,163,184,.16); --line-strong:rgba(148,163,184,.3);
+    --text:#E8EEF7; --muted:#97A5BC; --dim:#5F6E88;
+    --cyan:#7DE3F5; --blue:#5AA9FF; --cyan-ink:#06121C;
+    --green:#34D399; --amber:#F5C451;
+    --font-display:'Nunito',ui-rounded,system-ui,sans-serif;
+    --font-body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+    --font-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+    --r:14px; --r-lg:22px; --maxw:1180px;
+    --shadow:0 30px 80px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.03) inset;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html{color-scheme:dark;scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font:400 16px/1.6 var(--font-body);-webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(900px 520px at 88% -8%, rgba(90,169,255,.20), transparent 62%),
+      radial-gradient(700px 400px at -10% 40%, rgba(125,227,245,.08), transparent 60%),
+      linear-gradient(rgba(148,163,184,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148,163,184,.045) 1px, transparent 1px);
+    background-size:auto,auto,48px 48px,48px 48px;
+    background-attachment:fixed;
+  }
+  a{color:inherit}
+  button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+  svg{display:block}
+  :focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:6px}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  .eyebrow{font:800 11.5px var(--font-display);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:0}
+  .fine{font-size:12.5px;color:var(--dim)}
+
+  /* ---------- header ---------- */
+  .top{position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(10,14,26,.72);border-bottom:1px solid var(--line)}
+  .top .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .brand{font:900 23px var(--font-display);letter-spacing:-.01em;text-decoration:none}
+  .brand b{color:var(--cyan)}
+  .top-right{display:flex;align-items:center;gap:4px}
+  .icon-btn{width:40px;height:40px;display:inline-grid;place-items:center;border-radius:10px;color:var(--muted);text-decoration:none;border:1px solid transparent}
+  .icon-btn:hover{color:var(--text);background:rgba(148,163,184,.08);border-color:var(--line)}
+  .icon-btn svg{width:18px;height:18px}
+  .icon-btn.pending{opacity:.42;cursor:not-allowed}
+  .icon-btn.pending:hover{background:none;border-color:transparent;color:var(--muted)}
+
+  /* ---------- buttons ---------- */
+  .btn{display:inline-flex;align-items:center;gap:10px;padding:15px 22px;border-radius:12px;border:1px solid transparent;font:800 15.5px var(--font-display);text-decoration:none;cursor:pointer;line-height:1;white-space:nowrap;transition:transform .15s,box-shadow .15s,background .15s,border-color .15s}
+  .btn .ic{width:17px;height:17px}
+  .btn-primary{background:var(--cyan);color:var(--cyan-ink);box-shadow:0 8px 28px rgba(125,227,245,.22)}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 12px 34px rgba(125,227,245,.32)}
+  .btn-ghost{background:rgba(17,26,46,.75);border-color:var(--line-strong);color:var(--text)}
+  .btn-ghost:hover{border-color:rgba(148,163,184,.55);background:rgba(17,26,46,1)}
+  .btn-ask{background:rgba(245,196,81,.10);border-color:rgba(245,196,81,.42);color:var(--amber);padding:10px 14px;font-size:14px;margin-left:8px}
+  .btn-ask:hover{background:rgba(245,196,81,.18)}
+  .btn.sm{padding:10px 14px;font-size:13.5px}
+  .link-btn{font:500 13px var(--font-body);color:var(--muted);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line-strong)}
+  .link-btn:hover{color:var(--cyan);text-decoration-color:var(--cyan)}
+
+  /* ---------- hero ---------- */
+  .hero{display:grid;grid-template-columns:1.02fr 1fr;gap:56px;align-items:center;padding:72px 28px 36px}
+  .badge{display:inline-flex;align-items:center;gap:9px;margin:0 0 26px;padding:8px 14px;border-radius:999px;border:1px solid rgba(52,211,153,.35);background:rgba(52,211,153,.08);font:800 11.5px var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:#BFEEE0}
+  .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+  h1{font:900 clamp(40px,5.2vw,68px)/1.04 var(--font-display);letter-spacing:-.025em;margin:0 0 24px;text-wrap:balance}
+  .grad{background:linear-gradient(92deg,var(--blue) 0%,var(--cyan) 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{font-size:18.5px;line-height:1.6;color:var(--muted);max-width:56ch;margin:0 0 34px}
+  .cta{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .cta .arrow{font-weight:900;margin-left:-2px}
+
+  /* ---------- the window ---------- */
+  .stage{perspective:1500px;position:relative}
+  .win{
+    position:relative;transform-style:preserve-3d;will-change:transform;
+    background:linear-gradient(180deg,#131C31 0%,#0D1425 100%);
+    border:1px solid var(--line-strong);border-radius:var(--r-lg);box-shadow:var(--shadow);
+    padding:20px 24px 24px;overflow:hidden;
+    transition:transform .55s cubic-bezier(.2,.8,.2,1),box-shadow .3s;
+  }
+  .win::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;
+    background:radial-gradient(520px 260px at var(--gx,60%) var(--gy,0%), rgba(255,255,255,.075), transparent 65%)}
+  .stage:hover .win::after,.win.pinned::after{opacity:1}
+  .win.pinned{box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 0 1px rgba(125,227,245,.35)}
+  .stage-hint{margin:10px 0 0;text-align:right;font:500 11.5px var(--font-mono);color:var(--dim)}
+  .win-bar{display:flex;align-items:center;gap:14px}
+  .dots{display:inline-flex;gap:7px}
+  .dots i{width:11px;height:11px;border-radius:50%;background:#FF5F57}
+  .dots i:nth-child(2){background:#FEBC2E}.dots i:nth-child(3){background:#28C840}
+  .flow{margin-left:auto;font:500 12.5px var(--font-mono);color:var(--dim)}
+  .live{display:inline-flex;align-items:center;gap:7px;font:500 12.5px var(--font-mono);color:var(--green)}
+  .live i{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2.2s ease-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%{box-shadow:0 0 0 9px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+  .win-title{font:900 30px/1.1 var(--font-display);margin:20px 0 4px;letter-spacing:-.01em}
+  .win-sub{margin:0;color:var(--muted);font-size:15px}
+  .steps{list-style:none;margin:26px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;position:relative}
+  .steps::before{content:'';position:absolute;left:10%;right:10%;top:29px;height:1px;background:var(--line-strong)}
+  .steps li{display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;gap:6px}
+  .step-ic{width:58px;height:58px;border-radius:15px;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--line-strong);color:var(--muted);margin-bottom:6px}
+  .step-ic svg{width:22px;height:22px}
+  .steps b{font:800 15px var(--font-display)}
+  .steps small{font-size:12px;line-height:1.35;color:var(--dim);max-width:12ch}
+  .steps li.active .step-ic{color:var(--cyan);border-color:var(--cyan);box-shadow:0 0 0 3px rgba(125,227,245,.14),0 0 26px rgba(125,227,245,.35)}
+  .steps li.active b{color:var(--cyan)}
+  .win-bottom{display:grid;grid-template-columns:1.08fr 1fr;gap:14px;margin-top:24px}
+  .term{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font:400 12.5px/1.7 var(--font-mono);color:var(--muted)}
+  .prompt{color:var(--dim);margin-bottom:6px}
+  .tline{display:flex;align-items:center;gap:10px;padding:3px 0;color:var(--muted)}
+  .tline.done{color:var(--text)}
+  .chk{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--dim);display:grid;place-items:center;flex:none;transition:background .25s,border-color .25s}
+  .chk svg{width:11px;height:11px;opacity:0;transition:opacity .25s;color:#052e1e}
+  .tline.done .chk{background:var(--green);border-color:var(--green)}
+  .tline.done .chk svg{opacity:1}
+  .tline.ship{margin-top:8px;color:var(--dim)}
+  .spin{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--dim);border-top-color:var(--cyan);flex:none;animation:rot 1.1s linear infinite}
+  @keyframes rot{to{transform:rotate(360deg)}}
+  .ship{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:16px;justify-content:space-between}
+  .ship-top{display:flex;gap:14px;align-items:center}
+  .rocket{width:56px;height:56px;border-radius:50%;flex:none;display:grid;place-items:center;background:radial-gradient(circle at 30% 30%,rgba(125,227,245,.35),rgba(90,169,255,.08));border:1px solid rgba(125,227,245,.35);color:var(--cyan)}
+  .rocket svg{width:24px;height:24px}
+  .ship-top b{font:800 16px var(--font-display);display:block;margin-bottom:2px}
+  .ship-top p{margin:0;font-size:13.5px;line-height:1.5;color:var(--muted)}
+  .ship-stats{display:grid;grid-template-columns:repeat(3,1fr)}
+  .ship-stats div{text-align:center;padding:4px 6px;border-left:1px solid var(--line)}
+  .ship-stats div:first-child{border-left:0}
+  .ship-stats b{display:block;font:800 17px var(--font-display);white-space:nowrap}
+  .ship-stats small{font-size:11.5px;color:var(--dim);line-height:1.3;display:block}
+
+  /* ---------- selected work strip ---------- */
+  .strip{padding:28px 28px 80px}
+  .strip-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+  .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .tile{text-align:left;background:rgba(17,26,46,.55);border:1px solid var(--line);border-radius:14px;padding:16px 16px 18px;display:flex;flex-direction:column;gap:6px;transition:border-color .15s,transform .15s,background .15s}
+  .tile:hover{border-color:rgba(125,227,245,.45);transform:translateY(-2px);background:rgba(17,26,46,.9)}
+  .tile-role{font:500 10.5px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+  .tile b{font:800 17px var(--font-display)}
+  .tile p{margin:0;font-size:13.5px;line-height:1.5;color:var(--muted)}
+
+  /* ---------- footer ---------- */
+  .foot{border-top:1px solid var(--line);padding:30px 0 52px;color:var(--muted);font-size:14px}
+  .foot-grid{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:flex-start}
+  .brand-sm{font:800 16px var(--font-display);color:var(--text)}
+  .foot p{margin:4px 0 0}
+  .foot-links{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .foot-links a{text-decoration:none;color:var(--text)}
+  .foot-links a:hover{color:var(--cyan)}
+  .foot-links .sep{color:var(--dim)}
+  .pending-txt{color:var(--dim)}
+  .foot-note{margin-top:22px;font-size:12.5px;color:var(--dim)}
+
+  /* ---------- work overlay ---------- */
+  .overlay{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;background:rgba(6,9,18,.96);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;transition:opacity .25s}
+  .overlay.open{opacity:1}
+  .ov-head{display:flex;align-items:center;gap:18px;padding:16px 28px;border-bottom:1px solid var(--line);background:rgba(10,14,26,.6)}
+  .ov-title{flex:1;min-width:0}
+  .ov-title h2{font:900 22px var(--font-display);margin:0;letter-spacing:-.01em}
+  .ov-title p{margin:2px 0 0;font-size:13px;color:var(--dim);max-width:60ch}
+  .gallery{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .gcard{display:grid;grid-template-columns:minmax(170px,42%) 1fr;gap:18px;align-items:center;text-align:left;background:rgba(17,26,46,.55);border:1px solid var(--line);border-radius:18px;padding:14px;cursor:pointer;transition:border-color .15s,transform .15s,background .15s}
+  .gcard:hover{border-color:rgba(125,227,245,.45);background:rgba(17,26,46,.85);transform:translateY(-2px)}
+  .gcard.featured{grid-column:1/-1;grid-template-columns:minmax(260px,46%) 1fr;padding:18px;gap:30px}
+  .gimg{aspect-ratio:4/3;border-radius:12px;border:1px solid var(--line-strong);overflow:hidden;display:grid;place-items:center}
+  .gimg svg{width:100%;height:100%}
+  .gtext{min-width:0}
+  .gtext h3{font:900 24px var(--font-display);margin:4px 0 6px;letter-spacing:-.01em}
+  .gcard.featured .gtext h3{font-size:34px}
+  .gshort{margin:0 0 12px;color:var(--muted);font-size:14.5px;line-height:1.55}
+  .gtag{display:none}
+  .gcard.featured .gtag{display:block;margin:0 0 14px;font-size:15px;line-height:1.6}
+  .gactions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .chip.static{cursor:default;color:var(--dim)}
+  .chip.static:hover{border-color:var(--line-strong);color:var(--dim)}
+  .ov-body{flex:1;overflow:auto;padding:30px 28px}
+  .case{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1.05fr 1fr;gap:38px;align-items:start}
+  .fig{margin:0;position:sticky;top:0;aspect-ratio:4/3;border-radius:18px;border:1px solid var(--line-strong);overflow:hidden;display:grid;place-items:center;background:var(--surface-2)}
+  .fig svg{width:100%;height:100%}
+  .fig figcaption{position:absolute;left:14px;bottom:14px;font:500 11px var(--font-mono);letter-spacing:.04em;color:var(--dim);background:rgba(10,14,26,.8);border:1px dashed var(--line-strong);padding:6px 10px;border-radius:8px}
+  .hue-cyan{background:radial-gradient(70% 60% at 30% 20%,rgba(125,227,245,.16),transparent 70%),var(--surface-2)}
+  .hue-amber{background:radial-gradient(70% 60% at 30% 20%,rgba(245,196,81,.14),transparent 70%),var(--surface-2)}
+  .hue-green{background:radial-gradient(70% 60% at 30% 20%,rgba(52,211,153,.14),transparent 70%),var(--surface-2)}
+  .hue-blue{background:radial-gradient(70% 60% at 30% 20%,rgba(90,169,255,.18),transparent 70%),var(--surface-2)}
+  .hue-violet{background:radial-gradient(70% 60% at 30% 20%,rgba(167,139,250,.16),transparent 70%),var(--surface-2)}
+  .detail h3{font:900 clamp(28px,3vw,36px)/1.1 var(--font-display);margin:6px 0 12px;letter-spacing:-.02em}
+  .tagline{font-size:16.5px;line-height:1.6;color:var(--muted);margin:0 0 16px;max-width:60ch}
+  .thesis{border-left:3px solid var(--cyan);padding:2px 0 2px 14px;margin:0 0 20px;font-weight:500;line-height:1.55}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 18px}
+  .pair div{background:rgba(17,26,46,.55);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .pair dt{font:500 10.5px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+  .pair dd{margin:0;font-size:14.5px;line-height:1.5}
+  .stack{font:400 12.5px/1.6 var(--font-mono);color:var(--muted);margin:0 0 18px}
+  .stack span{font-weight:500;color:var(--dim);margin-right:10px;letter-spacing:.08em;text-transform:uppercase;font-size:10.5px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 6px}
+  .stats div{background:rgba(17,26,46,.55);border:1px solid var(--line);border-radius:12px;padding:12px 12px 10px;text-align:center}
+  .stats b{display:block;font:800 22px var(--font-display);color:var(--cyan);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .stats small{font:400 11px var(--font-mono);color:var(--dim);line-height:1.3;display:block;margin-top:2px}
+  .stats-note{margin:6px 0 0}
+  .readme{border:1px solid var(--line-strong);border-radius:14px;overflow:hidden;background:var(--surface-2);margin-top:22px}
+  .rm-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--line);background:rgba(17,26,46,.7)}
+  .rm-file{display:inline-flex;align-items:center;gap:8px;font:500 12.5px var(--font-mono);color:var(--muted)}
+  .rm-file svg{width:15px;height:15px}
+  .rm-btns{display:flex;gap:8px;flex-wrap:wrap}
+  .rm-note{margin:0;padding:8px 14px;font-size:12.5px;color:var(--amber);background:rgba(245,196,81,.07);border-bottom:1px solid var(--line)}
+  .rm-body{margin:0;padding:16px;font:400 12.5px/1.65 var(--font-mono);color:var(--muted);white-space:pre-wrap;word-break:break-word;max-height:290px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 68%,transparent);mask-image:linear-gradient(#000 68%,transparent)}
+  .rm-body.plain{font:400 14.5px/1.6 var(--font-body);max-height:none;-webkit-mask-image:none;mask-image:none}
+  .rm-body.plain p{margin:0 0 8px}.rm-body.plain p:last-child{margin:0}
+  .rm-foot{display:flex;gap:8px;flex-wrap:wrap;padding:12px 14px;border-top:1px solid var(--line)}
+  .ov-foot{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-top:1px solid var(--line);background:rgba(10,14,26,.6)}
+  .counter{font:500 12.5px var(--font-mono);color:var(--dim);font-variant-numeric:tabular-nums}
+
+  /* ---------- chips / report ---------- */
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--line-strong);background:rgba(17,26,46,.6);color:var(--text);font:500 12.5px var(--font-body);cursor:pointer;text-decoration:none;line-height:1.3;transition:border-color .15s,color .15s,background .15s}
+  .chip:hover{border-color:var(--cyan);color:var(--cyan)}
+  .chip.amber{border-color:rgba(245,196,81,.45);color:var(--amber);background:rgba(245,196,81,.08)}
+  .chip.amber:hover{background:rgba(245,196,81,.16);color:var(--amber);border-color:rgba(245,196,81,.7)}
+  .chip .ic{width:13px;height:13px}
+  .report{margin-top:10px;border:1px solid rgba(245,196,81,.35);border-radius:12px;overflow:hidden;background:var(--surface-2)}
+  .rp-head{display:flex;gap:10px;align-items:baseline;padding:10px 12px;background:rgba(245,196,81,.10);border-bottom:1px solid rgba(245,196,81,.25)}
+  .rp-head span{font:500 10.5px var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--amber)}
+  .rp-head b{font:800 14px var(--font-display)}
+  .rp-list{margin:0;padding:10px 12px 10px 28px;display:grid;gap:10px;font-size:13.5px;line-height:1.5}
+  .rp-list .chip{margin-top:6px}
+  .rp-note{margin:0;padding:0 12px 10px;font-size:12.5px;color:var(--dim)}
+  .rp-actions{display:flex;gap:8px;flex-wrap:wrap;padding:10px 12px;border-top:1px solid var(--line)}
+  .linklist{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:6px}
+  .linklist li{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13.5px}
+  .linklist .muted{color:var(--dim);font-size:12.5px}
+
+  /* ---------- ask drawer ---------- */
+  .scrim{position:fixed;inset:0;z-index:55;background:rgba(6,9,18,.45)}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(450px,100vw);z-index:60;background:var(--bg-2);border-left:1px solid var(--line-strong);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .32s cubic-bezier(.2,.8,.2,1);box-shadow:-30px 0 80px rgba(0,0,0,.45)}
+  .drawer.open{transform:none}
+  .ask-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line)}
+  .ask-head h2{font:900 19px var(--font-display);margin:0;display:inline}
+  .pill{display:inline-block;margin-left:10px;font:500 10.5px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--amber);border:1px solid rgba(245,196,81,.4);border-radius:999px;padding:3px 8px;vertical-align:middle}
+  .msgs{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+  .msg{max-width:94%;padding:12px 14px;border-radius:14px;font-size:14px;line-height:1.55}
+  .msg.guide{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-top-left-radius:4px}
+  .msg.you{align-self:flex-end;background:rgba(125,227,245,.12);border:1px solid rgba(125,227,245,.3);border-top-right-radius:4px}
+  .msg p{margin:0 0 8px}.msg p:last-child{margin:0}
+  .msg .fine{margin-top:8px}
+  .msg.typing{color:var(--dim);font:500 12px var(--font-mono)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 18px 12px}
+  .ask-form{display:flex;gap:8px;padding:12px 18px 18px;border-top:1px solid var(--line)}
+  .ask-form input{flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--line-strong);border-radius:10px;padding:11px 12px;color:var(--text);font:400 14px var(--font-body)}
+  .ask-form input::placeholder{color:var(--dim)}
+  .ask-form input:focus{outline:none;border-color:var(--cyan)}
+
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:70;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;padding:10px 16px;font:500 13px var(--font-body);box-shadow:0 20px 50px rgba(0,0,0,.5)}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:1024px){
+    .hero{grid-template-columns:1fr;gap:40px;padding-top:52px}
+    .tiles{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;margin:0 -28px;padding-left:28px;padding-right:28px}
+    .tile{flex:0 0 240px;scroll-snap-align:start}
+    .gallery{grid-template-columns:1fr}
+    .gcard.featured{grid-template-columns:minmax(170px,42%) 1fr;padding:14px;gap:18px}
+    .gcard.featured .gtext h3{font-size:24px}.gcard.featured .gtag{display:none}
+  }
+  @media (max-width:900px){
+    .case{grid-template-columns:1fr;gap:26px}
+    .fig{position:static}
+  }
+  @media (max-width:640px){
+    .wrap,.hero,.strip{padding-left:18px;padding-right:18px}
+    .tiles{margin:0 -18px;padding-left:18px;padding-right:18px}
+    .win{padding:16px 16px 18px}
+    .win-bottom{grid-template-columns:1fr}
+    .steps{gap:2px}.steps small{display:none}
+    .step-ic{width:46px;height:46px;border-radius:12px}.steps::before{top:23px}
+    .steps b{font-size:12.5px}
+    .pair,.stats{grid-template-columns:1fr 1fr}
+    .ov-head,.ov-body,.ov-foot{padding-left:16px;padding-right:16px}
+    .ov-head{flex-wrap:wrap}.gcard,.gcard.featured{grid-template-columns:1fr}
+    .btn-ask .label{display:none}.btn-ask{padding:10px 12px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.6 1 1.5 1 2.5h6c0-1 .3-1.9 1-2.5A6 6 0 0 0 12 3z"/></g></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></g></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></g></symbol>
+    <symbol id="i-rocket" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c3 2 5 6 5 10l-2 3H9l-2-3c0-4 2-8 5-10z"/><path d="M9 15l-3 2 1 3 3-1.5M15 15l3 2-1 3-3-1.5M10.5 20.5h3"/><circle cx="12" cy="9" r="1.6"/></g></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-7M11 20V5M17 20v-10M2 20h20"/></g></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></g></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3l1.7 4.8L17.5 9.5l-4.8 1.7L11 16l-1.7-4.8L4.5 9.5l4.8-1.7z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></g></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></g></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></g></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></g></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
+    <symbol id="i-linkedin" viewBox="0 0 24 24"><path fill="currentColor" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></symbol>
+  </defs>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top">Pulin<b>.</b></a>
+    <nav class="top-right" aria-label="Links">
+      <a class="icon-btn" href="https://github.com/jupiter-Pulin" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub · jupiter-Pulin"><svg><use href="#i-github"/></svg></a>
+      <a class="icon-btn" href="https://linkedin.com/in/tang-pulin-52b559367" target="_blank" rel="noopener" aria-label="LinkedIn" title="LinkedIn · Pulin Tang"><svg><use href="#i-linkedin"/></svg></a>
+      <span class="icon-btn pending" aria-disabled="true" title="X — handle to be added"><svg><use href="#i-x"/></svg></span>
+      <button class="btn btn-ask" type="button" data-ask aria-haspopup="dialog"><svg class="ic"><use href="#i-spark"/></svg><span class="label">Any question?</span></button>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero wrap">
+    <div class="hero-copy">
+      <p class="badge"><span class="dot"></span>Building at the intersection of fintech × AI</p>
+      <h1>I build products that turn complex systems into <span class="grad">simple experiences.</span></h1>
+      <p class="lede">I'm Pulin, a product-minded software engineer with experience in fintech, blockchain and AI. I enjoy taking ideas from 0 to 1 — from product design and system architecture to development, deployment and real users.</p>
+      <div class="cta">
+        <button class="btn btn-primary" type="button" data-open="" aria-haspopup="dialog"><svg class="ic"><use href="#i-spark"/></svg>View My Work <span class="arrow">→</span></button>
+        <a class="btn btn-ghost" data-mailto href="#"><svg class="ic"><use href="#i-mail"/></svg>Hire Me</a>
+        <button class="link-btn" type="button" data-copy title="Copy Pulin7490@gmail.com">copy email</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage">
+      <article class="win" id="win" aria-label="How I build">
+        <div class="win-bar">
+          <span class="dots"><i></i><i></i><i></i></span>
+          <span class="flow">Ideas → Code → Users</span>
+          <span class="live"><i></i>Live</span>
+        </div>
+        <h2 class="win-title">How I Build</h2>
+        <p class="win-sub">From idea to real-world products, end to end.</p>
+        <ol class="steps">
+          <li><span class="step-ic"><svg><use href="#i-bulb"/></svg></span><b>1. Idea</b><small>Find real problems and define scope</small></li>
+          <li><span class="step-ic"><svg><use href="#i-file"/></svg></span><b>2. Design</b><small>Turn ideas into product plans</small></li>
+          <li class="active"><span class="step-ic"><svg><use href="#i-code"/></svg></span><b>3. Build</b><small>Frontend, backend, AI and infrastructure</small></li>
+          <li><span class="step-ic"><svg><use href="#i-rocket"/></svg></span><b>4. Deploy</b><small>Ship to production with reliability</small></li>
+          <li><span class="step-ic"><svg><use href="#i-chart"/></svg></span><b>5. Iterate</b><small>Learn from users and keep improving</small></li>
+        </ol>
+        <div class="win-bottom">
+          <div class="term" id="term" aria-label="Build log">
+            <div class="prompt">&gt; building...</div>
+            <div class="tline"><span class="chk"><svg><use href="#i-check"/></svg></span>Product architecture</div>
+            <div class="tline"><span class="chk"><svg><use href="#i-check"/></svg></span>Backend services</div>
+            <div class="tline"><span class="chk"><svg><use href="#i-check"/></svg></span>AI agent workflows</div>
+            <div class="tline"><span class="chk"><svg><use href="#i-check"/></svg></span>Frontend experience</div>
+            <div class="tline"><span class="chk"><svg><use href="#i-check"/></svg></span>Production infrastructure</div>
+            <div class="tline ship"><span class="spin" aria-hidden="true"></span>Shipping...</div>
+          </div>
+          <div class="ship">
+            <div class="ship-top">
+              <span class="rocket"><svg><use href="#i-rocket"/></svg></span>
+              <div><b>Ship useful products.</b><p>Build things that people actually use, and make a positive impact.</p></div>
+            </div>
+            <div class="ship-stats">
+              <div><b>0 → 1</b><small>Product Experience</small></div>
+              <div><b>Real Users</b><small>Production Systems</small></div>
+              <div><b>Keep Learning</b><small>Always improving</small></div>
+            </div>
+          </div>
+        </div>
+      </article>
+      <p class="stage-hint" id="stage-hint">move the mouse to tilt · click to pin</p>
+    </div>
+  </section>
+
+  <section class="strip wrap" aria-labelledby="strip-title">
+    <div class="strip-head">
+      <h2 id="strip-title" class="eyebrow">Selected work</h2>
+      <button class="link-btn" type="button" data-open="">open all →</button>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div><b class="brand-sm">Pulin Tang</b><p>Shenzhen, China · UTC+8 · Open to relocation and to remote</p></div>
+      <div class="foot-links">
+        <a data-mailto href="#">Pulin7490@gmail.com</a><button class="link-btn" type="button" data-copy>copy</button>
+        <span class="sep">·</span><a href="https://github.com/jupiter-Pulin" target="_blank" rel="noopener">GitHub</a>
+        <span class="sep">·</span><a href="https://linkedin.com/in/tang-pulin-52b559367" target="_blank" rel="noopener">LinkedIn</a>
+        <span class="sep">·</span><span class="pending-txt" title="handle to be added">X (soon)</span>
+      </div>
+    </div>
+    <p class="foot-note">Mock v0.1 · Project images are placeholders · Figures marked self-reported come from Pulin's own run ledger.</p>
+  </div>
+</footer>
+
+<div class="overlay" id="work" role="dialog" aria-modal="true" aria-labelledby="work-title" hidden>
+  <div class="ov-head">
+    <button class="btn btn-ghost sm" type="button" data-back id="back" hidden>← All work</button>
+    <div class="ov-title"><h2 id="work-title">Selected Work</h2><p id="work-sub">Five systems, one recurring problem: keeping state correct when the environment is not reliable.</p></div>
+    <button class="icon-btn close" type="button" data-close-work aria-label="Close"><svg><use href="#i-close"/></svg></button>
+  </div>
+  <div class="ov-body" id="ov-body"><div class="gallery" id="gallery"></div><div class="case" id="case" hidden></div></div>
+  <div class="ov-foot" id="ov-foot" hidden>
+    <button class="btn btn-ghost sm" type="button" data-prev>← Previous</button>
+    <span class="counter" id="counter"></span>
+    <button class="btn btn-ghost sm" type="button" data-next>Next →</button>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="ask" role="dialog" aria-modal="true" aria-labelledby="ask-title" hidden>
+  <div class="ask-head">
+    <div><h2 id="ask-title">Any question?</h2><span class="pill">mock · scripted</span></div>
+    <button class="icon-btn" type="button" data-close-ask aria-label="Close"><svg><use href="#i-close"/></svg></button>
+  </div>
+  <div class="msgs" id="msgs" aria-live="polite"></div>
+  <div class="chips" id="chips"></div>
+  <form class="ask-form" id="ask-form">
+    <input id="ask-input" type="text" placeholder="Ask about the work, the stack, or how to reach Pulin" autocomplete="off" aria-label="Your question">
+    <button class="btn btn-primary sm" type="submit">Send</button>
+  </form>
+</aside>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const EMAIL = 'Pulin7490@gmail.com';
+  const MAILTO = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent('Hi Pulin — [role] at [company]') +
+    '&body=' + encodeURIComponent('Hi Pulin,\n\nI saw your work on ... and would like to talk about ...\n\n');
+  document.querySelectorAll('[data-mailto]').forEach(a => a.href = MAILTO);
+
+  /* ---------------- data ---------------- */
+  const art = {
+    bibo: `<svg viewBox="0 0 400 300" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M62 140H338" stroke="var(--line-strong)" stroke-width="2"/>
+      <g stroke-width="2.5">
+        <circle cx="80" cy="140" r="17" fill="var(--surface-2)" stroke="var(--cyan)"/>
+        <circle cx="160" cy="140" r="17" fill="var(--surface-2)" stroke="var(--cyan)"/>
+        <circle cx="240" cy="140" r="17" fill="rgba(52,211,153,.18)" stroke="var(--green)"/>
+        <circle cx="320" cy="140" r="17" fill="var(--surface-2)" stroke="var(--dim)" stroke-dasharray="4 4"/>
+      </g>
+      <path d="M232 140l6 6 12-12" stroke="var(--green)" stroke-width="3"/>
+      <path d="M80 123v-30h80M160 123v-30" stroke="var(--dim)" stroke-width="1.5" stroke-dasharray="3 4"/>
+      <text x="120" y="82" font-family="var(--font-mono)" font-size="11" fill="var(--dim)" text-anchor="middle">persisted before signing</text>
+      <g font-family="var(--font-mono)" font-size="11.5" fill="var(--muted)" text-anchor="middle">
+        <text x="80" y="182">stage 1</text><text x="160" y="182">stage 2</text><text x="240" y="182">receipt</text><text x="320" y="182">stage 4</text>
+      </g>
+      <rect x="62" y="214" width="276" height="34" rx="9" stroke="var(--line-strong)" stroke-width="1.5"/>
+      <text x="200" y="236" font-family="var(--font-mono)" font-size="11.5" fill="var(--muted)" text-anchor="middle">only an on-chain receipt advances a stage</text>
+    </svg>`,
+    loop: `<svg viewBox="0 0 400 300" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M110 92L200 60L290 92L290 200L200 236L110 200Z" stroke="var(--line-strong)" stroke-width="2"/>
+      <g stroke="var(--cyan)" stroke-width="2.5" fill="var(--surface-2)">
+        <circle cx="200" cy="60" r="15"/><circle cx="290" cy="92" r="15"/><circle cx="290" cy="200" r="15"/><circle cx="110" cy="200" r="15"/>
+      </g>
+      <g stroke="var(--amber)" stroke-width="2.5" fill="rgba(245,196,81,.15)">
+        <path d="M110 74l18 18-18 18-18-18z"/><path d="M200 218l18 18-18 18-18-18z"/>
+      </g>
+      <g font-family="var(--font-mono)" font-size="11" fill="var(--muted)" text-anchor="middle">
+        <text x="200" y="40">implement</text><text x="326" y="96">verify</text><text x="326" y="204">review</text><text x="72" y="204">route</text>
+      </g>
+      <g font-family="var(--font-mono)" font-size="11" fill="var(--amber)" text-anchor="middle">
+        <text x="68" y="96">approve spec</text><text x="200" y="268">approve merge</text>
+      </g>
+      <text x="200" y="150" font-family="var(--font-mono)" font-size="11.5" fill="var(--dim)" text-anchor="middle">router picks one of 8 actions</text>
+      <text x="200" y="166" font-family="var(--font-mono)" font-size="11.5" fill="var(--dim)" text-anchor="middle">kernel executes · humans decide twice</text>
+    </svg>`,
+    live: `<svg viewBox="0 0 400 300" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M40 200 q10-40 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0" stroke="var(--dim)" stroke-width="2"/>
+      <path d="M40 200 q10-14 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0" stroke="var(--dim)" stroke-width="2" opacity=".5"/>
+      <path d="M40 110 q10-30 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0" stroke="var(--cyan)" stroke-width="2.5"/>
+      <path d="M200 110 q10-6 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0" stroke="var(--cyan)" stroke-width="2.5" opacity=".45"/>
+      <rect x="196" y="82" width="4" height="150" rx="2" fill="var(--amber)"/>
+      <g font-family="var(--font-mono)" font-size="11" fill="var(--muted)">
+        <text x="40" y="70">translation · mixed on top, ducks the floor</text>
+        <text x="40" y="250">original audio · opened at connect, never closed</text>
+      </g>
+      <text x="208" y="94" font-family="var(--font-mono)" font-size="11" fill="var(--amber)">socket drops → still a meeting you can hear</text>
+    </svg>`,
+    chain: `<svg viewBox="0 0 400 300" fill="none" aria-hidden="true">
+      <g fill="var(--green)">
+        <rect x="52" y="150" width="14" height="80" rx="3"/><rect x="74" y="120" width="14" height="110" rx="3"/><rect x="96" y="160" width="14" height="70" rx="3"/>
+        <rect x="118" y="105" width="14" height="125" rx="3"/><rect x="140" y="135" width="14" height="95" rx="3"/><rect x="162" y="128" width="14" height="102" rx="3"/>
+        <rect x="206" y="112" width="14" height="118" rx="3"/><rect x="228" y="145" width="14" height="85" rx="3"/><rect x="250" y="98" width="14" height="132" rx="3"/>
+        <rect x="272" y="140" width="14" height="90" rx="3"/><rect x="294" y="122" width="14" height="108" rx="3"/><rect x="316" y="152" width="14" height="78" rx="3"/><rect x="338" y="116" width="14" height="114" rx="3"/>
+      </g>
+      <rect x="184" y="212" width="14" height="18" rx="3" fill="var(--amber)"/>
+      <path d="M52 232H352" stroke="var(--line-strong)" stroke-width="1.5"/>
+      <g font-family="var(--font-mono)" font-size="11" fill="var(--muted)">
+        <text x="52" y="72">one bar per night · Ethereum mainnet · raw JSON-RPC</text>
+        <text x="52" y="258">STATUS.md committed every run, success or failure</text>
+      </g>
+      <text x="191" y="205" font-family="var(--font-mono)" font-size="10.5" fill="var(--amber)" text-anchor="middle">rpc failed · still committed</text>
+    </svg>`,
+    amm: `<svg viewBox="0 0 400 300" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M60 40V240H340" stroke="var(--line-strong)" stroke-width="2"/>
+      <path d="M78 46C82 160 150 226 332 232" stroke="var(--cyan)" stroke-width="3"/>
+      <circle cx="150" cy="176" r="6" fill="var(--amber)"/>
+      <path d="M150 176V240M150 176H60" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <circle cx="205" cy="208" r="6" fill="var(--surface-2)" stroke="var(--cyan)" stroke-width="2"/>
+      <path d="M156 178L200 206" stroke="var(--muted)" stroke-width="1.5"/>
+      <g font-family="var(--font-mono)" font-size="11.5" fill="var(--muted)">
+        <text x="250" y="90">x · y = k</text>
+        <text x="250" y="110">pair re-derives amounts</text>
+        <text x="250" y="126">from its own balances,</text>
+        <text x="250" y="142">reverts on the invariant</text>
+      </g>
+      <text x="72" y="262" font-family="var(--font-mono)" font-size="11" fill="var(--dim)">tokens arrive first · then swap() is called</text>
+    </svg>`
+  };
+
+  const PROJECTS = [
+    {
+      id: 'bibo', name: 'BIBO', hue: 'cyan',
+      short: 'Recoverable multi-step on-chain transactions: receipts, not promises, advance state.',
+      role: 'Full-stack development · team-built',
+      stack: 'Next.js · React · TypeScript · Hono · Ponder / PostgreSQL · wagmi / viem',
+      tagline: 'An on-chain asset issuance and trading platform. I delivered the core frontend and backend: market discovery, token creation, wallet trading and liquidity management.',
+      thesis: 'Indexed data is fast enough to render a market; it is never trusted to authorize a trade.',
+      wrong: 'A signature lands while the user has already closed the tab.',
+      mechanism: 'Stages persisted before signing; only an on-chain receipt advances one.',
+      stats: [],
+      private: true,
+      scope: 'Team-built product; the scope shown here is the frontend and backend I delivered. The repository is private — a walkthrough is available on request.',
+      repos: [],
+      qa: {
+        decision: 'Why a receipt advances the stage, and not the UI. The wallet’s promise resolves when a transaction is <em>submitted</em>, not when it is mined, so a dropped or replaced transaction would leave the product one stage ahead of the chain. Every transition waits on a receipt and reconciles against it, and the interface only renders what the store has already confirmed. The cost is a few seconds of perceived latency; what it buys is the removal of every state in which the product and the chain disagree.',
+        stack: 'Next.js, React and TypeScript on the front; Hono for the API; Ponder over PostgreSQL for indexed reads; wagmi / viem for wallet and live chain reads. Indexed data renders the market; live chain reads authorize quote, balance and ownership right before submission.',
+        status: 'Team-built. Pulin describes only the frontend and backend he delivered, and the repository is private. This site makes no claim about launch or operating status.'
+      }
+    },
+    {
+      id: 'loop', name: 'Loop Conductor', hue: 'amber',
+      short: 'An AI coding pipeline you can walk away from: two human gates, review bound to a commit hash.',
+      role: 'Solo · open source',
+      stack: 'Node ≥ 22, zero runtime dependencies · Claude CLI subprocesses · git worktrees',
+      tagline: 'A minimal kernel that takes a one-line brief to a reviewed, tested, locally merged commit. A router agent picks the next action from a closed set; the kernel executes and records it. A human decides twice.',
+      thesis: 'Review is only binding if it is bound to a commit hash. That single rule is what the rest of the kernel protects.',
+      wrong: 'Code gets reviewed at one commit and merged at another.',
+      mechanism: 'Approval is bound to the branch head and re-checked at the merge gate.',
+      stats: [{ v: '17', l: 'Tasks run' }, { v: '10', l: 'Merged to main' }, { v: '16/17', l: 'One-shot maker pass' }, { v: '$248.67', l: 'Total API spend' }],
+      statsNote: 'Self-reported from Pulin’s own run ledger; the repository documents the method and the refresh command.',
+      readmeUrl: 'https://github.com/jupiter-Pulin/loop-conductor#readme',
+      repos: [{ label: 'jupiter-Pulin/loop-conductor', url: 'https://github.com/jupiter-Pulin/loop-conductor' }],
+      readme: [
+        '# Loop Conductor', '',
+        'A minimal kernel that runs an agent loop end to end: a **router agent** picks the next action from a closed set, the kernel executes it, records the facts, and stops at the two gates where a human has to decide — approving the spec, and approving the merge. Everything else — retries, budget, worktrees, the pre-commit regression, branch cleanup — is machine-owned.', '',
+        '> Agents working inside this repo start from `AGENTS.md`, a Chinese routing index. This page is the human-facing tour.', '',
+        '**Contents:** Architecture · What this is · State machine · Roles · Human gates · Core technical challenges · What it actually cost', '',
+        '## Architecture', '',
+        '![Loop Conductor system architecture](docs/assets/architecture.png)', '',
+        'Read it top to bottom:', '',
+        '- **Operator.** The CLI and the local dashboard are the only ways in. The dashboard holds no state of its own: it rebuilds its view from disk on every request …',
+        '- **Kernel.** `npm run conductor -- run` is one plain Node process with no dependencies. Each scheduler step is one *routing round* …',
+        '- **Agents.** Every spawn is a fresh `claude -p` session …',
+        '- **Disk & git.** `state/` and `dossier/` are the source of truth, so `run` can be killed at any moment and started again …'
+      ].join('\n'),
+      qa: {
+        decision: 'One model call decides, and it decides only <em>which action</em>. The router sees the recorded facts — never the spec, the diff or the code — and returns one of eight action names. Everything with a side effect (spawning an agent, committing, opening a gate, writing state) is plain deterministic Node. A bad run is therefore either a wrong action name, which is one line in a log, or a kernel bug, which is a failing test — never both at once.',
+        stack: 'Node ≥ 22 with zero runtime dependencies. Every agent spawn is a fresh <code>claude -p</code> session with fixed tools; the target repository only ever sees git worktrees and a throwaway merge candidate. <code>state/</code> and <code>dossier/</code> on disk are the source of truth, so the run can be killed at any moment and restarted.',
+        status: 'Open source, solo. 17 tasks run, 10 merged to main, 16/17 one-shot maker pass, $248.67 total API spend — self-reported from Pulin’s own run ledger; the README documents the method. $148.60 of that spend bought zero shipped code, and the current architecture is the response to those failures. Work packages and the plan action are not implemented yet.'
+      }
+    },
+    {
+      id: 'live', name: 'Live Interpreter', hue: 'blue',
+      short: 'Two-way meeting interpretation that never joins the call and never goes silent.',
+      role: 'Solo · open source',
+      stack: 'Chrome MV3 offscreen document · Web Audio · WebSocket · Native Messaging · Node host',
+      tagline: 'Real-time two-way interpretation for Zoom, Google Meet and Teams. Nothing joins the call: the meeting app only ever sees an audio device, so the other side installs nothing and consents to nothing.',
+      thesis: 'The product decision and the security decision are the same shape: put the thing that must not leak — the meeting bot, the API key — outside the surface that is exposed.',
+      wrong: 'The audio device disappears mid-stream and the call goes silent.',
+      mechanism: 'The original path stays open underneath; translation ducks it, never replaces it.',
+      stats: [{ v: '13', l: 'Output languages' }, { v: '45', l: 'Automated tests' }, { v: '$0.05', l: 'Per real-link E2E run' }, { v: '1', l: 'Runtime dependency' }],
+      readmeUrl: 'https://github.com/jupiter-Pulin/live-interpreter#readme',
+      readmeNote: 'README is in Chinese today; an English version and a 60-second demo are on the to-do list.',
+      repos: [{ label: 'jupiter-Pulin/live-interpreter', url: 'https://github.com/jupiter-Pulin/live-interpreter' }],
+      readme: [
+        '# live-interpreter', '',
+        'macOS 本地实时会议同传：BlackHole 音频路由 + OpenAI `gpt-realtime-translate` 双向翻译，装成 Chrome 扩展。对会议软件（Zoom / Meet / Teams）完全透明，不入会、不装 bot。', '',
+        '- **下行**：会议 app 输出 → BlackHole 截获 → 翻成你想听的语言 → 你的耳机',
+        '- **上行**：你的真麦克风 → 翻成对方听的语言 → 第二块 BlackHole（虚拟麦克风）→ 会议对方',
+        '- **原声是底，翻译是顶**：连上之后两个方向的原声一直直通；翻译播放时原声压低，停顿即恢复，任何状态都不会无声。', '',
+        '**目录**：架构 · 部署指南 · 使用 · 核心难点解析 · 自动化测试', '',
+        '## 架构', '',
+        '整张图分两层看：', '',
+        '- **音频面**（上半）：会议 app 只和两块虚拟声卡打交道 …',
+        '- **控制面**（下半）：Service Worker 只编排，不碰音频；getUserMedia、AudioContext 和 WebSocket 全都在离屏文档里 …'
+      ].join('\n'),
+      qa: {
+        decision: 'Why the original audio is never switched off. Routing the meeting through the translator and playing only the translation is cleaner, and it is wrong: every failure in that chain — a dropped socket, a stalled model, a device that disappears — arrives at the user as silence, and silence is indistinguishable from a quiet room. So the direct path opens at connect time and stays open for the whole session; translation is mixed on top and ducks it while speaking. A total failure of the translation layer degrades to “a meeting you can hear”.',
+        stack: 'Chrome MV3 with an offscreen document (the Service Worker only orchestrates; getUserMedia, AudioContext and the WebSocket live in the offscreen page), Web Audio, Native Messaging to a local Node host, and BlackHole virtual audio devices on macOS. One runtime dependency: a WebSocket library. Long-lived keys stay on the local host; the page uses short-lived credentials.',
+        status: 'Open source, solo. macOS · Chrome ≥ 116 · Node ≥ 22. Meeting-mute sync covers Google Meet today. 45 automated tests run the whole chain against a mock backend for free; the paid real-link check is one command at about $0.05 a run. The README is in Chinese and the 60-second demo is not recorded yet.'
+      }
+    },
+    {
+      id: 'chain', name: 'chain-pulse', hue: 'green',
+      short: 'Nightly, zero-dependency Ethereum data pipeline whose heartbeat lives in git.',
+      role: 'Solo · open source · runs nightly',
+      stack: 'Node ≥ 22 only · raw JSON-RPC · hand-decoded ERC-20 logs · offline fixture tests',
+      tagline: 'An unattended pipeline that collects public Ethereum mainnet data and crypto funding signals every night, computes the metrics, writes a Markdown report and commits it — whether or not the run succeeded.',
+      thesis: 'A pipeline that only commits on success goes quiet exactly when you need to know. The status file is committed on every run, so the heartbeat is visible in git history without a dashboard.',
+      wrong: 'A public RPC endpoint flakes at 3 a.m. and nobody is watching.',
+      mechanism: 'Multi-endpoint failover with backoff; STATUS.md committed on every run, success or failure.',
+      stats: [],
+      readmeUrl: 'https://github.com/jupiter-Pulin/chain-pulse#readme',
+      readmeNote: 'README is in Chinese today.',
+      repos: [{ label: 'jupiter-Pulin/chain-pulse', url: 'https://github.com/jupiter-Pulin/chain-pulse' }],
+      readme: [
+        '# chain-pulse', '',
+        '夜间自动运行的数据管道：EVM 链上指标 + 加密融资信号，两个业务模块共享同一套无人值守基础设施（调度 / 落盘 / git 心跳 / 告警）。每晚 cron 触发：采集以太坊主网公开数据与融资 RSS → 聚合指标 → 生成 Markdown 日报 → git 固化。', '',
+        '## 设计要点', '',
+        '- **零依赖**：仅 Node ≥22 内置能力（`fetch`、`node --test`），不装任何 npm 包',
+        '- **裸 JSON-RPC**：不经 ethers/web3 封装，直接走协议层（`eth_blockNumber` / `eth_feeHistory` / `eth_getBlockByNumber` / `eth_getLogs`）',
+        '- **手工解码 ERC-20 Transfer 事件**：从 `topics` 抽 indexed 地址、从 `data` 抽 uint256 金额',
+        '- **多端点故障转移 + 指数退避**：公共 RPC 不稳定是常态，失败换端点重试',
+        '- **测试禁网络**：单测全部离线跑纯函数，fixture 驱动',
+        '- **只读**：只查公开链上数据，不持有私钥、不接任何交易/下单接口', '',
+        '## 每日产出', '',
+        '`reports/YYYY-MM-DD.md`（另有 `reports/latest.md` 副本）…每次运行（无论成败）都会写 `reports/STATUS.md`'
+      ].join('\n'),
+      qa: {
+        decision: 'Commit the status every run, success or failure. Public RPC endpoints flake, and a pipeline that only commits on success goes quiet exactly when you need to know. chain-pulse writes <code>reports/STATUS.md</code> on every run and commits it even when collection fails, so the heartbeat — and each failure — is visible in git history without a dashboard.',
+        stack: 'Node ≥ 22 only, no npm packages. Raw JSON-RPC (eth_blockNumber, eth_feeHistory, eth_getBlockByNumber, eth_getLogs), hand-decoded ERC-20 Transfer logs, multi-endpoint failover with exponential backoff, and unit tests that never touch the network.',
+        status: 'Runs nightly, unattended and read-only: public Ethereum mainnet data plus a funding RSS feed, no keys, no trading endpoints. The daily report lands in <code>reports/latest.md</code>. The README is in Chinese.'
+      }
+    },
+    {
+      id: 'amm', name: 'AMM DEX', hue: 'violet',
+      short: 'Uniswap-V2-style AMM from scratch; the pair trusts nothing but its own balances.',
+      role: 'Solo · B.Eng. capstone',
+      stack: 'Solidity · Foundry · Next.js — reference architecture: Uniswap V2',
+      tagline: 'A constant-product automated market maker written from scratch in Solidity — factory, pair and router — with a frontend for swapping and providing liquidity. Awarded outstanding undergraduate capstone.',
+      thesis: 'The router computes the trade, but the pair re-derives it from its own balances and reverts if the invariant breaks. Correctness lives where the money is.',
+      wrong: 'A caller hands the pool the wrong numbers for a swap.',
+      mechanism: 'The pair re-derives every amount from its own balances and reverts on the invariant.',
+      stats: [],
+      readmeUrl: 'https://github.com/jupiter-Pulin/DEX_2025_BACKEND#readme',
+      readmeNote: 'README preview not captured in this mock — open it on GitHub.',
+      repos: [
+        { label: 'DEX_2025_BACKEND · contracts', url: 'https://github.com/jupiter-Pulin/DEX_2025_BACKEND' },
+        { label: 'DEX_2025_FRONTED · frontend', url: 'https://github.com/jupiter-Pulin/DEX_2025_FRONTED' }
+      ],
+      readme: null,
+      qa: {
+        decision: 'Why the tokens arrive before <code>swap()</code> is called. The caller transfers the input tokens to the pair first, and only then calls swap. It reads backwards — you hand over the money before asking for anything — and it is what lets the pair trust no one: it measures its own balance change instead of believing a parameter, so one invariant check at the end covers every path into the function at once.',
+        stack: 'Solidity contracts (factory, pair, router; pair creation, swaps, add / remove liquidity, LP token mint and burn) following the Uniswap V2 architecture, a Foundry test suite for the swap and liquidity paths, and a Next.js frontend against the deployed contracts.',
+        status: 'Student work — a B.Eng. capstone, solo, awarded outstanding undergraduate capstone — and a year older than the rest. It stays because it is where the habit behind the other systems started: the component holding the state validates the state itself, and never trusts a caller’s arithmetic.'
+      }
+    }
+  ];
+  const byId = id => PROJECTS.find(p => p.id === id);
+  const LOOKING = 'Backend or full-stack work on systems where being wrong has a cost — payments and settlement, trading, or the infrastructure underneath an AI product. TypeScript and Node day to day, plus a year of production experience in a team and four systems taken end to end solo. Open to relocation, and to remote.';
+
+  /* ---------------- tiles ---------------- */
+  $('#tiles').innerHTML = PROJECTS.map(p =>
+    `<button class="tile" type="button" data-open="${p.id}" aria-haspopup="dialog"><span class="tile-role">${p.role}</span><b>${p.name}</b><p>${p.short}</p></button>`).join('');
+
+  /* ---------------- tilt ---------------- */
+  const stage = $('#stage'), win = $('#win'), hint = $('#stage-hint');
+  let pinned = false;
+  stage.addEventListener('pointermove', e => {
+    if (reduced || pinned || e.pointerType === 'touch') return;
+    const r = stage.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - .5, py = (e.clientY - r.top) / r.height - .5;
+    win.style.transition = 'box-shadow .3s';
+    win.style.transform = `rotateY(${(px * 16).toFixed(2)}deg) rotateX(${(-py * 12).toFixed(2)}deg)`;
+    win.style.setProperty('--gx', ((px + .5) * 100).toFixed(1) + '%');
+    win.style.setProperty('--gy', ((py + .5) * 100).toFixed(1) + '%');
+  });
+  stage.addEventListener('pointerleave', () => { if (pinned) return; win.style.transition = ''; win.style.transform = ''; });
+  win.addEventListener('click', e => {
+    if (e.target.closest('a,button')) return;
+    pinned = !pinned;
+    win.classList.toggle('pinned', pinned);
+    win.style.transition = '';
+    win.style.transform = pinned ? 'rotateY(-10deg) rotateX(6deg) scale(1.02)' : '';
+    hint.textContent = pinned ? 'pinned · click to release' : 'move the mouse to tilt · click to pin';
+  });
+
+  /* ---------------- build log ---------------- */
+  const tlines = [...document.querySelectorAll('#term .tline:not(.ship)')];
+  if (reduced) tlines.forEach(l => l.classList.add('done'));
+  else tlines.forEach((l, i) => setTimeout(() => l.classList.add('done'), 600 + i * 420));
+
+  /* ---------------- helpers ---------------- */
+  let locks = 0;
+  const lock = () => { locks++; document.body.style.overflow = 'hidden'; };
+  const unlock = () => { locks = Math.max(0, locks - 1); if (!locks) document.body.style.overflow = ''; };
+  function show(el) {
+    el.hidden = false;
+    if (reduced) { el.classList.add('open'); return; }
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('open')));
+  }
+  function hide(el) {
+    el.classList.remove('open');
+    if (reduced) { el.hidden = true; return; }
+    setTimeout(() => { if (!el.classList.contains('open')) el.hidden = true; }, 330);
+  }
+  let toastTimer;
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 1900);
+  }
+  function copyEmail() {
+    const done = () => toast('Copied ' + EMAIL);
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(EMAIL).then(done, () => toast(EMAIL));
+    else toast(EMAIL);
+  }
+
+  /* ---------------- work overlay ---------------- */
+  const work = $('#work'), galleryEl = $('#gallery'), caseEl = $('#case'), body = $('#ov-body'), backBtn = $('#back'), footEl = $('#ov-foot'), workSub = $('#work-sub');
+  const SUB = workSub.textContent;
+  let cur = 0, workTrigger = null;
+
+  function galleryHTML() {
+    return PROJECTS.map((p, i) => {
+      const second = p.private
+        ? `<span class="chip static"><svg class="ic"><use href="#i-lock"/></svg>Private repository</span>`
+        : `<a class="chip" href="${p.readmeUrl}" target="_blank" rel="noopener">README ↗</a>`;
+      return `<article class="gcard${i === 0 ? ' featured' : ''}" data-detail="${p.id}" tabindex="0" role="button" aria-label="${p.name}: learn more">
+        <div class="gimg hue-${p.hue}">${art[p.id]}</div>
+        <div class="gtext">
+          <p class="eyebrow">${p.role}</p>
+          <h3>${p.name}</h3>
+          <p class="gshort">${p.short}</p>
+          <p class="gtag">${p.tagline}</p>
+          <div class="gactions"><button class="btn btn-primary sm" type="button" data-detail="${p.id}">Learn more →</button>${second}</div>
+        </div>
+      </article>`;
+    }).join('');
+  }
+
+  function caseHTML(p) {
+    const stats = p.stats.length
+      ? `<div class="stats">${p.stats.map(s => `<div><b>${s.v}</b><small>${s.l}</small></div>`).join('')}</div>${p.statsNote ? `<p class="fine stats-note">${p.statsNote}</p>` : ''}`
+      : '';
+    const askBtn = `<button class="chip amber" type="button" data-ask="${p.id}" aria-haspopup="dialog"><svg class="ic"><use href="#i-spark"/></svg>Any question about this project?</button>`;
+    let readme;
+    if (p.private) {
+      readme = `<div class="readme"><div class="rm-head"><span class="rm-file"><svg><use href="#i-lock"/></svg>Private repository</span>${askBtn}</div><div class="rm-body plain"><p>${p.scope}</p></div></div>`;
+    } else {
+      const bodyHTML = p.readme
+        ? `<pre class="rm-body" id="readme-pre"></pre>`
+        : `<div class="rm-body plain"><p>${p.readmeNote}</p></div>`;
+      readme = `<div class="readme">
+        <div class="rm-head"><span class="rm-file"><svg><use href="#i-file"/></svg>README.md</span><div class="rm-btns">${askBtn}<a class="chip" href="${p.readmeUrl}" target="_blank" rel="noopener">Open README on GitHub ↗</a></div></div>
+        ${p.readme && p.readmeNote ? `<p class="rm-note">${p.readmeNote}</p>` : ''}
+        ${bodyHTML}
+        <div class="rm-foot">${p.repos.map(r => `<a class="btn btn-ghost sm" href="${r.url}" target="_blank" rel="noopener"><svg class="ic"><use href="#i-github"/></svg>${r.label} ↗</a>`).join('')}</div>
+      </div>`;
+    }
+    return `<figure class="fig hue-${p.hue}">${art[p.id]}<figcaption>image slot · replace with a product screenshot</figcaption></figure>
+      <div class="detail">
+        <p class="eyebrow">${p.role}</p>
+        <h3>${p.name}</h3>
+        <p class="tagline">${p.tagline}</p>
+        <p class="thesis">${p.thesis}</p>
+        <dl class="pair"><div><dt>What goes wrong unattended</dt><dd>${p.wrong}</dd></div><div><dt>The mechanism I built</dt><dd>${p.mechanism}</dd></div></dl>
+        <p class="stack"><span>Stack</span>${p.stack}</p>
+        ${stats}
+        ${readme}
+      </div>`;
+  }
+  function showGallery() {
+    if (!galleryEl.innerHTML) galleryEl.innerHTML = galleryHTML();
+    caseEl.hidden = true; galleryEl.hidden = false; footEl.hidden = true; backBtn.hidden = true;
+    workSub.textContent = SUB;
+    body.scrollTop = 0;
+    history.replaceState(null, '', '#work');
+  }
+  function showDetail(i) {
+    cur = i; const p = PROJECTS[i];
+    caseEl.innerHTML = caseHTML(p);
+    const pre = $('#readme-pre'); if (pre) pre.textContent = p.readme;
+    $('#counter').textContent = `${i + 1} / ${PROJECTS.length}`;
+    workSub.textContent = `${p.name} · ${i + 1} of ${PROJECTS.length}`;
+    galleryEl.hidden = true; caseEl.hidden = false; footEl.hidden = false; backBtn.hidden = false;
+    body.scrollTop = 0;
+    history.replaceState(null, '', '#work/' + p.id);
+  }
+  function openWork(id, trigger) {
+    if (!ask.hidden) closeAsk();
+    const wasOpen = !work.hidden;
+    if (!wasOpen) workTrigger = trigger || document.activeElement;
+    const i = id ? PROJECTS.findIndex(p => p.id === id) : -1;
+    if (i >= 0) showDetail(i); else showGallery();
+    if (!wasOpen) { show(work); lock(); setTimeout(() => $('[data-close-work]').focus(), 30); }
+    else if (i >= 0) setTimeout(() => backBtn.focus(), 30);
+  }
+  function closeWork() {
+    hide(work); unlock();
+    history.replaceState(null, '', location.pathname + location.search);
+    if (workTrigger && workTrigger.focus) workTrigger.focus();
+  }
+
+  /* ---------------- ask drawer ---------------- */
+  const ask = $('#ask'), scrim = $('#scrim'), msgs = $('#msgs'), chipsEl = $('#chips'), input = $('#ask-input');
+  let scope = null, askTrigger = null, greeted = false;
+
+  const chipHTML = (k, t) => `<button class="chip" type="button" data-chip="${k}">${t}</button>`;
+  function renderChips() {
+    chipsEl.innerHTML = scope
+      ? [chipHTML('decision', `Hardest decision in ${scope.name}?`), chipHTML('stack', 'What is the stack?'), chipHTML('status', 'Is it in production?'), chipHTML('code', 'Where is the code?'), chipHTML('all', '← All questions')].join('')
+      : [chipHTML('payments', "I'm hiring for a payments / fintech backend role"), chipHTML('agents', 'Show me the AI agent work'), chipHTML('code', "Where's the code?"), chipHTML('looking', 'What is Pulin looking for?'), chipHTML('contact', 'How do I reach him?')].join('');
+  }
+  function push(who, html) {
+    const m = document.createElement('div'); m.className = 'msg ' + who; m.innerHTML = html; msgs.appendChild(m);
+    msgs.scrollTop = msgs.scrollHeight; return m;
+  }
+  function guide(html) {
+    if (reduced) { push('guide', html); return; }
+    const t = push('guide typing', 'guide is typing…');
+    setTimeout(() => { t.className = 'msg guide'; t.innerHTML = html; msgs.scrollTop = msgs.scrollHeight; }, 420);
+  }
+  function openAsk(scopeId, trigger) {
+    askTrigger = trigger;
+    const next = scopeId ? byId(scopeId) : null;
+    const changed = next !== scope; scope = next; renderChips();
+    if (!greeted) {
+      greeted = true;
+      push('guide', `<p>I'm Pulin's site guide. Tell me what you're hiring for or what you want to see, and I'll take you there.</p><p class="fine">In this mock I answer from a fixed script. The live version will use a model with the same site map and the same rules: it navigates, links and quotes; it never sends anything on Pulin's behalf.</p>`);
+    }
+    if (scope && changed) push('guide', `<p>Scoped to <b>${scope.name}</b>. Pick a question below or type your own.</p>`);
+    scrim.hidden = false; show(ask); lock();
+    setTimeout(() => input.focus(), 60);
+  }
+  function closeAsk() {
+    hide(ask); scrim.hidden = true; unlock();
+    if (askTrigger && askTrigger.focus) askTrigger.focus();
+  }
+
+  const openBtn = (id, label) => `<button class="chip" type="button" data-open="${id}">${label || 'Open ' + byId(id).name} ↗</button>`;
+  const link = (url, label) => `<a class="chip" href="${url}" target="_blank" rel="noopener">${label} ↗</a>`;
+  const mailBtn = () => `<a class="chip amber" href="${MAILTO}">Email Pulin</a>`;
+  const copyBtn = () => `<button class="chip" type="button" data-copy>Copy email</button>`;
+  const report = (title, items, actions, note) =>
+    `<div class="report"><div class="rp-head"><span>Report</span><b>${title}</b></div><ol class="rp-list">${items.map(i => `<li>${i}</li>`).join('')}</ol>${note ? `<p class="rp-note">${note}</p>` : ''}<div class="rp-actions">${actions.join('')}</div></div>`;
+
+  const answers = {
+    payments: () => `<p>Three places to look, in order.</p>` + report('Fit · payments / fintech backend', [
+      `<b>BIBO</b> — multi-step on-chain transactions persisted before signing and advanced only by on-chain receipts; indexed data renders the market, live chain reads authorize the trade.<br>${openBtn('bibo')}`,
+      `<b>AMM DEX</b> — the pair re-derives every amount from its own balances and reverts on the invariant. Correctness lives where the money is.<br>${openBtn('amm')}`,
+      `<b>Loop Conductor</b> — process evidence: review approval is bound to a commit hash and re-checked at the merge gate.<br>${openBtn('loop')}`
+    ], [mailBtn(), copyBtn()], 'Scope note: BIBO is team-built (Pulin delivered the frontend and backend); the other systems are solo builds. Day job: a year of production backend work in a team, TypeScript / Node.'),
+    agents: () => `<p>Two shipped systems and one you are talking to.</p>` + report('AI agent work', [
+      `<b>Loop Conductor</b> — one model call decides only which action; everything with a side effect is deterministic Node. 17 tasks run, 10 merged, $248.67 total spend (self-reported).<br>${openBtn('loop')}`,
+      `<b>Live Interpreter</b> — real-time two-way meeting interpretation; the original audio is never switched off, so no failure produces silence.<br>${openBtn('live')}`,
+      `<b>This guide</b> — scripted today, model-backed later, same site map and the same rule: it navigates and quotes, it never acts on Pulin's behalf.`
+    ], [mailBtn()]),
+    code: () => {
+      const list = (scope ? [scope] : PROJECTS).map(p => p.private
+        ? `<li><span>${p.name}</span><span class="muted">private · team-built</span></li>`
+        : p.repos.map(r => `<li><span>${p.name}</span>${link(r.url, r.label)}</li>`).join('')).join('');
+      return `<p>${scope ? 'Source for ' + scope.name + ':' : 'All public code lives under one GitHub account.'}</p><ul class="linklist">${list}</ul><p style="margin-top:10px">${link('https://github.com/jupiter-Pulin', 'github.com/jupiter-Pulin')}</p>`;
+    },
+    looking: () => `<p>${LOOKING}</p><p style="margin-top:10px">${mailBtn()} ${copyBtn()}</p>`,
+    contact: () => `<p>Email is the fastest route; the subject line is pre-filled.</p><ul class="linklist"><li><span>Email</span><a class="chip amber" href="${MAILTO}">${EMAIL}</a></li><li><span>LinkedIn</span>${link('https://linkedin.com/in/tang-pulin-52b559367', 'tang-pulin')}</li><li><span>GitHub</span>${link('https://github.com/jupiter-Pulin', 'jupiter-Pulin')}</li><li><span>X</span><span class="muted">handle to be added</span></li></ul><p class="fine">Shenzhen, China · UTC+8 · open to relocation and to remote.</p><p style="margin-top:10px">${copyBtn()}</p>`,
+    decision: () => scope ? `<p><b>${scope.name} · one decision, in detail</b></p><p>${scope.qa.decision}</p><p style="margin-top:10px">${openBtn(scope.id, 'Read the full case')}</p>` : pick('decision'),
+    stack: () => scope ? `<p><b>${scope.name} · stack</b></p><p>${scope.qa.stack}</p>` : pick('stack'),
+    status: () => scope ? `<p><b>${scope.name} · status</b></p><p>${scope.qa.status}</p>` : pick('status'),
+    overview: () => `<p><b>${scope.name}</b> — ${scope.tagline}</p><p><span class="fine">What goes wrong unattended:</span> ${scope.wrong}<br><span class="fine">The mechanism:</span> ${scope.mechanism}</p><p style="margin-top:10px">${openBtn(scope.id)}</p>`,
+    all: () => `<p>Back to the whole site. What are you looking for?</p>`,
+    fallback: () => `<p>In this mock I only know the scripted questions below — the live version will answer this one from the same site map.</p><p class="fine">Try a chip, or name a project: BIBO, Loop Conductor, Live Interpreter, chain-pulse, AMM.</p>`
+  };
+  function pick(k) {
+    return `<p>Which project? Pick one and I'll answer for it.</p><p style="margin-top:8px">${PROJECTS.map(p => `<button class="chip" type="button" data-scope="${p.id}" data-then="${k}">${p.name}</button>`).join(' ')}</p>`;
+  }
+  function route(text) {
+    const t = text.toLowerCase();
+    const named = [['bibo', /bibo/], ['loop', /loop|conductor/], ['live', /interpret|meeting|zoom|translat/], ['chain', /chain|pulse|ethereum|rpc/], ['amm', /amm|dex|swap|uniswap|solidity/]].find(([, re]) => re.test(t));
+    if (named && !(scope && scope.id === named[0])) { scope = byId(named[0]); renderChips(); return 'overview'; }
+    if (/(payment|fintech|settle|ledger|bank|money|trading|finance)/.test(t)) return 'payments';
+    if (/(agent|llm|\bai\b|model|claude|automation|pipeline)/.test(t)) return 'agents';
+    if (/(code|github|repo|source)/.test(t)) return 'code';
+    if (/(contact|email|reach|hire|call|linkedin|talk)/.test(t)) return 'contact';
+    if (/(looking|want|role|open to|relocat|remote|salary|visa)/.test(t)) return 'looking';
+    if (/(decision|hardest|why|trade-?off)/.test(t)) return 'decision';
+    if (/(stack|built with|tech|language|framework)/.test(t)) return 'stack';
+    if (/(production|status|live|users|shipped|running)/.test(t)) return 'status';
+    return 'fallback';
+  }
+  function respond(k) {
+    if (k === 'all') { scope = null; renderChips(); }
+    guide((answers[k] || answers.fallback)());
+  }
+  function askIntent(k, label) { push('you', label); respond(k); }
+  $('#ask-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const text = input.value.trim(); if (!text) return;
+    input.value = '';
+    push('you', text.replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c])));
+    respond(route(text));
+  });
+
+  /* ---------------- delegated clicks ---------------- */
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-open],[data-detail],[data-back],[data-ask],[data-copy],[data-close-work],[data-close-ask],[data-prev],[data-next],[data-chip],[data-scope]');
+    if (!t) return;
+    if (t.hasAttribute('data-open')) openWork(t.dataset.open, t);
+    else if (t.hasAttribute('data-detail')) { if (e.target.closest('a')) return; openWork(t.dataset.detail, t); }
+    else if (t.hasAttribute('data-back')) showGallery();
+    else if (t.hasAttribute('data-ask')) openAsk(t.dataset.ask || null, t);
+    else if (t.hasAttribute('data-copy')) copyEmail();
+    else if (t.hasAttribute('data-close-work')) closeWork();
+    else if (t.hasAttribute('data-close-ask')) closeAsk();
+    else if (t.hasAttribute('data-prev')) showDetail((cur - 1 + PROJECTS.length) % PROJECTS.length);
+    else if (t.hasAttribute('data-next')) showDetail((cur + 1) % PROJECTS.length);
+    else if (t.hasAttribute('data-chip')) askIntent(t.dataset.chip, t.textContent.replace(/^← /, ''));
+    else if (t.hasAttribute('data-scope')) { scope = byId(t.dataset.scope); renderChips(); askIntent(t.dataset.then, t.textContent); }
+  });
+  scrim.addEventListener('click', closeAsk);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { if (!ask.hidden) closeAsk(); else if (!work.hidden) closeWork(); return; }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('gcard')) { e.preventDefault(); openWork(e.target.dataset.detail, e.target); return; }
+    if (work.hidden || caseEl.hidden || !ask.hidden || e.target.tagName === 'INPUT') return;
+    if (e.key === 'ArrowRight') showDetail((cur + 1) % PROJECTS.length);
+    if (e.key === 'ArrowLeft') showDetail((cur - 1 + PROJECTS.length) % PROJECTS.length);
+  });
+
+  /* ---------------- deep link ---------------- */
+  const m = location.hash.match(/^#work(?:\/([a-z]+))?$/);
+  if (m) openWork(m[1] && byId(m[1]) ? m[1] : '', null);
+})();
+</script>
