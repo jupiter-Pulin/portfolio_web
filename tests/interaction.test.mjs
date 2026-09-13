@@ -1,7 +1,10 @@
 // Hero card interactions: the mock's formulas and timings, asserted without a browser.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import {
+  PINNED_CLASS,
   PINNED_TRANSFORM,
   RESET_TRANSFORM,
   canTilt,
@@ -41,6 +44,18 @@ test('tilt is skipped for touch, for reduced motion and while pinned', () => {
 test('pinning uses the fixed pose; releasing clears the inline transform', () => {
   assert.equal(PINNED_TRANSFORM, 'rotateY(-10deg) rotateX(6deg) scale(1.02)');
   assert.equal(RESET_TRANSFORM, '');
+});
+
+test('the pinned class the card gets is the one the stylesheet styles', () => {
+  // The card is a CSS module, the pinned pose is a plain class: only :global()
+  // rules can reach it, so the stylesheet has to name the same class.
+  assert.equal(PINNED_CLASS, 'pinned');
+  const css = readFileSync(
+    fileURLToPath(new URL('../src/components/HowIBuildCard.module.css', import.meta.url)),
+    'utf8',
+  ).replace(/\s+/g, ' ');
+  assert.match(css, new RegExp(`\\.win:global\\(\\.${PINNED_CLASS}\\) \\{[^}]*box-shadow`), 'pinned pose');
+  assert.match(css, new RegExp(`\\.win:global\\(\\.${PINNED_CLASS}\\)::after`), 'pinned glare stays lit');
 });
 
 test('terminal lines tick over at 600ms, then one every 420ms', () => {

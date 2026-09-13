@@ -5,6 +5,7 @@ import type { MouseEvent, PointerEvent } from "react";
 import { HERO, HOW_I_BUILD } from "@/content/copy";
 import { doneCountAt, lineDelay } from "@/lib/buildLog";
 import {
+  PINNED_CLASS,
   PINNED_TRANSFORM,
   RESET_TRANSFORM,
   canTilt,
@@ -86,7 +87,7 @@ export function HowIBuildCard() {
       onPointerLeave={onPointerLeave}
     >
       <article
-        className={`${styles.win}${pinned ? " pinned" : ""}`}
+        className={`${styles.win}${pinned ? ` ${PINNED_CLASS}` : ""}`}
         ref={win}
         aria-label="How I build"
         onClick={onCardClick}

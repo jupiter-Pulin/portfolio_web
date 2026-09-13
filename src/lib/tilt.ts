@@ -4,6 +4,9 @@ export const TILT_Y_DEG = 16;
 export const TILT_X_DEG = 12;
 export const PINNED_TRANSFORM = "rotateY(-10deg) rotateX(6deg) scale(1.02)";
 export const RESET_TRANSFORM = "";
+/** Pinned cards carry this plain class name; HowIBuildCard.module.css targets it
+    through :global(), so the two sides must keep agreeing. */
+export const PINNED_CLASS = "pinned";
 
 export type Rect = { left: number; top: number; width: number; height: number };
 export type Offset = { px: number; py: number };

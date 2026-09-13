@@ -117,6 +117,31 @@ test('the How I Build card renders every step, log line and ship stat', () => {
   }
 });
 
+test('the build log starts unticked and keeps the shipping line spinning', () => {
+  // The five lines must arrive as work still to do — a page that ships them
+  // already ticked would satisfy the copy assertions but lose the animation.
+  const ticks = pages.home.match(/data-done="(true|false)"/g) ?? [];
+  assert.deepEqual(ticks, Array(HOW_I_BUILD.terminal.lines.length).fill('data-done="false"'));
+  assert.ok(
+    textOf(pages.home).includes(HOW_I_BUILD.terminal.shipping),
+    'Shipping... is not part of the checklist and never ticks',
+  );
+});
+
+test('the toast host ships with the page, empty and hidden', () => {
+  const tag = pages.home.match(/<div[^>]*class="toast"[^>]*>/i);
+  assert.ok(tag, 'no toast element for copy email to write into');
+  assert.match(tag[0], /role="status"/);
+  assert.match(tag[0], /aria-live="polite"/);
+  assert.match(tag[0], /hidden(=""|\s|>)/, 'the toast is hidden until something is copied');
+});
+
+test('the hero card announces the tilt hint it will swap on pin', () => {
+  const body = textOf(pages.home);
+  assert.ok(body.includes(HERO.tiltHint), 'unpinned hint');
+  assert.ok(!body.includes(HERO.tiltPinned), 'the pinned hint only appears after a click');
+});
+
 test('header socials use the links.ts urls and open in a new tab', () => {
   for (const social of SOCIALS) {
     const tag = tagWithHref(pages.home, social.href);
