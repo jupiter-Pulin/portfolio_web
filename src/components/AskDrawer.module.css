@@ -1,0 +1,214 @@
+/* ask drawer — design/mock/index.html .scrim / .drawer / .ask-head / .msgs /
+   .msg / .chips / .ask-form / .report / .rp-* / .linklist.
+   .chip and .fine are global primitives, so they are reached with :global(). */
+/* The panel stays in the layout and is hidden by `visibility`, so it can slide
+   both ways: a display switch in the same frame would skip the transition, and
+   visibility:hidden still keeps the closed drawer out of the tab order and off
+   the accessibility tree. The delayed visibility step is what holds the panel on
+   screen for the length of the slide out. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: rgba(6, 9, 18, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.32s, visibility 0s 0.32s;
+}
+.scrim.open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.32s;
+}
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(450px, 100vw);
+  z-index: 60;
+  background: var(--bg-2);
+  border-left: 1px solid var(--line-strong);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s 0.32s;
+  box-shadow: -30px 0 80px rgba(0, 0, 0, 0.45);
+}
+.drawer.open {
+  transform: none;
+  visibility: visible;
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.askHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.askHead h2 {
+  font: 900 19px var(--font-display);
+  margin: 0;
+  display: inline;
+}
+.pill {
+  display: inline-block;
+  margin-left: 10px;
+  font: 500 10.5px var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--amber);
+  border: 1px solid rgba(245, 196, 81, 0.4);
+  border-radius: 999px;
+  padding: 3px 8px;
+  vertical-align: middle;
+}
+.msgs {
+  flex: 1;
+  overflow: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.msg {
+  max-width: 94%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.msg.guide {
+  align-self: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top-left-radius: 4px;
+}
+.msg.you {
+  align-self: flex-end;
+  background: rgba(125, 227, 245, 0.12);
+  border: 1px solid rgba(125, 227, 245, 0.3);
+  border-top-right-radius: 4px;
+}
+.msg p {
+  margin: 0 0 8px;
+}
+.msg p:last-child {
+  margin: 0;
+}
+.msg p:global(.fine) {
+  margin-top: 8px;
+}
+.msg.typing {
+  color: var(--dim);
+  font: 500 12px var(--font-mono);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 18px 12px;
+}
+.askForm {
+  display: flex;
+  gap: 8px;
+  padding: 12px 18px 18px;
+  border-top: 1px solid var(--line);
+}
+.askForm input {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  padding: 11px 12px;
+  color: var(--text);
+  font: 400 14px var(--font-body);
+}
+.askForm input::placeholder {
+  color: var(--dim);
+}
+.askForm input:focus {
+  outline: none;
+  border-color: var(--cyan);
+}
+
+/* ---------- report card ---------- */
+.report {
+  margin-top: 10px;
+  border: 1px solid rgba(245, 196, 81, 0.35);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.rpHead {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 10px 12px;
+  background: rgba(245, 196, 81, 0.1);
+  border-bottom: 1px solid rgba(245, 196, 81, 0.25);
+}
+.rpHead span {
+  font: 500 10.5px var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.rpHead b {
+  font: 800 14px var(--font-display);
+}
+.rpList {
+  margin: 0;
+  padding: 10px 12px 10px 28px;
+  display: grid;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.rpList :global(.chip) {
+  margin-top: 6px;
+}
+.rpNote {
+  margin: 0;
+  padding: 0 12px 10px;
+  font-size: 12.5px;
+  color: var(--dim);
+}
+.rpActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- link rows ---------- */
+.linklist {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+.linklist li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  font-size: 13.5px;
+}
+.linklist .muted {
+  color: var(--dim);
+  font-size: 12.5px;
+}
+
+/* a row of chips under a paragraph — the mock's inline margin-top:10px */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}

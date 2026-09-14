@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SITE } from "@/content/copy";
 import { SOCIALS } from "@/content/links";
+import { AskButton } from "./AskButton";
 import { Icon, type IconName } from "./Icon";
 import styles from "./Header.module.css";
 
@@ -26,16 +27,7 @@ export function Header() {
               <Icon name={s.key as IconName} />
             </a>
           ))}
-          {/* Renders only — the ask drawer is a later task. */}
-          <button
-            className="btn btn-ask"
-            type="button"
-            aria-disabled="true"
-            title="Coming in a later task"
-          >
-            <Icon name="spark" className="ic" />
-            <span className="label">{SITE.askLabel}</span>
-          </button>
+          <AskButton className="btn btn-ask" label={SITE.askLabel} labelClassName="label" />
         </nav>
       </div>
     </header>

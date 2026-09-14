@@ -8,6 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { SITE, WORK } from '../src/content/copy.ts';
+import { GUIDE } from '../src/content/guide.ts';
 import { PROJECTS, projectById } from '../src/content/projects.ts';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
@@ -221,15 +222,23 @@ test('README notes: a caveat bar with a preview, plain copy without one', () => 
   assert.equal(amm.repos.length, 2);
 });
 
-test('the ask button renders disabled and carries its scope for the next task', () => {
+test('the ask button is live on every case page and carries its own scope', () => {
   for (const p of PROJECTS) {
-    const tag = markup(pages[p.id]).match(/<button\b[^>]*data-scope="[^"]*"[^>]*>/);
+    const html = markup(pages[p.id]);
+    const tag = html.match(/<button\b[^>]*data-scope="[^"]*"[^>]*>/);
     assert.ok(tag, `${p.id} has the ask button`);
-    assert.match(tag[0], /aria-disabled="true"/);
+    // The placeholder is gone: the button opens the drawer, scoped to this page.
+    assert.doesNotMatch(tag[0], /aria-disabled/, `${p.id} ask button is not disabled`);
+    assert.doesNotMatch(tag[0], /title="Coming in a later task"/);
+    assert.match(tag[0], /aria-haspopup="dialog"/, `${p.id} announces the dialog`);
     assert.match(tag[0], new RegExp(`data-scope="${p.id}"`));
-    assert.match(tag[0], /title="Coming in a later task"/);
     assert.ok(textOf(pages[p.id]).includes(WORK.askProject), `${p.id} ask label`);
+    // …and the dialog it points at is on the page, labelled as the mock it is.
+    assert.match(html, /role="dialog"/, `${p.id} renders the drawer`);
+    assert.match(html, /aria-modal="true"/);
+    assert.ok(textOf(pages[p.id]).includes(GUIDE.pill), `${p.id} says the guide is scripted`);
   }
+  assert.doesNotMatch(markup(pages.bibo), /aria-disabled="true"/, 'nothing is left pending');
 });
 
 test('the case pages walk in a loop and offer both ways out', () => {
