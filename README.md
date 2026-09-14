@@ -18,14 +18,6 @@ npm run lint
 npm run build
 ```
 
-## Delivery plan (Loop Conductor task chain)
-
-1. Landing page: header, hero with the tilting "How I Build" window, Selected work strip, footer.
-2. Work view: `/work` gallery (projects side by side) → `/work/[id]` detail (image, decision, README preview, source).
-3. "Any question?" guide drawer: scripted concierge that produces report cards and navigates.
-
-Briefs live in `design/briefs/`.
-
 ## Branching
 
 - `main` is protected on GitHub (ruleset `protect-main`): no direct pushes, no force-pushes, no deletion. Every change lands through a pull request. No reviewer is required — the PR is the speed bump, not a review queue.
