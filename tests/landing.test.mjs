@@ -7,6 +7,7 @@ import { createServer } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { HERO, HOW_I_BUILD, SITE } from '../src/content/copy.ts';
+import { GUIDE } from '../src/content/guide.ts';
 import { EMAIL, MAILTO, SOCIALS } from '../src/content/links.ts';
 import { PROJECTS } from '../src/content/projects.ts';
 
@@ -154,13 +155,27 @@ test('header socials use the links.ts urls and open in a new tab', () => {
   }
 });
 
-test('"Any question?" renders disabled until the ask drawer ships', () => {
-  const tag = decode(pages.home).match(/<[a-z]+\b[^>]*aria-disabled="true"[^>]*>/i);
-  assert.ok(tag, 'nothing carries aria-disabled="true"');
-  assert.match(tag[0], /^<button\b/);
-  assert.match(tag[0], /title="Coming in a later task"/);
+test('"Any question?" opens the scripted guide drawer', () => {
+  const home = decode(pages.home);
+  // The placeholder shipped disabled; the drawer it was waiting for is here now.
+  assert.equal(
+    /<[a-z]+\b[^>]*aria-disabled="true"[^>]*>/i.test(home),
+    false,
+    'nothing is still disabled',
+  );
+  assert.ok(!home.includes('Coming in a later task'), 'no pending title is left');
+
+  const tag = home.match(/<button\b[^>]*aria-haspopup="dialog"[^>]*>/);
+  assert.ok(tag, 'the header button announces the dialog it opens');
   assert.ok(textOf(pages.home).includes(SITE.askLabel), 'ask label');
-  assert.ok(!/href="#ask"|id="ask"/.test(pages.home), 'the drawer is a later task');
+
+  // The drawer renders once, under the page, and says what it is before it is asked.
+  assert.match(home, /role="dialog"/, 'the drawer is on the page');
+  assert.match(home, /aria-modal="true"/);
+  assert.match(home, /aria-labelledby="ask-title"/);
+  const text = textOf(pages.home);
+  assert.ok(text.includes(GUIDE.pill), 'the guide is labelled as a scripted mock');
+  assert.ok(text.includes(GUIDE.send), 'the question form is there');
 });
 
 test('Hire Me points at the prefilled mailto from links.ts', () => {
