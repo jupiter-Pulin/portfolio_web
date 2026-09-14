@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MouseEvent, PointerEvent } from "react";
 import { HERO, HOW_I_BUILD } from "@/content/copy";
 import { doneCountAt, lineDelay } from "@/lib/buildLog";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import {
   PINNED_CLASS,
   PINNED_TRANSFORM,
@@ -16,27 +17,14 @@ import {
 import { Icon, type IconName } from "./Icon";
 import styles from "./HowIBuildCard.module.css";
 
-const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 const LINES = HOW_I_BUILD.terminal.lines;
-
-const subscribeReducedMotion = (onChange: () => void) => {
-  const query = window.matchMedia(REDUCED_MOTION);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-};
-const reducedMotionNow = () => window.matchMedia(REDUCED_MOTION).matches;
-const reducedMotionOnServer = () => false;
 
 export function HowIBuildCard() {
   const stage = useRef<HTMLDivElement>(null);
   const win = useRef<HTMLElement>(null);
   const [pinned, setPinned] = useState(false);
   const [ticked, setTicked] = useState(0);
-  const reduced = useSyncExternalStore(
-    subscribeReducedMotion,
-    reducedMotionNow,
-    reducedMotionOnServer,
-  );
+  const reduced = useReducedMotion();
   // Reduced motion shows the checklist finished; otherwise it ticks over after mount.
   const done = reduced ? doneCountAt(0, LINES.length, true) : ticked;
 

@@ -14,8 +14,14 @@ const TYPING = new Set(["INPUT", "TEXTAREA", "SELECT"]);
 
 export type KeyTarget = { tagName?: string; isContentEditable?: boolean } | null | undefined;
 
-/** What a keydown means on a case page, or null when it means nothing. */
-export function keyAction(key: string, target?: KeyTarget): WorkKey | null {
+/** What a keydown means on a case page, or null when it means nothing.
+    An open ask drawer owns the keyboard: Esc closes it, and the arrows stay put. */
+export function keyAction(
+  key: string,
+  target?: KeyTarget,
+  opts?: { askOpen?: boolean },
+): WorkKey | null {
+  if (opts?.askOpen) return null;
   if (target?.isContentEditable) return null;
   if (TYPING.has((target?.tagName ?? "").toUpperCase())) return null;
   if (key === "ArrowLeft") return "prev";
