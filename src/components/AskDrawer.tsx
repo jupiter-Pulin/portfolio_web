@@ -140,7 +140,7 @@ export function AskProvider({ children }: { children: ReactNode }) {
     trigger.current?.focus();
   }, []);
 
-  /** "Open <name> ↗": the drawer steps aside and the case page takes over. */
+  /** The case-page chip: the drawer steps aside first, then the page takes over. */
   const openProject = useCallback(
     (id: string) => {
       closeAsk();

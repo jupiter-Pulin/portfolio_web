@@ -95,7 +95,7 @@ test('the eight keyword families each reach their own answer, and keep the scope
     payments: ['payments role', 'fintech backend', 'settlement', 'a ledger', 'banking', 'money movement', 'trading systems', 'finance'],
     agents: ['agent work', 'llm things', 'is this AI?', 'which model', 'claude pipelines', 'automation'],
     code: ['where is the code', 'github please', 'the repo', 'source'],
-    contact: ['contact him', 'his email', 'how do I reach him', 'we are hiring', 'linkedin', 'can we talk'],
+    contact: ['contact him', 'his email', 'how do I reach him', 'can we hire him', 'give me a call', 'linkedin', 'can we talk'],
     looking: ['what is he looking for', 'what does he want', 'the role', 'open to relocation?', 'remote?', 'salary', 'visa'],
     decision: ['hardest decision', 'why that', 'the trade-off', 'tradeoff'],
     stack: ['the stack', 'built with what', 'which tech', 'what language', 'which framework'],
@@ -330,8 +330,10 @@ test('only <em> and <code> survive as elements; every other tag stays text', () 
     elements.map((n) => n.props.children),
     ['a', 'b'],
   );
+  // Everything the two tags did not claim comes through as characters: the
+  // <script> and the <b> are text nodes, which React escapes when it renders.
   const text = nodes.filter((n) => typeof n === 'string').join('');
-  assert.equal(text, ' ', 'whitespace between the tags is text');
+  assert.equal(text, source.replace('<em>a</em>', '').replace('<code>b</code>', ''));
   const tail = tokenizeInline(source).at(-1);
   assert.equal(tail.tag, 'text');
   assert.equal(tail.text, ' <script>x</script> & <b>c</b>', 'the rest is characters, not markup');
@@ -419,6 +421,16 @@ test('the drawer keeps the mock class names and the 450px slide', () => {
   assert.match(css, /\.drawer\.open \{[^}]*transform: none/);
   assert.match(css, /\.msg\.guide \{/);
   assert.match(css, /\.msg\.you \{/);
+
+  // Reduced motion: the site-wide reset is what removes the slide, as in the mock,
+  // so the drawer must not carry a rule that outranks it.
+  const globals = read('../src/app/globals.css').replace(/\s+/g, ' ');
+  assert.match(
+    globals,
+    /@media \(prefers-reduced-motion: reduce\) \{ \*, \*::before, \*::after \{[^}]*transition: none !important/,
+    'the reduced-motion reset still kills every transition',
+  );
+  assert.doesNotMatch(css, /!important/, 'nothing in the drawer outranks that reset');
 });
 
 test('the drawer is wired to the page: dialog semantics, focus, navigation', () => {
@@ -437,6 +449,12 @@ test('the drawer is wired to the page: dialog semantics, focus, navigation', () 
     drawer.replace(/\s+/g, ' '),
     /closeAsk\(\); router\.push\(`\/work\/\$\{id\}`\);/,
   );
+  // What the visitor typed goes back out as text. It never reaches inlineNodes,
+  // which is the only place in the drawer that can turn a string into an element.
+  assert.match(drawer, /styles\.you\}`\}>\{msg\.text\}</, 'the echo is a text child');
+  assert.doesNotMatch(drawer, /inlineNodes\(msg\.text\)/);
+  assert.doesNotMatch(drawer, /dangerouslySetInnerHTML/, 'no string is ever injected');
+  assert.match(drawer, /target="_blank" rel="noopener"/, 'outbound links are safe');
 
   const button = read('../src/components/AskButton.tsx');
   assert.match(button, /aria-haspopup="dialog"/);
