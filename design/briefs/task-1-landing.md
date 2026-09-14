@@ -1,7 +1,5 @@
 # portfolio_web · 落地页：把 design/mock/index.html 的首屏移植成 Next.js
 
-> **路线指令（发起人 Pulin 2026-09-13 明确要求）：本单不需要 spec。** 需求已经以可运行的 HTML mock 定稿（`design/mock/index.html`，发起人已逐屏验收），本 brief 即契约。请 router 直接派 maker，只走 review → precommit → merge 闸；不要产出 spec 交人审。
-
 ## 背景
 - 目标仓 `/Users/uranus_pu/ai-experiment/portfolio_web`：create-next-app 16.3 脚手架（App Router、TypeScript strict、ESLint、`src/` 目录、无 Tailwind、npm、Turbopack）。`src/app/page.tsx`、`src/app/globals.css`、`src/app/page.module.css` 是脚手架默认页，`src/app/layout.tsx` 用 Geist 字体——本单全部替换。
 - 视觉与交互契约：`design/mock/index.html`，单文件（CSS + HTML + JS），已在浏览器逐屏验收。本单只移植它的**首屏**：header、hero（左文案 + 右侧「How I Build」窗口卡）、Selected work 项目条、footer。mock 里的 `#work` 弹窗与 `#ask` 抽屉不在本单。

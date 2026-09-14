@@ -1,7 +1,5 @@
 # portfolio_web · /work：项目总览网格 + 项目详情 + 可替换的内容槽位
 
-> **路线指令（发起人 Pulin 明确要求）：本单不需要 spec。** 视觉与交互契约是 `design/mock/index.html` 里 `#work` 弹窗的两级视图（`galleryHTML()` = 总览、`caseHTML()` = 详情），发起人已逐屏验收；本 brief 即契约。请 router 直接派 maker，只走 review → precommit → merge 闸。
-
 ## 背景
 - task-20260913-001 已合并：首屏（Header / Hero / HowIBuildCard / SelectedWorkStrip / Footer）、`src/lib/tilt.ts` 等、`/work` 与 `/work/[id]` 是**占位页**（`src/components/WorkPlaceholder.tsx`），发起人点进去看到一个纯列表并明确不接受——本单把它换成真正的两级视图。
 - 数据唯一来源仍是 `src/content/projects.ts`（`PROJECTS` 数组：id / name / hue / short / role / stack / tagline / thesis / wrong / mechanism / stats / statsNote / private / scope / readmeUrl / readmeNote / repos / readme / qa）与 `src/content/copy.ts`（`SITE.workTitle` / `workSubtitle` / `imageSlot`）。数组顺序 = 展示顺序，第一条 = featured。

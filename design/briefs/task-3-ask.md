@@ -1,7 +1,5 @@
 # portfolio_web · Any question? 导览抽屉（脚本化 mock，可导航、可出报告）
 
-> **路线指令（发起人 Pulin 明确要求）：本单不需要 spec。** 契约是 `design/mock/index.html` 里 `#ask` 抽屉（`openAsk / renderChips / answers / route / report` 那一段），发起人已验收；本 brief 即契约。请 router 直接派 maker，只走 review → precommit → merge 闸。
-
 ## 背景
 - task-20260913-001（首屏）与 task-20260914-001（`/work` 总览 + 详情 + 图片槽位）已合并。Header 的「Any question?」按钮与详情页 README 面板的「Any question about this project?」按钮目前都是 `aria-disabled="true"` 的占位（`src/components/Header.tsx`、`src/components/WorkCase.tsx`，后者带 `data-scope="<id>"`）。本单把它们接上真正的抽屉。
 - 抽屉是**脚本化 mock**：不接模型、不接后端、不发送任何东西。它能做的只有四种动作：跳到 `/work/<id>`、打开 mailto、复制邮箱、在页内给出文字 / 报告卡片。发起人的定位：「导游，不是代言人」。
