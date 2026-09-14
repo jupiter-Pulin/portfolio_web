@@ -107,12 +107,13 @@ export function BlogIndex({ posts }: { posts: PostMeta[] }) {
 
 function Card({ post: p }: { post: PostMeta }) {
   return (
-    <Link className={styles.post} href={`/blog/${p.slug}`}>
-      {p.cover ? (
+    <Link className={`${styles.post} ${p.thumb ? "" : styles.noThumb}`} href={`/blog/${p.slug}`}>
+      {p.thumb ? (
         <span className={styles.thumb}>
           <Image
-            className={styles.thumbImg}
-            src={p.cover}
+            // A thumbnail borrowed from the body (usually a chart) keeps its top edge in frame.
+            className={`${styles.thumbImg} ${p.thumb === p.cover ? "" : styles.fromBody}`}
+            src={p.thumb}
             alt=""
             fill
             unoptimized

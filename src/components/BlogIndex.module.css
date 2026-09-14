@@ -141,6 +141,9 @@
   object-fit: cover;
   transition: transform 0.35s;
 }
+.fromBody {
+  object-position: top;
+}
 .post:hover .thumbImg {
   transform: scale(1.04);
 }
@@ -242,4 +245,9 @@
   .txt {
     padding: 0 4px 6px;
   }
+}
+
+/* After the breakpoints on purpose: a post with no photo at all gives its text the whole row. */
+.post.noThumb {
+  grid-template-columns: 1fr;
 }

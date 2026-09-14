@@ -29,7 +29,10 @@ export type PostMeta = {
   title: string;
   summary: string;
   tags: string[];
+  /** Article hero: the header's `cover`, else public/blog/<slug>/cover.*. Null → no hero. */
   cover: string | null;
+  /** List thumbnail: the cover, else the first photo in the post (charts stay uncropped in the body). */
+  thumb: string | null;
   coverCaption: string | null;
   draft: boolean;
   minutes: number;
@@ -54,12 +57,23 @@ function resolveCover(slug: string, meta: Frontmatter, root: string): string | n
   return null;
 }
 
+/** The first image in the post in document order; image syntax inside code does not count. */
+function firstImage(body: string, slug: string): string | null {
+  const md = new Marked({ gfm: true });
+  const hrefs: string[] = [];
+  md.walkTokens(md.lexer(body), (t) => {
+    if (t.type === "image") hrefs.push((t as Tokens.Image).href);
+  });
+  return hrefs.length > 0 ? resolveAsset(hrefs[0], slug) : null;
+}
+
 function readPost(file: string, root: string): { meta: PostMeta; body: string } {
   const m = file.match(POST_FILE);
   if (!m) throw new Error(`Not a post file name: ${file}`);
   const { meta, body } = parseFrontmatter(readFileSync(join(root, ...POSTS_DIR, file), "utf8"));
   const slug = str(meta.slug) ?? m[2];
   const date = str(meta.date) ?? m[1];
+  const cover = resolveCover(slug, meta, root);
   return {
     meta: {
       slug,
@@ -70,7 +84,8 @@ function readPost(file: string, root: string): { meta: PostMeta; body: string } 
       title: str(meta.title) ?? slug.replace(/-/g, " "),
       summary: str(meta.summary) ?? "",
       tags: list(meta.tags),
-      cover: resolveCover(slug, meta, root),
+      cover,
+      thumb: cover ?? firstImage(body, slug),
       coverCaption: str(meta.coverCaption),
       draft: meta.draft === true,
       minutes: readingMinutes(body),

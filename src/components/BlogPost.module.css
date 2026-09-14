@@ -78,6 +78,11 @@
 .body > :first-child {
   margin-top: 0;
 }
+/* A post that opens on a photo (no cover) keeps air between the rule and the image. */
+.body > figure:first-child,
+.body > :global(.gallery):first-child {
+  margin-top: 24px;
+}
 .body h2 {
   font: 800 24px/1.25 var(--font-display);
   color: var(--text);

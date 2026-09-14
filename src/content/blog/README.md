@@ -9,7 +9,7 @@ that name (this README, drafts you keep as `notes-*.md`, …) is ignored.
 title: What the post is called
 summary: One or two sentences shown in the list.
 tags: [fintech, agents]
-cover: cover.jpg                  # optional — a file in public/blog/<slug>/; auto-detected if omitted
+cover: cover.jpg                  # optional — a photo in public/blog/<slug>/; cover.* is auto-detected
 coverCaption: Where the photo was taken   # optional
 draft: true                       # optional — keeps the post out of the build
 ---
@@ -21,6 +21,9 @@ Ordinary Markdown from here on.
 
 - **Photos** go in `public/blog/<slug>/` and are referenced by file name only
   (`photo-1.jpg`). Absolute URLs (`/…`, `https://…`) are left untouched.
+- **Charts and screenshots** should not be the cover (the cover is cropped). Leave
+  `cover` out and put them in the body: they keep their shape there, and the list uses
+  the first image in the post as the thumbnail.
 - **One photo alone in a paragraph** renders as a figure with its caption;
   **two or more in the same paragraph** (one per line, no blank line between) render
   as a grid.

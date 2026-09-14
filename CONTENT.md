@@ -81,7 +81,7 @@ between the two `---` lines is a small YAML subset:
 title: What the post is called
 summary: One or two sentences shown in the list and under the title.
 tags: [fintech, agents]          # or a block list of `- item` lines
-cover: cover.jpg                 # optional; auto-detected from public/blog/<slug>/cover.* if omitted
+cover: cover.jpg                 # optional — photographs only; see below
 coverCaption: Where it was taken # optional
 draft: true                      # optional — keeps the post out of the list and the build
 ---
@@ -93,8 +93,14 @@ Ordinary Markdown (GitHub flavour: tables, fenced code, task lists).
 
 - **Photos** live in `public/blog/<slug>/` and are referenced by file name only
   (`photo-1.jpg` → `/blog/<slug>/photo-1.jpg`). URLs and root paths (`/…`) are left as
-  written. The cover is the list thumbnail (3:2) and the article hero (16:9), cropped
-  with `object-fit: cover`; 1600×1000 is a good source size.
+  written.
+- **The cover** (`cover:` in the header, or a `cover.webp|png|jpg|jpeg|svg` file in the
+  post's folder) is the article hero (16:9) and the list thumbnail (3:2), both cropped with
+  `object-fit: cover`; 1600×1000 is a good source size. Use it for photographs.
+- **No cover** is the right choice for charts, diagrams and screenshots, which must not be
+  cropped: put the image in the body, where it keeps its own aspect ratio. The article then
+  opens without a hero, and the list borrows the first image in the post as its thumbnail,
+  anchored to the top edge. A post with no image at all gets a text-only card.
 - **One photo alone in a paragraph** renders as a `<figure>` with the quoted title as
   its caption. **Two or more photos in the same paragraph** (one per line, no blank line
   between them) render as a grid — three of them as three columns.
