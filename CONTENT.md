@@ -11,6 +11,7 @@ Everything below is a data edit or a file drop; the table says which file to tou
 | Change a README preview or its caveat | `src/content/projects.ts` — `readme` / `readmeNote` |
 | Change a figure or where it came from | `src/content/projects.ts` — `stats` / `statsNote` |
 | Change a repository or README link | `src/content/projects.ts` — `readmeUrl` / `repos` |
+| Publish a blog post | `src/content/blog/YYYY-MM-DD-<slug>.md` + photos in `public/blog/<slug>/` (see below) |
 | Change contact or social links | `src/content/links.ts` |
 | Change page copy (headings, chrome, labels) | `src/content/copy.ts` |
 
@@ -68,8 +69,46 @@ page renders the note directly under the four stat tiles, and it is the only thi
 telling a reader where the number came from. With `stats: []` the whole block, note
 included, is not rendered.
 
+## Blog posts
+
+One Markdown file per post in `src/content/blog/`, named `YYYY-MM-DD-<slug>.md`.
+The date orders the list (newest first), the slug is the URL (`/blog/<slug>`), and
+files that do not match the name (`README.md`, `notes-*.md`) are ignored. The header
+between the two `---` lines is a small YAML subset:
+
+```markdown
+---
+title: What the post is called
+summary: One or two sentences shown in the list and under the title.
+tags: [fintech, agents]          # or a block list of `- item` lines
+cover: cover.jpg                 # optional; auto-detected from public/blog/<slug>/cover.* if omitted
+coverCaption: Where it was taken # optional
+draft: true                      # optional — keeps the post out of the list and the build
+---
+
+Ordinary Markdown (GitHub flavour: tables, fenced code, task lists).
+
+![Alt text](photo-1.jpg "This quoted title becomes the caption.")
+```
+
+- **Photos** live in `public/blog/<slug>/` and are referenced by file name only
+  (`photo-1.jpg` → `/blog/<slug>/photo-1.jpg`). URLs and root paths (`/…`) are left as
+  written. The cover is the list thumbnail (3:2) and the article hero (16:9), cropped
+  with `object-fit: cover`; 1600×1000 is a good source size.
+- **One photo alone in a paragraph** renders as a `<figure>` with the quoted title as
+  its caption. **Two or more photos in the same paragraph** (one per line, no blank line
+  between them) render as a grid — three of them as three columns.
+- **Reading time** is derived from the text: English words at 220 per minute plus CJK
+  characters at 400 per minute.
+- **Drafts** never reach the build; a **duplicate slug fails the build** rather than
+  shipping two posts on one URL. A missing header field falls back: `title` to the slug,
+  `summary` to nothing, `tags` to none, `date` to the file name.
+- The list page chrome (title, search label, chips, empty states) is `BLOG` in
+  `src/content/copy.ts`. The Markdown is rendered by `marked` at build time
+  (`src/lib/blog.ts`); the file-name and figure rules are tested in `tests/blog.test.mjs`.
+
 ## Copy
 
-Page chrome lives in `src/content/copy.ts` (`SITE`, `HERO`, `HOW_I_BUILD`, `WORK`),
+Page chrome lives in `src/content/copy.ts` (`SITE`, `HERO`, `HOW_I_BUILD`, `WORK`, `BLOG`),
 contact details in `src/content/links.ts`. Components import from there; never
 hardcode a second copy of a string in a component.

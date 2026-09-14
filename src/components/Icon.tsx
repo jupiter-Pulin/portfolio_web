@@ -67,6 +67,12 @@ const ICONS = {
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
     </g>
   ),
+  search: (
+    <g {...stroke}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </g>
+  ),
   github: (
     <path
       fill="currentColor"
