@@ -7,7 +7,8 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import index from '../src/generated/ask-index.json' with { type: 'json' };
 import { EMAIL, GITHUB, LINKEDIN, X } from '../src/content/links.ts';
-import { PROJECTS } from '../src/content/projects.ts';
+import { GUIDE } from '../src/content/guide.ts';
+import { LOOKING, PROJECTS } from '../src/content/projects.ts';
 import { ANSWER_KEYS } from '../src/lib/askContract.ts';
 import { createAskHandler } from '../src/server/ask/handler.ts';
 import { SYSTEM_PROMPT, buildUserPrompt, normalizeQuestion } from '../src/server/ask/prompt.ts';
@@ -124,6 +125,23 @@ test('buildUserPrompt carries the catalogue, keys, scope, intent, candidates, li
   assert.ok(!priv.includes(secret.repos[0].url));
   assert.ok(!priv.includes(secret.readmeUrl));
   assert.doesNotMatch(section(priv, 'Project catalogue'), /https?:\/\//);
+});
+
+test('routing: site-wide keys take a null scope, and the looking / site-wide material is always sent', () => {
+  // Paid eval at 35976b6: "AI agent work" came back agents/loop, and "what role is he looking for"
+  // in zh/ja drifted to fallback because retrieval missed LOOKING.
+  const p = SYSTEM_PROMPT;
+  assert.match(p, /Site-wide keys — "payments", "agents", "looking", "contact" and "all"/);
+  assert.match(p, /"agents" with scopeId null/);
+  assert.match(p, /that is "looking", never "fallback"/);
+  const user = buildUserPrompt({ question: '他在找什么样的工作？', scopeId: 'loop', candidates: [] });
+  assert.equal(section(user, 'What Pulin is looking for'), LOOKING);
+  const summaries = section(user, 'Site-wide summaries');
+  for (const item of [...GUIDE.fit.items, ...GUIDE.agents.items]) assert.ok(summaries.includes(item.text), item.text);
+  assert.doesNotMatch(summaries, /https?:\/\//);
+  const keys = section(user, 'Answer keys');
+  for (const k of ['payments', 'agents', 'looking', 'contact', 'all']) assert.match(keys, new RegExp(`- ${k}: site-wide \\(scopeId null\\)`), k);
+  for (const k of ['code', 'decision', 'stack', 'status', 'overview']) assert.match(keys, new RegExp(`- ${k}: project key`), k);
 });
 
 test('the language sample travels to the prompt; the question stays the question', async () => {

@@ -1,9 +1,9 @@
 // The prompt /api/ask sends: one fixed system prompt, and a user message built
 // from content. The system prompt is a draft Pulin may replace wholesale; the
 // user message is assembled here so every provider sends the same thing.
-import type { AnswerKey } from "../../content/guide.ts";
+import { GUIDE, type AnswerKey } from "../../content/guide.ts";
 import { EMAIL, GITHUB, LINKEDIN, X } from "../../content/links.ts";
-import { PROJECTS, type Project } from "../../content/projects.ts";
+import { LOOKING, PROJECTS, type Project } from "../../content/projects.ts";
 import { ANSWER_KEYS } from "../../lib/askContract.ts";
 import { stripTags, type Chunk } from "../../lib/askIndex.ts";
 
@@ -14,15 +14,17 @@ Language
 - When a sample mixes languages, its language is the one that carries the sentence structure: "chain-pulse 怎么样" is Chinese, "what does 链上监控 do" is English.
 
 Facts
-- Answer only from the site material in the user message: the project catalogue, the scope project's details, the candidate passages and the public links.
+- Answer only from the site material in the user message: the project catalogue, what Pulin is looking for, the site-wide summaries, the scope project's details, the candidate passages and the public links.
 - If the material does not cover the question, say plainly that the site does not say. Never invent projects, numbers, dates, employers, links or contact details.
 - When you quote a number, link or email address from the material, copy it exactly as written.
 - A private project is described only by its scope note; never offer a repository for it.
 - Never promise to send, book or do anything on Pulin's behalf.
 
 Routing
-- Pick "key" from the answer keys listed in the user message, using their meanings.
-- "scopeId" is the id of the project the answer is about, or null when it is about no single project. Naming a project moves the scope to it; otherwise keep the current scope. For "all", scopeId is null.
+- Pick "key" from the answer keys listed in the user message, using their meanings. The same question asked in any language, or in other words, gets the same key and scopeId.
+- Site-wide keys — "payments", "agents", "looking", "contact" and "all" — are about Pulin or the whole site, so their scopeId is null. That holds even when one project is an example of the topic (a question about his AI agent work is "agents" with scopeId null) and even when a scope is current. Only when the visitor names one project in the question does a site-wide question take that project's id.
+- Project keys — "code", "decision", "stack", "status" and "overview" — take the id of the project the question names; when it names none, keep the current scope, which may be null.
+- Use "fallback" only when nothing in the material relates to the question. The kind of role Pulin wants, relocation and remote work are covered by the "What Pulin is looking for" section: that is "looking", never "fallback".
 - An "Intent" section is a hint from a button the visitor pressed; follow it unless the question clearly asks something else.
 
 Output
@@ -31,17 +33,17 @@ Output
 
 /** What each answer key means, as the model reads it. */
 export const KEY_MEANINGS: Record<AnswerKey, string> = {
-  payments: "the visitor is hiring for payments / fintech backend work; which projects show fit",
-  agents: "AI agent work: the systems that use models",
-  code: "where the source code is (for the scope project, or all public repositories)",
-  looking: "what kind of role Pulin is looking for, relocation, remote",
-  contact: "how to reach Pulin: email and social links",
-  decision: "the hardest design decision in one project",
-  stack: "the technology stack of one project",
-  status: "whether one project is in production / its current status",
-  overview: "an overview of one named project",
-  all: "leave the current project and go back to the whole site",
-  fallback: "the site does not cover this question",
+  payments: "site-wide (scopeId null): the visitor is hiring for payments / fintech / backend work and asks whether Pulin fits; which projects show fit",
+  agents: "site-wide (scopeId null): Pulin's AI agent work as a whole — which systems use models, including this guide",
+  code: "project key: where the source code is — the named or current project's repositories, or all public repositories when there is no project",
+  looking: "site-wide (scopeId null): what kind of job or role Pulin is looking for, the work he wants next, relocation, remote",
+  contact: "site-wide (scopeId null): how to reach Pulin — email, LinkedIn, GitHub, X",
+  decision: "project key: the hardest design decision or trade-off in one project",
+  stack: "project key: the technologies / tech stack one project uses",
+  status: "project key: whether one project is in production, live or in use; its current status",
+  overview: "project key: what one project is — an introduction or summary of it",
+  all: "site-wide (scopeId null): leave the current project and go back to the whole site",
+  fallback: "only when nothing in the site material relates to the question",
 };
 
 /** NFKC and collapsed whitespace; case is kept, so the model reads the visitor's own words. */
@@ -82,12 +84,22 @@ const scopeDetails = (p: Project) =>
     ...(p.statsNote ? [`figures: ${p.stats.map((s) => `${s.l} ${s.v}`).join(", ")} (${p.statsNote})`] : []),
   ].join("\n");
 
+// The site-wide answers are sent every time: retrieval ranks by shared words, so a
+// question in another language can miss them and the model would call it uncovered.
+type SiteItem = { id?: string; lead?: string; text: string };
+const siteLines = (topic: string, items: readonly SiteItem[]) =>
+  items.map((item) => `- ${topic} · ${item.id ?? item.lead}: ${stripTags(item.text)}`);
+const siteWide = () =>
+  [...siteLines("payments fit", GUIDE.fit.items), ...siteLines("AI agent work", GUIDE.agents.items)].join("\n");
+
 /** The user message: site material first, then the language sample, then the question. */
 export function buildUserPrompt(input: PromptInput): string {
   const projects = input.projects ?? PROJECTS;
   const scope = input.scopeId ? projects.find((p) => p.id === input.scopeId) : undefined;
   const sections: [string, string][] = [
     ["Project catalogue", projects.map(catalogueEntry).join("\n")],
+    ["What Pulin is looking for", LOOKING],
+    ["Site-wide summaries", siteWide()],
     ["Answer keys", ANSWER_KEYS.map((k) => `- ${k}: ${KEY_MEANINGS[k]}`).join("\n")],
     ["Current scope", input.scopeId ?? "none"],
     ...(scope ? ([["Scope project details", scopeDetails(scope)]] as [string, string][]) : []),
