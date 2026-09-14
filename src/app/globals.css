@@ -130,13 +130,6 @@ svg {
 .btn-ask:hover {
   background: rgba(245, 196, 81, 0.18);
 }
-/* "Any question?" renders but does nothing until the ask drawer ships. */
-.btn-ask[aria-disabled="true"],
-.btn-ask[aria-disabled="true"]:hover {
-  opacity: 0.55;
-  cursor: not-allowed;
-  background: rgba(245, 196, 81, 0.1);
-}
 .btn.sm {
   padding: 10px 14px;
   font-size: 13.5px;
@@ -211,14 +204,6 @@ svg {
   background: rgba(245, 196, 81, 0.16);
   color: var(--amber);
   border-color: rgba(245, 196, 81, 0.7);
-}
-/* the ask drawer is a later task: the button renders, but does nothing yet */
-.chip[aria-disabled="true"],
-.chip[aria-disabled="true"]:hover {
-  opacity: 0.55;
-  cursor: not-allowed;
-  background: rgba(245, 196, 81, 0.08);
-  border-color: rgba(245, 196, 81, 0.45);
 }
 
 .toast {

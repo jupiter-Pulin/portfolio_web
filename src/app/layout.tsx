@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, JetBrains_Mono, Nunito } from "next/font/google";
 import "./globals.css";
+import { AskProvider } from "@/components/AskDrawer";
 import { ToastProvider } from "@/components/Toast";
 import { HERO, SITE } from "@/content/copy";
 
@@ -42,7 +43,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${display.variable} ${body.variable} ${mono.variable}`}
     >
       <body>
-        <ToastProvider>{children}</ToastProvider>
+        {/* Toast first: the ask drawer's "Copy email" chip raises one. */}
+        <ToastProvider>
+          <AskProvider>{children}</AskProvider>
+        </ToastProvider>
       </body>
     </html>
   );
