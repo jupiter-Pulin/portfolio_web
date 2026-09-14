@@ -429,3 +429,45 @@ test('the route module loads, is a Node route, and refuses without env in produc
     Object.assign(process.env, saved);
   }
 });
+
+test('model output is unwrapped losslessly before the structure check; refusals log their reason', async () => {
+  // Paid eval at 859c153: one reply failed the structure check with no trace of why.
+  const usage = { inputTokens: 10, outputTokens: 10 };
+  const answer = 'Loop Conductor の承認はブランチの先頭に紐づきます。\n```not a fence```';
+  const replies = [
+    ['fenced', '```json\n' + JSON.stringify({ key: 'decision', scopeId: 'loop', answer }) + '\n```', 'loop'],
+    ['prose around', 'Here you go: ' + JSON.stringify({ key: 'decision', scopeId: 'loop', answer }) + ' Hope that helps.', 'loop'],
+    ['scope as name', JSON.stringify({ key: 'decision', scopeId: 'Loop Conductor', answer }), 'loop'],
+    ['scope as id in caps', JSON.stringify({ key: 'decision', scopeId: ' LOOP ', answer }), 'loop'],
+    ['name in lower case', JSON.stringify({ key: 'stack', scopeId: 'amm dex', answer }), 'amm'],
+  ];
+  for (const [name, content, scopeId] of replies) {
+    const { handler, store } = setup({ provider: fakeProvider(() => ({ content, usage })) });
+    const res = await readJson(await post(handler, { question: 'hi', scopeId: null }));
+    assert.equal(res.status, 200, name);
+    assert.deepEqual(res.body, { ok: true, key: name === 'name in lower case' ? 'stack' : 'decision', scopeId, answer }, name);
+    assert.equal(await num(store, day('answered')), 1, name);
+  }
+
+  const refusals = [
+    ['prose only', 'Sure! chain-pulse is…', 'not-json'],
+    ['broken braces', 'answer: {key: stack}', 'not-json'],
+    ['bad key', '{"key":"weather","scopeId":null,"answer":"OK"}', 'bad-key'],
+    ['unknown name', '{"key":"stack","scopeId":"BIBO","answer":"OK"}', 'bad-scope'],
+    ['blank answer', '```json\n{"key":"stack","scopeId":null,"answer":" "}\n```', 'bad-answer'],
+  ];
+  for (const [name, content, reason] of refusals) {
+    const { handler, store, log } = setup({ provider: fakeProvider(() => ({ content, usage })) });
+    const res = await readJson(await post(handler, { question: 'hi', scopeId: null }));
+    assert.equal(res.status, 502, name);
+    assert.deepEqual(res.body, { ok: false, error: 'system' }, name);
+    assert.equal(await num(store, day('error:invalid')), 1, name);
+    assert.deepEqual(log.entries.map((e) => e.level), ['warn'], name);
+    assert.equal(log.entries[0].text, `ask: model output failed the structure check (${reason})`, name);
+  }
+
+  const { handler, store, log } = setup({ provider: fakeProvider(() => ({ content: '{"key":"stack","scopeId":null,"answer":"OK"}', usage: null })) });
+  assert.equal((await post(handler, { question: 'hi', scopeId: null })).status, 502);
+  assert.equal(await num(store, day('error:invalid')), 1);
+  assert.deepEqual(log.entries, [{ level: 'warn', text: 'ask: model response carried no usage' }]);
+});

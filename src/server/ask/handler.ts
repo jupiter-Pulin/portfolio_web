@@ -6,13 +6,13 @@ import type { AnswerKey } from "../../content/guide.ts";
 import {
   isAnswerKey,
   isScopeId,
-  validateModelOutput,
   type AskRequest,
   type AskResponse,
 } from "../../lib/askContract.ts";
 import { hashEmbed, topK, type Chunk } from "../../lib/askIndex.ts";
 import { askEnabled, isConfigError, maxQuestionChars, readConfig, type Env } from "./config.ts";
 import { bump, checkBudget, checkVisitor, clientIp, recordCost, type Metric } from "./limits.ts";
+import { readModelOutput } from "./output.ts";
 import { buildUserPrompt, normalizeQuestion, SYSTEM_PROMPT } from "./prompt.ts";
 import { costUsd, selectProvider, type Provider } from "./providers/index.ts";
 import { selectStore, type Log, type Store } from "./store.ts";
@@ -166,12 +166,18 @@ export function createAskHandler(deps: AskDeps) {
         }
       }
 
-      const output = result.usage ? validateModelOutput(result.content) : null;
-      if (!output) {
-        log.warn("ask: model output failed the structure check");
+      if (!result.usage) {
+        log.warn("ask: model response carried no usage");
         await count("error:invalid").catch(() => {});
         return system(502);
       }
+      const read = readModelOutput(result.content);
+      if (!read.ok) {
+        log.warn(`ask: model output failed the structure check (${read.reason})`);
+        await count("error:invalid").catch(() => {});
+        return system(502);
+      }
+      const output = read.output;
 
       await count("answered").catch(() => {});
       return json(200, {

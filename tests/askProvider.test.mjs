@@ -15,7 +15,8 @@ import { SYSTEM_PROMPT, buildUserPrompt, normalizeQuestion } from '../src/server
 import { costUsd, selectProvider } from '../src/server/ask/providers/index.ts';
 import { readConfig } from '../src/server/ask/config.ts';
 import { createMemoryStore } from '../src/server/ask/store.ts';
-import { detectLang, evaluate } from '../scripts/eval-ask.mjs';
+import { detectLang, evaluate, explain } from '../scripts/eval-ask.mjs';
+import { readModelOutput } from '../src/server/ask/output.ts';
 import { MODEL_BASE, baseEnv, captureLog, completion, fakeFetch, fakeProvider, fixedClock, post } from './fixtures/askHarness.mjs';
 import { privateFixture } from './fixtures/askPrivate.mjs';
 
@@ -47,6 +48,7 @@ test('openai-compatible: one chat-completions POST with the system prompt, key a
   assert.ok(call.init.signal instanceof AbortSignal, 'the deadline signal is passed through');
   assert.equal(call.body.model, 'test-model');
   assert.equal(call.body.temperature, 0);
+  assert.equal(call.body.max_tokens, 700, 'the reply length is capped');
   assert.deepEqual(call.body.response_format, { type: 'json_object' });
   assert.equal(call.body.messages[0].role, 'system');
   assert.equal(call.body.messages[0].content, SYSTEM_PROMPT);
@@ -259,6 +261,39 @@ test('detectLang and evaluate: inconsistent routing and wrong language are repor
   assert.match(cli.stdout, /路由不一致/);
   assert.match(cli.stdout, /costUsd \d/);
   assert.match(cli.stdout, /zh: route \d+\/\d+/);
+});
+
+test('eval-ask: a missing answer reports its reason and the raw reply; token totals are printed', async () => {
+  // Paid eval at 859c153: exit 1 on one structure failure that nobody could explain afterwards.
+  const cases = JSON.parse(read('./fixtures/ask-paraphrases.json'));
+  const raw = '{"key":"decision","scopeId":"Loop","answer":';
+  let n = 0;
+  const report = await evaluate(cases, async () => {
+    n++;
+    if (n === 1) return { kind: 'error', status: 502, reason: 'not-json', raw, costUsd: 0.001, inputTokens: 2000, outputTokens: 5 };
+    return { kind: 'answer', key: 'fallback', scopeId: null, answer: 'x', costUsd: 0.001, inputTokens: 2000, outputTokens: 100 };
+  });
+  assert.deepEqual(report.tokens, { input: 2000 * report.cases, output: 5 + 100 * (report.cases - 1) });
+  const missing = report.failures.filter((f) => f.type === 'no-answer');
+  assert.equal(missing.length, 1);
+  assert.equal(missing[0].status, 502);
+  assert.equal(missing[0].reason, 'not-json');
+  assert.equal(missing[0].raw, raw);
+
+  const usage = { inputTokens: 1, outputTokens: 1 };
+  assert.deepEqual(explain({ content: raw, usage }, 502, readModelOutput), { reason: 'not-json', raw });
+  assert.deepEqual(explain({ content: '{"key":"stack","scopeId":"ghost","answer":"OK"}', usage }, 502, readModelOutput), { reason: 'bad-scope', raw: '{"key":"stack","scopeId":"ghost","answer":"OK"}' });
+  assert.deepEqual(explain({ content: '{"key":"stack","scopeId":null,"answer":""}', usage }, 502, readModelOutput).reason, 'bad-answer');
+  assert.deepEqual(explain({ content: '{"key":"x"}', usage }, 502, readModelOutput).reason, 'bad-key');
+  assert.deepEqual(explain({ content: 'OK', usage: null }, 502, readModelOutput), { reason: 'no-usage', raw: 'OK' });
+  assert.equal(explain({ error: 'ProviderError: model responded 402' }, 502, readModelOutput).reason, 'provider error (ProviderError: model responded 402)');
+  assert.equal(explain(null, 504, readModelOutput).reason, 'deadline');
+
+  const cli = spawnSync(process.execPath, ['scripts/eval-ask.mjs', '--runs', '1', '--ask', 'tests/fixtures/eval-ask-refused.mjs'], { cwd: ROOT, encoding: 'utf8' });
+  assert.notEqual(cli.status, 0, cli.stderr);
+  assert.match(cli.stdout, /FAIL 没有回答 .*"reason":"not-json"/);
+  assert.ok(cli.stdout.includes(JSON.stringify('```json\n{"key":"decision"')), cli.stdout);
+  assert.match(cli.stdout, /tokens input \d+ · output \d+/);
 });
 
 test('.env.example is tracked and complete; README documents the route, scripts and costs', () => {

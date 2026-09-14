@@ -46,7 +46,8 @@ const pct = (p) => (p.total ? `${p.pass}/${p.total} (${Math.round((p.pass / p.to
 /**
  * Run every case `runs` times through `ask` and judge it. `ask` receives
  * { question, scopeId, intent?, langSample? } and resolves to
- * { kind:"answer", key, scopeId, answer, costUsd? } or another kind.
+ * { kind:"answer", key, scopeId, answer, costUsd?, inputTokens?, outputTokens? } or
+ * another kind, optionally with { status, reason, raw } saying why there was no answer.
  */
 export async function evaluate(cases, ask, { runs = 1 } = {}) {
   const all = flattenCases(cases);
@@ -54,6 +55,7 @@ export async function evaluate(cases, ask, { runs = 1 } = {}) {
   const byLang = {};
   const seenRoutes = new Map();
   let costUsd = 0;
+  const tokens = { input: 0, output: 0 };
 
   for (let run = 1; run <= runs; run++) {
     for (const c of all) {
@@ -65,12 +67,24 @@ export async function evaluate(cases, ask, { runs = 1 } = {}) {
       };
       const res = await ask(body);
       costUsd += res?.costUsd ?? 0;
+      tokens.input += res?.inputTokens ?? 0;
+      tokens.output += res?.outputTokens ?? 0;
       const lang = c.expect.lang;
       const stats = (byLang[lang] ??= { route: { pass: 0, total: 0 }, lang: { pass: 0, total: 0 } });
       stats.route.total++;
       stats.lang.total++;
       if (res?.kind !== 'answer') {
-        failures.push({ type: 'no-answer', label: '没有回答', group: c.group, question: c.question, run, kind: res?.kind });
+        failures.push({
+          type: 'no-answer',
+          label: '没有回答',
+          group: c.group,
+          question: c.question,
+          run,
+          kind: res?.kind,
+          ...(res?.status !== undefined ? { status: res.status } : {}),
+          ...(res?.reason !== undefined ? { reason: res.reason } : {}),
+          ...(res?.raw !== undefined ? { raw: res.raw } : {}),
+        });
         continue;
       }
       const route = `${res.key}/${res.scopeId}`;
@@ -86,7 +100,7 @@ export async function evaluate(cases, ask, { runs = 1 } = {}) {
   for (const [group, routes] of seenRoutes) {
     if (routes.size > 1) failures.push({ type: 'route-inconsistent', label: '路由不一致', group, routes: [...routes] });
   }
-  return { ok: failures.length === 0, cases: all.length, runs, costUsd, byLang, failures };
+  return { ok: failures.length === 0, cases: all.length, runs, costUsd, tokens, byLang, failures };
 }
 
 /** The real thing: the /api/ask handler with env config, in-memory counters and a cost meter. */
@@ -94,6 +108,7 @@ async function modelAsk() {
   const { createAskHandler } = await import('../src/server/ask/handler.ts');
   const { readConfig, isConfigError } = await import('../src/server/ask/config.ts');
   const { selectProvider, costUsd } = await import('../src/server/ask/providers/index.ts');
+  const { readModelOutput } = await import('../src/server/ask/output.ts');
   const { createMemoryStore } = await import('../src/server/ask/store.ts');
   const { default: index } = await import('../src/generated/ask-index.json', { with: { type: 'json' } });
   const env = { ...process.env, ASK_VISITOR_DAILY_LIMIT: String(Number.MAX_SAFE_INTEGER) };
@@ -103,23 +118,42 @@ async function modelAsk() {
   const config = readConfig(env);
   if (isConfigError(config)) throw new Error(`missing or invalid env: ${config.names.join(', ')}`);
   const real = selectProvider(config, fetch);
-  let last = 0;
+  // What the model did on the current request, so a refusal can be explained.
+  let last = null;
   const provider = {
     id: real.id,
     async ask(req) {
-      const out = await real.ask(req);
-      last = out.usage ? costUsd(out.usage, config) : 0;
-      return out;
+      try {
+        const out = await real.ask(req);
+        last = { content: out.content, usage: out.usage };
+        return out;
+      } catch (err) {
+        last = { error: err instanceof Error ? `${err.name}: ${err.message}` : String(err) };
+        throw err;
+      }
     },
   };
   const handler = createAskHandler({ env, index, provider, store: createMemoryStore(), log: { info() {}, warn: console.warn, error: console.error } });
   return async (body) => {
-    last = 0;
+    last = null;
     const res = await handler(new Request('http://localhost/api/ask', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }));
     const data = await res.json().catch(() => null);
-    if (res.status === 200 && data?.ok) return { kind: 'answer', key: data.key, scopeId: data.scopeId, answer: data.answer, costUsd: last };
-    return { kind: res.status === 429 ? 'limited' : 'error', status: res.status, costUsd: last };
+    const usage = last?.usage;
+    const metered = usage ? { costUsd: costUsd(usage, config), inputTokens: usage.inputTokens, outputTokens: usage.outputTokens } : { costUsd: 0 };
+    if (res.status === 200 && data?.ok) return { kind: 'answer', key: data.key, scopeId: data.scopeId, answer: data.answer, ...metered };
+    return { kind: res.status === 429 ? 'limited' : 'error', status: res.status, ...explain(last, res.status, readModelOutput), ...metered };
   };
+}
+
+/** Why the handler gave no answer, from what the model returned: a reason and the raw reply. */
+export function explain(last, status, readModelOutput) {
+  if (status === 504) return { reason: 'deadline' };
+  if (!last) return { reason: `no model call (HTTP ${status})` };
+  if (last.error) return { reason: `provider error (${last.error})` };
+  const raw = last.content;
+  if (!last.usage) return { reason: 'no-usage', raw };
+  const read = readModelOutput(raw);
+  return { reason: read.ok ? `unexplained (HTTP ${status})` : read.reason, raw };
 }
 
 function arg(name, fallback) {
@@ -140,6 +174,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       console.log(`${lang}: route ${pct(s.route)} · language ${pct(s.lang)}`);
     }
     for (const f of report.failures) console.log(`FAIL ${f.label} ${JSON.stringify(f)}`);
+    console.log(`tokens input ${report.tokens.input} · output ${report.tokens.output}`);
     console.log(`costUsd ${report.costUsd.toFixed(6)}`);
     process.exitCode = report.ok ? 0 : 1;
   } catch (err) {

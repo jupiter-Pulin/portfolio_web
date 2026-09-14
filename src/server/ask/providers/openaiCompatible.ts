@@ -5,6 +5,9 @@ import { ProviderError, type Provider, type Usage } from "./index.ts";
 
 type FetchFn = typeof fetch;
 
+/** Caps the reply: a few sentences fit easily, and a runaway answer cannot eat the deadline. */
+export const MAX_OUTPUT_TOKENS = 700;
+
 export function createOpenAiCompatible(
   config: Pick<Config, "baseUrl" | "model" | "apiKey">,
   fetch: FetchFn,
@@ -21,6 +24,7 @@ export function createOpenAiCompatible(
           body: JSON.stringify({
             model: config.model,
             temperature: 0,
+            max_tokens: MAX_OUTPUT_TOKENS,
             response_format: { type: "json_object" },
             messages: [
               { role: "system", content: system },

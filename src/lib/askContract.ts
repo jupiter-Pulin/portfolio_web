@@ -44,6 +44,20 @@ export const isAnswerKey = (v: unknown): v is AnswerKey =>
 export const isScopeId = (v: unknown): v is string | null =>
   v === null || (typeof v === "string" && PROJECTS.some((p) => p.id === v));
 
+/** Why a model output failed the structure check. */
+export type ModelOutputProblem = "not-json" | "bad-key" | "bad-scope" | "bad-answer";
+
+/** The first structure rule a parsed model output breaks, or null when it passes. */
+export function modelOutputProblem(value: unknown): ModelOutputProblem | null {
+  if (!value || typeof value !== "object") return "not-json";
+  const o = value as Record<string, unknown>;
+  if (!isAnswerKey(o.key)) return "bad-key";
+  if (!("scopeId" in o) || !isScopeId(o.scopeId)) return "bad-scope";
+  if (typeof o.answer !== "string") return "bad-answer";
+  if (o.answer.trim() === "" || o.answer.length > ASK_MAX_ANSWER_CHARS) return "bad-answer";
+  return null;
+}
+
 /**
  * The structure check on what the model returned — a JSON string or a parsed
  * object. It checks shape only: the words in `answer` are never inspected.
@@ -57,11 +71,7 @@ export function validateModelOutput(raw: unknown): ModelOutput | null {
       return null;
     }
   }
-  if (!value || typeof value !== "object") return null;
-  const o = value as Record<string, unknown>;
-  if (!isAnswerKey(o.key)) return null;
-  if (!("scopeId" in o) || !isScopeId(o.scopeId)) return null;
-  if (typeof o.answer !== "string") return null;
-  if (o.answer.trim() === "" || o.answer.length > ASK_MAX_ANSWER_CHARS) return null;
+  if (modelOutputProblem(value)) return null;
+  const o = value as ModelOutput;
   return { key: o.key, scopeId: o.scopeId, answer: o.answer };
 }
