@@ -1,0 +1,29 @@
+/* header — design/mock/index.html .top */
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: rgba(10, 14, 26, 0.72);
+  border-bottom: 1px solid var(--line);
+}
+.top :global(.wrap) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+}
+.brand {
+  font: 900 23px var(--font-display);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+.brand b {
+  color: var(--cyan);
+}
+.topRight {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
