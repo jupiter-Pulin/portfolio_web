@@ -25,3 +25,9 @@ npm run build
 3. "Any question?" guide drawer: scripted concierge that produces report cards and navigates.
 
 Briefs live in `design/briefs/`.
+
+## Branching
+
+- `main` is protected on GitHub (ruleset `protect-main`): no direct pushes, no force-pushes, no deletion. Every change lands through a pull request. No reviewer is required — the PR is the speed bump, not a review queue.
+- Day-to-day work happens on `dev` and on task branches cut from it. Loop Conductor tasks use `--base-branch dev`.
+- Release = open a PR `dev → main` and merge it, then locally `git checkout main && git pull --ff-only`.
