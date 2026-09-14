@@ -1,6 +1,7 @@
-// Every scripted answer the ask drawer can give, as data. The drawer renders
-// these blocks; it decides nothing about what they say. Keeping the script pure
-// is what lets the whole transcript be asserted without a browser.
+// Every answer block the ask drawer renders, as data. The model writes the answer
+// text; what is clickable next to it (and the fixed copy for when the model is not
+// reached) is built here from content. Keeping this pure is what lets the whole
+// transcript be asserted without a browser.
 //
 // Runtime imports carry the .ts extension so the plain `node --test` suite can
 // load this module the same way the bundler does.
@@ -13,7 +14,7 @@ import {
   scopedHeading,
   type AnswerKey,
 } from "../content/guide.ts";
-import { EMAIL, GITHUB, MAILTO } from "../content/links.ts";
+import { BLOG, EMAIL, GITHUB, LINKEDIN, MAILTO, X } from "../content/links.ts";
 import { LOOKING, PROJECTS, projectById, type Project } from "../content/projects.ts";
 
 /** Pause the guide takes before answering, in ms. */
@@ -30,12 +31,16 @@ export type Run =
   | { t: "fine"; v: string }
   | { t: "br" };
 
-/** The four things a chip in the transcript can do — all of them local. */
+/** What a chip in the transcript can do — all of them local. */
 export type Action =
   | { t: "open"; id: string; label: string }
   | { t: "mail"; href: string; label: string; amber?: true }
   | { t: "copy"; label: string }
-  | { t: "link"; href: string; label: string; amber?: true };
+  | { t: "link"; href: string; label: string; amber?: true }
+  // An in-site page, reached through the router.
+  | { t: "nav"; href: string; label: string }
+  // A placeholder with nowhere to go yet: rendered, never clickable.
+  | { t: "soon"; label: string };
 
 export type Row = { label: string; right: Action | { t: "muted"; text: string } };
 export type ReportItem = { runs: Run[]; action?: Action };
@@ -198,3 +203,80 @@ export function answerBlocks(key: AnswerKey, scopeId: string | null): Block[] {
       return fallbackBlocks();
   }
 }
+
+/** The language of the fixed copy; see copyLang() in askClient.ts. */
+export type CopyLang = "zh" | "en";
+
+/**
+ * Everything clickable in the scripted answer for (key, scope), in order and
+ * without repeats, plus its project picker — and none of its text. This is what
+ * sits under a model-written answer.
+ */
+export function answerActions(
+  key: AnswerKey,
+  scopeId: string | null,
+  projects: readonly Project[] = PROJECTS,
+): Block[] {
+  // A private project has no repository to point at, not even the account home.
+  if (key === "code" && projects.find((p) => p.id === scopeId)?.private) return [];
+  const found: Action[] = [];
+  const picks: Block[] = [];
+  const seen = new Set<string>();
+  const add = (a: Action) => {
+    const id = JSON.stringify(a);
+    if (seen.has(id)) return;
+    seen.add(id);
+    found.push(a);
+  };
+  for (const block of answerBlocks(key, scopeId)) {
+    switch (block.kind) {
+      case "report":
+        block.items.forEach((item) => item.action && add(item.action));
+        block.actions.forEach(add);
+        break;
+      case "rows":
+        block.rows.forEach((row) => row.right.t !== "muted" && add(row.right));
+        break;
+      case "actions":
+        block.actions.forEach(add);
+        break;
+      case "picks":
+        picks.push(block);
+        break;
+    }
+  }
+  return [...(found.length ? [actions(...found)] : []), ...picks];
+}
+
+/** The model's answer as plain paragraphs, then the content-built actions. */
+export const modelAnswerBlocks = (answer: string, key: AnswerKey, scopeId: string | null): Block[] => [
+  ...answer
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .map((line) => para(text(line))),
+  ...answerActions(key, scopeId),
+];
+
+/** Four ways onward when the guide cannot answer: blog (not built yet), LinkedIn, X, the projects. */
+export const entryActions = (lang: CopyLang): Action[] => {
+  const labels = GUIDE.entries[lang];
+  return [
+    BLOG.href ? { t: "link", href: BLOG.href, label: labels.blog } : { t: "soon", label: labels.blog },
+    { t: "link", href: LINKEDIN, label: labels.linkedin },
+    { t: "link", href: X, label: labels.x },
+    { t: "nav", href: "/work", label: labels.work },
+  ];
+};
+
+const withEntries = (lead: string, lang: CopyLang): Block[] => [
+  para(text(lead)),
+  para(text(GUIDE.entries[lang].lead)),
+  actions(...entryActions(lang)),
+];
+
+/** Visitor limit or budget reached. */
+export const limitedBlocks = (lang: CopyLang): Block[] => withEntries(GUIDE.limited[lang], lang);
+/** ASK_ENABLED=false. */
+export const unavailableBlocks = (lang: CopyLang): Block[] => withEntries(GUIDE.unavailable[lang], lang);
+/** Everything else: one line, nothing to click. */
+export const errorBlocks = (lang: CopyLang): Block[] => [para(text(GUIDE.systemError[lang]))];

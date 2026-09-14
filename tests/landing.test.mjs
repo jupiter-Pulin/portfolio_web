@@ -228,3 +228,48 @@ test('/work/<id> names the project; an unknown id is a 404', async () => {
   const missing = await get('/work/nope');
   assert.equal(missing.status, 404);
 });
+
+test('/api/ask is the one dynamic route, and with no env it refuses without leaking', async () => {
+  const { readFileSync, readdirSync, statSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const readJson = (rel) => JSON.parse(readFileSync(join(ROOT, rel), 'utf8'));
+
+  // Route table: every app route is prerendered (○ / ●) except /api/ask (ƒ).
+  const appRoutes = Object.values(readJson('.next/app-path-routes-manifest.json'));
+  const prerender = readJson('.next/prerender-manifest.json');
+  const staticRoutes = Object.keys(prerender.routes);
+  assert.ok(staticRoutes.includes('/') && staticRoutes.includes('/work'), '/ and /work are static');
+  assert.ok(Object.keys(prerender.dynamicRoutes).includes('/work/[id]'), '/work/[id] is generated from params');
+  for (const p of PROJECTS) assert.ok(staticRoutes.includes(`/work/${p.id}`), `/work/${p.id} is prerendered`);
+  const dynamic = appRoutes.filter((r) => !staticRoutes.includes(r) && !(r in prerender.dynamicRoutes));
+  assert.deepEqual(dynamic, ['/api/ask']);
+
+  const res = await fetch(`${base}/api/ask`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ question: 'hi', scopeId: null }),
+  });
+  assert.equal(res.status, 503);
+  assert.deepEqual(await res.json(), { ok: false, error: 'system' });
+
+  // Nothing server-only reaches the browser bundle, and no public env prefix exists.
+  const walk = (dir) =>
+    readdirSync(dir).flatMap((f) => (statSync(join(dir, f)).isDirectory() ? walk(join(dir, f)) : [join(dir, f)]));
+  for (const file of walk(join(ROOT, '.next/static'))) {
+    const text = readFileSync(file, 'utf8');
+    for (const name of ['ASK_MODEL_API_KEY', 'UPSTASH_REDIS_REST_TOKEN']) {
+      assert.ok(!text.includes(name), `${file} mentions ${name}`);
+    }
+  }
+  const publicPrefix = ['NEXT', 'PUBLIC', ''].join('_');
+  const skip = new Set(['node_modules', '.next', '.git']);
+  const repoFiles = (dir) =>
+    readdirSync(dir).flatMap((f) => {
+      if (skip.has(f)) return [];
+      const path = join(dir, f);
+      return statSync(path).isDirectory() ? repoFiles(path) : [path];
+    });
+  for (const file of repoFiles(ROOT)) {
+    assert.ok(!readFileSync(file, 'utf8').includes(publicPrefix), `${file} uses a public env prefix`);
+  }
+});

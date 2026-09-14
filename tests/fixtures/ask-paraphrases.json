@@ -1,0 +1,481 @@
+{
+  "note": "Paid evaluation cases for scripts/eval-ask.mjs. Mixed-language questions take the language of their sentence structure.",
+  "groups": [
+    {
+      "id": "payments",
+      "expect": {
+        "key": "payments",
+        "scopeId": null
+      },
+      "cases": [
+        {
+          "question": "I'm hiring for a payments backend role — is Pulin a fit?",
+          "scopeId": null,
+          "mix": "en",
+          "expect": {
+            "key": "payments",
+            "scopeId": null,
+            "lang": "en"
+          }
+        },
+        {
+          "question": "我在招支付方向的后端工程师，他合适吗？",
+          "scopeId": null,
+          "mix": "zh",
+          "expect": {
+            "key": "payments",
+            "scopeId": null,
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "我们在招 fintech backend，他合适吗？",
+          "scopeId": null,
+          "mix": "mixed",
+          "expect": {
+            "key": "payments",
+            "scopeId": null,
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "Busco un ingeniero backend para pagos, ¿encaja Pulin?",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "payments",
+            "scopeId": null,
+            "lang": "es"
+          }
+        }
+      ]
+    },
+    {
+      "id": "agents",
+      "expect": {
+        "key": "agents",
+        "scopeId": null
+      },
+      "cases": [
+        {
+          "question": "Show me the AI agent work",
+          "scopeId": null,
+          "mix": "en",
+          "expect": {
+            "key": "agents",
+            "scopeId": null,
+            "lang": "en"
+          }
+        },
+        {
+          "question": "给我看看他做的 AI 智能体项目",
+          "scopeId": null,
+          "mix": "mixed",
+          "expect": {
+            "key": "agents",
+            "scopeId": null,
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "他做过哪些智能体相关的工作？",
+          "scopeId": null,
+          "mix": "zh",
+          "expect": {
+            "key": "agents",
+            "scopeId": null,
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "AIエージェントの仕事を見せてください",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "agents",
+            "scopeId": null,
+            "lang": "ja"
+          }
+        }
+      ]
+    },
+    {
+      "id": "code",
+      "expect": {
+        "key": "code",
+        "scopeId": null
+      },
+      "cases": [
+        {
+          "question": "Where is the code?",
+          "scopeId": null,
+          "mix": "en",
+          "expect": {
+            "key": "code",
+            "scopeId": null,
+            "lang": "en"
+          }
+        },
+        {
+          "question": "代码在哪里可以看到？",
+          "scopeId": null,
+          "mix": "zh",
+          "expect": {
+            "key": "code",
+            "scopeId": null,
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "他的 GitHub 代码在哪？",
+          "scopeId": null,
+          "mix": "mixed",
+          "expect": {
+            "key": "code",
+            "scopeId": null,
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "¿Dónde está el código de sus proyectos?",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "code",
+            "scopeId": null,
+            "lang": "es"
+          }
+        }
+      ]
+    },
+    {
+      "id": "looking",
+      "expect": {
+        "key": "looking",
+        "scopeId": null
+      },
+      "cases": [
+        {
+          "question": "What kind of role is Pulin looking for?",
+          "scopeId": null,
+          "mix": "en",
+          "expect": {
+            "key": "looking",
+            "scopeId": null,
+            "lang": "en"
+          }
+        },
+        {
+          "question": "他在找什么样的工作？",
+          "scopeId": null,
+          "mix": "zh",
+          "expect": {
+            "key": "looking",
+            "scopeId": null,
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "他接受 remote 或者 relocation 吗？",
+          "scopeId": null,
+          "mix": "mixed",
+          "expect": {
+            "key": "looking",
+            "scopeId": null,
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "どんな仕事を探していますか？",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "looking",
+            "scopeId": null,
+            "lang": "ja"
+          }
+        }
+      ]
+    },
+    {
+      "id": "contact",
+      "expect": {
+        "key": "contact",
+        "scopeId": null
+      },
+      "cases": [
+        {
+          "question": "How do I reach him?",
+          "scopeId": null,
+          "mix": "en",
+          "expect": {
+            "key": "contact",
+            "scopeId": null,
+            "lang": "en"
+          }
+        },
+        {
+          "question": "怎么联系他？",
+          "scopeId": null,
+          "mix": "zh",
+          "expect": {
+            "key": "contact",
+            "scopeId": null,
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "他的 email 和 LinkedIn 是什么？",
+          "scopeId": null,
+          "mix": "mixed",
+          "expect": {
+            "key": "contact",
+            "scopeId": null,
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "¿Cómo puedo contactar con él?",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "contact",
+            "scopeId": null,
+            "lang": "es"
+          }
+        }
+      ]
+    },
+    {
+      "id": "decision-loop",
+      "expect": {
+        "key": "decision",
+        "scopeId": "loop"
+      },
+      "cases": [
+        {
+          "question": "What was the hardest decision in Loop Conductor?",
+          "scopeId": null,
+          "mix": "en",
+          "expect": {
+            "key": "decision",
+            "scopeId": "loop",
+            "lang": "en"
+          }
+        },
+        {
+          "question": "Loop Conductor 里最难的设计决定是什么？",
+          "scopeId": null,
+          "mix": "mixed",
+          "expect": {
+            "key": "decision",
+            "scopeId": "loop",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "这个流水线项目最难的取舍是什么？",
+          "scopeId": "loop",
+          "mix": "zh",
+          "expect": {
+            "key": "decision",
+            "scopeId": "loop",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "Loop Conductor で一番難しかった設計判断は何ですか？",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "decision",
+            "scopeId": "loop",
+            "lang": "ja"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stack-chain",
+      "expect": {
+        "key": "stack",
+        "scopeId": "chain"
+      },
+      "cases": [
+        {
+          "question": "What is the stack of chain-pulse?",
+          "scopeId": null,
+          "mix": "en",
+          "expect": {
+            "key": "stack",
+            "scopeId": "chain",
+            "lang": "en"
+          }
+        },
+        {
+          "question": "chain-pulse 用了什么技术栈？",
+          "scopeId": null,
+          "mix": "mixed",
+          "expect": {
+            "key": "stack",
+            "scopeId": "chain",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "这个项目用了什么技术？",
+          "scopeId": "chain",
+          "mix": "zh",
+          "expect": {
+            "key": "stack",
+            "scopeId": "chain",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "¿Qué tecnologías usa chain-pulse?",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "stack",
+            "scopeId": "chain",
+            "lang": "es"
+          }
+        }
+      ]
+    },
+    {
+      "id": "status-live",
+      "expect": {
+        "key": "status",
+        "scopeId": "live"
+      },
+      "cases": [
+        {
+          "question": "Is Live Interpreter in production?",
+          "scopeId": null,
+          "mix": "en",
+          "expect": {
+            "key": "status",
+            "scopeId": "live",
+            "lang": "en"
+          }
+        },
+        {
+          "question": "Live Interpreter 现在上线了吗？",
+          "scopeId": null,
+          "mix": "mixed",
+          "expect": {
+            "key": "status",
+            "scopeId": "live",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "这个同传项目现在是什么状态？",
+          "scopeId": "live",
+          "mix": "zh",
+          "expect": {
+            "key": "status",
+            "scopeId": "live",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "Live Interpreter は本番で使われていますか？",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "status",
+            "scopeId": "live",
+            "lang": "ja"
+          }
+        }
+      ]
+    },
+    {
+      "id": "overview-amm",
+      "expect": {
+        "key": "overview",
+        "scopeId": "amm"
+      },
+      "cases": [
+        {
+          "question": "Tell me about the AMM DEX",
+          "scopeId": null,
+          "mix": "en",
+          "expect": {
+            "key": "overview",
+            "scopeId": "amm",
+            "lang": "en"
+          }
+        },
+        {
+          "question": "介绍一下 AMM DEX 这个项目",
+          "scopeId": null,
+          "mix": "mixed",
+          "expect": {
+            "key": "overview",
+            "scopeId": "amm",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "讲讲那个去中心化交易所项目",
+          "scopeId": null,
+          "mix": "zh",
+          "expect": {
+            "key": "overview",
+            "scopeId": "amm",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "Háblame del proyecto AMM DEX",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "overview",
+            "scopeId": "amm",
+            "lang": "es"
+          }
+        }
+      ]
+    }
+  ],
+  "chips": [
+    {
+      "question": "What is the stack?",
+      "intent": "stack",
+      "scopeId": "chain",
+      "langSample": "chain-pulse 用了什么技术",
+      "expect": {
+        "key": "stack",
+        "scopeId": "chain",
+        "lang": "zh"
+      }
+    },
+    {
+      "question": "Where's the code?",
+      "intent": "code",
+      "scopeId": null,
+      "langSample": "他的项目代码在哪里",
+      "expect": {
+        "key": "code",
+        "scopeId": null,
+        "lang": "zh"
+      }
+    },
+    {
+      "question": "Is it in production?",
+      "intent": "status",
+      "scopeId": "live",
+      "langSample": "Live Interpreter はどんなプロジェクトですか",
+      "expect": {
+        "key": "status",
+        "scopeId": "live",
+        "lang": "ja"
+      }
+    }
+  ]
+}

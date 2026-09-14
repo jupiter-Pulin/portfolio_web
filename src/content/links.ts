@@ -14,3 +14,5 @@ export const SOCIALS = [
   { key: 'linkedin', label: 'LinkedIn', href: LINKEDIN, title: 'LinkedIn · Pulin Tang' },
   { key: 'x', label: 'X', href: X, title: 'X' },
 ] as const;
+// The blog is not built yet: a placeholder with no address, rendered as a "coming soon" chip.
+export const BLOG = { href: null, mock: true } as const;

@@ -1,0 +1,301 @@
+// The paid provider, the prompt, target-language passing, the evaluation script
+// and the env / docs contract. Fake fetch and fake providers only.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import index from '../src/generated/ask-index.json' with { type: 'json' };
+import { EMAIL, GITHUB, LINKEDIN, X } from '../src/content/links.ts';
+import { PROJECTS } from '../src/content/projects.ts';
+import { ANSWER_KEYS } from '../src/lib/askContract.ts';
+import { createAskHandler } from '../src/server/ask/handler.ts';
+import { SYSTEM_PROMPT, buildUserPrompt, normalizeQuestion } from '../src/server/ask/prompt.ts';
+import { costUsd, selectProvider } from '../src/server/ask/providers/index.ts';
+import { readConfig } from '../src/server/ask/config.ts';
+import { createMemoryStore } from '../src/server/ask/store.ts';
+import { detectLang, evaluate } from '../scripts/eval-ask.mjs';
+import { MODEL_BASE, baseEnv, captureLog, completion, fakeFetch, fakeProvider, fixedClock, post } from './fixtures/askHarness.mjs';
+import { privateFixture } from './fixtures/askPrivate.mjs';
+
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
+const read = (rel) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8');
+
+/** The body of one "## <title>" section of the user message. */
+const section = (user, title) => {
+  const m = user.match(new RegExp(`(?:^|\\n)## ${title}\\n([\\s\\S]*?)(?=\\n\\n## |$)`));
+  assert.ok(m, `no "${title}" section`);
+  return m[1];
+};
+
+const recording = () =>
+  fakeProvider(() => ({ content: '{"key":"stack","scopeId":"chain","answer":"OK"}', usage: { inputTokens: 1, outputTokens: 1 } }));
+
+const handlerWith = (provider, fetch) =>
+  createAskHandler({ env: baseEnv(), index, store: createMemoryStore(), provider, clock: fixedClock('2026-09-14T12:00:00Z'), log: captureLog(), fetch: fetch ?? fakeFetch() });
+
+test('openai-compatible: one chat-completions POST with the system prompt, key and signal', async () => {
+  const fetch = fakeFetch({ model: () => completion('{"key":"overview","scopeId":"chain","answer":"OK"}', { prompt_tokens: 1200, completion_tokens: 80 }) });
+  const res = await post(handlerWith(null, fetch), { question: 'chain-pulse?', scopeId: null });
+  assert.equal(res.status, 200);
+  assert.equal(fetch.modelCalls.length, 1);
+  const [call] = fetch.modelCalls;
+  assert.equal(call.url, `${MODEL_BASE}/chat/completions`);
+  assert.equal(call.init.method, 'POST');
+  assert.equal(call.init.headers.Authorization, 'Bearer test-api-key');
+  assert.ok(call.init.signal instanceof AbortSignal, 'the deadline signal is passed through');
+  assert.equal(call.body.model, 'test-model');
+  assert.equal(call.body.temperature, 0);
+  assert.deepEqual(call.body.response_format, { type: 'json_object' });
+  assert.equal(call.body.messages[0].role, 'system');
+  assert.equal(call.body.messages[0].content, SYSTEM_PROMPT);
+  assert.equal(call.body.messages[1].role, 'user');
+
+  // The provider on its own: content and usage are read off the response.
+  const config = readConfig(baseEnv());
+  const provider = selectProvider(config, fetch);
+  const out = await provider.ask({ system: 's', user: 'u', signal: new AbortController().signal });
+  assert.deepEqual(out.usage, { inputTokens: 1200, outputTokens: 80 });
+  assert.equal(out.content, '{"key":"overview","scopeId":"chain","answer":"OK"}');
+  assert.equal(costUsd(out.usage, config), (1200 * 1 + 80 * 2) / 1e6);
+  assert.equal(selectProvider({ ...config, provider: 'bogus' }, fetch), null);
+
+  // No usage in the response: a structure failure, not an answer.
+  const store = createMemoryStore();
+  const noUsage = createAskHandler({
+    env: baseEnv(),
+    index,
+    store,
+    clock: fixedClock('2026-09-14T12:00:00Z'),
+    log: captureLog(),
+    fetch: fakeFetch({ model: () => completion('{"key":"overview","scopeId":"chain","answer":"OK"}', null) }),
+  });
+  const bad = await post(noUsage, { question: 'hi', scopeId: null });
+  assert.equal(bad.status, 502);
+  assert.deepEqual(await bad.json(), { ok: false, error: 'system' });
+  assert.equal(await store.get('ask:day:2026-09-14:error:invalid'), '1');
+});
+
+test('the system prompt states the language, facts and output rules — and claims no checking', () => {
+  const p = SYSTEM_PROMPT;
+  assert.match(p, /target language/i);
+  assert.match(p, /Target language sample/);
+  assert.match(p, /not the question you answer/);
+  assert.match(p, /only from the site material/);
+  assert.match(p, /does not cover the question, say plainly that the site does not say/);
+  assert.match(p, /Never invent/);
+  assert.match(p, /copy it exactly as written/);
+  assert.match(p, /number, link or email address/);
+  assert.match(p, /one JSON object and nothing else/);
+  assert.match(p, /"key"/);
+  assert.match(p, /"scopeId"/);
+  assert.match(p, /"answer" is plain text/);
+  assert.match(p, /private project is described only by its scope note/);
+  assert.doesNotMatch(p, /https?:\/\//);
+  assert.doesNotMatch(p, /verified|checked/i);
+  for (const value of Object.values(baseEnv())) if (value.length > 4) assert.ok(!p.includes(value));
+});
+
+test('buildUserPrompt carries the catalogue, keys, scope, intent, candidates, links and question', () => {
+  const candidates = [
+    { id: 'loop:qa.stack:0', text: 'Loop Conductor: Node ≥ 22 with zero runtime dependencies.' },
+    { id: 'site:looking:0', text: 'Backend or full-stack work.' },
+  ];
+  const input = { question: 'Where is the code?', scopeId: 'loop', intent: 'code', langSample: undefined, candidates };
+  const user = buildUserPrompt(input);
+  assert.equal(buildUserPrompt(input), user, 'deterministic');
+  for (const p of PROJECTS) {
+    for (const v of [p.id, p.name, p.short]) assert.ok(user.includes(v), v);
+    for (const r of p.repos) assert.ok(user.includes(r.url), r.url);
+  }
+  const keys = section(user, 'Answer keys');
+  for (const k of ANSWER_KEYS) assert.match(keys, new RegExp(`- ${k}: \\S`), `${k} has a meaning`);
+  assert.equal(ANSWER_KEYS.length, 11);
+  assert.equal(section(user, 'Current scope'), 'loop');
+  assert.equal(section(user, 'Intent'), 'code');
+  for (const c of candidates) assert.ok(section(user, 'Candidate passages').includes(c.text));
+  for (const link of [EMAIL, LINKEDIN, GITHUB, X]) assert.ok(section(user, 'Public links').includes(link), link);
+  assert.equal(section(user, 'Question'), 'Where is the code?');
+  assert.equal(section(user, 'Target language sample'), 'Where is the code?');
+
+  const secret = privateFixture();
+  const priv = buildUserPrompt({ ...input, scopeId: 'secret', projects: [secret] });
+  assert.ok(priv.includes(secret.scope));
+  assert.ok(!priv.includes(secret.repos[0].url));
+  assert.ok(!priv.includes(secret.readmeUrl));
+  assert.doesNotMatch(section(priv, 'Project catalogue'), /https?:\/\//);
+});
+
+test('the language sample travels to the prompt; the question stays the question', async () => {
+  // The handler normalises (NFKC, spaces, lower case) before building the prompt,
+  // so the sections hold the normalised forms of what was sent.
+  const provider = recording();
+  const handler = handlerWith(provider);
+  const body = { question: "What's the stack?", scopeId: 'chain', intent: 'stack', langSample: 'chain-pulse 用了什么技术' };
+  assert.equal((await post(handler, body)).status, 200);
+  const { langSample, ...withoutSample } = body;
+  assert.equal((await post(handler, withoutSample)).status, 200);
+
+  const [withS, withoutS] = provider.calls;
+  assert.equal(section(withS.user, 'Target language sample'), langSample);
+  assert.equal(section(withS.user, 'Question'), normalizeQuestion("What's the stack?"));
+  assert.equal(section(withoutS.user, 'Target language sample'), normalizeQuestion("What's the stack?"));
+  assert.equal(section(withS.user, 'Intent'), 'stack');
+  assert.equal(withS.system, withoutS.system);
+  assert.equal(withS.system, SYSTEM_PROMPT);
+});
+
+test('questions that differ only in form send the same bytes to the model', async () => {
+  assert.equal(normalizeQuestion('  Where   is the CODE? '), normalizeQuestion('where is the code?'));
+  assert.equal(normalizeQuestion('ｃｈａｉｎ－ｐｕｌｓｅ'), 'chain-pulse');
+  for (const [a, b] of [
+    ['  Where   is the CODE? ', 'where is the code?'],
+    ['ｃｈａｉｎ－ｐｕｌｓｅ', 'chain-pulse'],
+  ]) {
+    const provider = recording();
+    const handler = handlerWith(provider);
+    await post(handler, { question: a, scopeId: null });
+    await post(handler, { question: b, scopeId: null });
+    await post(handler, { question: 'stack?', scopeId: null, intent: 'stack', langSample: a });
+    await post(handler, { question: 'stack?', scopeId: null, intent: 'stack', langSample: b });
+    assert.equal(provider.calls.length, 4);
+    assert.equal(provider.calls[0].user, provider.calls[1].user, `${a} ≡ ${b}`);
+    assert.equal(provider.calls[2].user, provider.calls[3].user, `sample ${a} ≡ ${b}`);
+  }
+});
+
+test('the paraphrase fixture covers every family, four projects, four kinds of language and chip cases', () => {
+  const cases = JSON.parse(read('./fixtures/ask-paraphrases.json'));
+  assert.ok(cases.groups.length >= 8);
+  const keys = new Set(cases.groups.map((g) => g.expect.key));
+  for (const k of ['payments', 'agents', 'code', 'looking', 'contact', 'decision', 'stack', 'status']) assert.ok(keys.has(k), k);
+  const scopes = new Set(cases.groups.map((g) => g.expect.scopeId).filter(Boolean));
+  assert.deepEqual([...scopes].sort(), PROJECTS.map((p) => p.id).sort());
+  for (const g of cases.groups) {
+    const mixes = new Set(g.cases.map((c) => c.mix));
+    for (const m of ['en', 'zh', 'mixed', 'other']) assert.ok(mixes.has(m), `${g.id} has ${m}`);
+    assert.ok(g.cases.some((c) => c.mix === 'other' && ['ja', 'es'].includes(c.expect.lang)), `${g.id}: ja or es`);
+    for (const c of g.cases) {
+      assert.deepEqual(Object.keys(c.expect).sort(), ['key', 'lang', 'scopeId']);
+      assert.equal(c.expect.key, g.expect.key);
+      assert.equal(c.expect.scopeId, g.expect.scopeId);
+      assert.equal(c.expect.lang, detectLang(c.question), `${c.question} is labelled with its own language`);
+    }
+  }
+  assert.ok(cases.chips.length >= 3);
+  const zhAfterEnglish = cases.chips.filter((c) => c.expect.lang === 'zh' && detectLang(c.langSample) === 'zh' && detectLang(c.question) === 'en');
+  assert.ok(zhAfterEnglish.length >= 2, 'two Chinese conversations followed by an English chip');
+  for (const c of cases.chips) {
+    assert.ok(ANSWER_KEYS.includes(c.intent));
+    assert.ok(['zh', 'ja'].includes(c.expect.lang));
+    assert.equal(detectLang(c.langSample), c.expect.lang);
+  }
+});
+
+test('detectLang and evaluate: inconsistent routing and wrong language are reported separately', async () => {
+  assert.equal(detectLang('chain-pulse 使用 Node.js 与 GitHub Actions。'), 'zh');
+  assert.equal(detectLang('chain-pulse は毎晩実行されます。'), 'ja');
+  assert.equal(detectLang('El proyecto usa Foundry y los tests están en el repositorio.'), 'es');
+  assert.equal(detectLang('It runs every night and commits STATUS.md.'), 'en');
+
+  const cases = JSON.parse(read('./fixtures/ask-paraphrases.json'));
+  const say = { zh: '这个项目每晚运行。', en: 'It runs every night.', ja: '毎晩実行されます。', es: 'El proyecto se ejecuta cada noche.' };
+  const expectFor = (body) => {
+    const typed = cases.groups.flatMap((g) => g.cases).find((c) => c.question === body.question);
+    return typed ? typed.expect : cases.chips.find((c) => c.question === body.question && c.langSample === body.langSample).expect;
+  };
+
+  const perfect = await evaluate(cases, async (body) => {
+    const e = expectFor(body);
+    return { kind: 'answer', key: e.key, scopeId: e.scopeId, answer: say[e.lang], costUsd: 0.001 };
+  }, { runs: 2 });
+  assert.equal(perfect.ok, true, JSON.stringify(perfect.failures));
+  assert.ok(Math.abs(perfect.costUsd - 0.001 * perfect.cases * 2) < 1e-9);
+  assert.equal(perfect.byLang.zh.route.pass, perfect.byLang.zh.route.total);
+
+  // One paraphrase in the stack group routes elsewhere.
+  const split = await evaluate(cases, async (body) => {
+    const e = expectFor(body);
+    const off = body.question === '这个项目用了什么技术？';
+    return { kind: 'answer', key: off ? 'fallback' : e.key, scopeId: off ? null : e.scopeId, answer: say[e.lang] };
+  });
+  assert.equal(split.ok, false);
+  assert.deepEqual(split.failures.filter((f) => f.type === 'route-inconsistent').map((f) => f.group), ['stack-chain']);
+  assert.equal(split.failures.find((f) => f.type === 'route-inconsistent').label, '路由不一致');
+  assert.ok(!split.failures.some((f) => f.type === 'lang-mismatch'));
+
+  // Right route, but the chip after a Chinese question is answered in English.
+  const english = await evaluate(cases, async (body) => {
+    const e = expectFor(body);
+    return { kind: 'answer', key: e.key, scopeId: e.scopeId, answer: body.langSample ? say.en : say[e.lang] };
+  });
+  assert.equal(english.ok, false);
+  const mismatches = english.failures.filter((f) => f.type === 'lang-mismatch');
+  assert.ok(mismatches.length >= 2);
+  assert.ok(mismatches.every((f) => f.group.startsWith('chip-') && f.label === '语言不符'));
+  assert.ok(!english.failures.some((f) => f.type.startsWith('route')));
+
+  const cli = spawnSync(process.execPath, ['scripts/eval-ask.mjs', '--runs', '1', '--ask', 'tests/fixtures/eval-ask-wrong.mjs'], { cwd: ROOT, encoding: 'utf8' });
+  assert.notEqual(cli.status, 0, cli.stderr);
+  assert.match(cli.stdout, /路由不一致/);
+  assert.match(cli.stdout, /costUsd \d/);
+  assert.match(cli.stdout, /zh: route \d+\/\d+/);
+});
+
+test('.env.example is tracked and complete; README documents the route, scripts and costs', () => {
+  const example = read('../.env.example');
+  const vars = Object.fromEntries(
+    example
+      .split('\n')
+      .filter((l) => /^[A-Z_]+=/.test(l))
+      .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]),
+  );
+  for (const name of [
+    'ASK_ENABLED',
+    'ASK_PROVIDER',
+    'ASK_MODEL_BASE_URL',
+    'ASK_MODEL',
+    'ASK_MODEL_API_KEY',
+    'ASK_PRICE_INPUT_USD_PER_MTOK',
+    'ASK_PRICE_OUTPUT_USD_PER_MTOK',
+    'UPSTASH_REDIS_REST_URL',
+    'UPSTASH_REDIS_REST_TOKEN',
+    'ASK_IP_SALT',
+    'ASK_DAILY_BUDGET_USD',
+    'ASK_MONTHLY_BUDGET_USD',
+    'ASK_VISITOR_DAILY_LIMIT',
+    'ASK_MAX_QUESTION_CHARS',
+    'ASK_SERVER_DEADLINE_MS',
+  ]) {
+    assert.ok(name in vars, name);
+  }
+  assert.ok(!example.includes('ASK_EMBEDDER'));
+  for (const secret of ['ASK_MODEL_API_KEY', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'ASK_IP_SALT']) {
+    assert.equal(vars[secret], '', `${secret} ships empty`);
+  }
+  assert.deepEqual(
+    ['ASK_DAILY_BUDGET_USD', 'ASK_MONTHLY_BUDGET_USD', 'ASK_VISITOR_DAILY_LIMIT', 'ASK_MAX_QUESTION_CHARS'].map((n) => vars[n]),
+    ['2', '20', '10', '100'],
+  );
+
+  assert.match(read('../.gitignore'), /^!\.env\.example$/m);
+  // exit 1 from check-ignore means "not ignored".
+  assert.equal(spawnSync('git', ['check-ignore', '-q', '.env.example'], { cwd: ROOT }).status, 1);
+  assert.ok(execFileSync('git', ['check-ignore', '.env.local'], { cwd: ROOT, encoding: 'utf8' }).includes('.env.local'));
+
+  const readme = read('../README.md');
+  const run = readme.slice(readme.indexOf('## Run'), readme.indexOf('## Branching'));
+  for (const phrase of [
+    '/api/ask',
+    'node scripts/build-ask-index.mjs',
+    'node scripts/eval-ask.mjs',
+    'Upstash may incur additional charges',
+    'Production must configure Upstash',
+    '`ASK_IP_SALT`',
+    'weak per-instance limit',
+    'still called for real and still billed',
+    'Model calls are paid by Pulin and are bounded by daily / monthly budget',
+  ]) {
+    assert.ok(run.includes(phrase), `README Run section: ${phrase}`);
+  }
+});
