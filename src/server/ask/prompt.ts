@@ -44,8 +44,8 @@ export const KEY_MEANINGS: Record<AnswerKey, string> = {
   fallback: "the site does not cover this question",
 };
 
-/** NFKC, collapsed whitespace, lower case: paraphrases that differ only in form send one prompt. */
-export const normalizeQuestion = (s: string): string => s.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
+/** NFKC and collapsed whitespace; case is kept, so the model reads the visitor's own words. */
+export const normalizeQuestion = (s: string): string => s.normalize("NFKC").replace(/\s+/g, " ").trim();
 
 export type PromptInput = {
   question: string;

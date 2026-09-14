@@ -127,8 +127,7 @@ test('buildUserPrompt carries the catalogue, keys, scope, intent, candidates, li
 });
 
 test('the language sample travels to the prompt; the question stays the question', async () => {
-  // The handler normalises (NFKC, spaces, lower case) before building the prompt,
-  // so the sections hold the normalised forms of what was sent.
+  // The handler normalises only width (NFKC) and whitespace, so the sections keep the visitor's case.
   const provider = recording();
   const handler = handlerWith(provider);
   const body = { question: "What's the stack?", scopeId: 'chain', intent: 'stack', langSample: 'chain-pulse 用了什么技术' };
@@ -138,18 +137,20 @@ test('the language sample travels to the prompt; the question stays the question
 
   const [withS, withoutS] = provider.calls;
   assert.equal(section(withS.user, 'Target language sample'), langSample);
-  assert.equal(section(withS.user, 'Question'), normalizeQuestion("What's the stack?"));
-  assert.equal(section(withoutS.user, 'Target language sample'), normalizeQuestion("What's the stack?"));
+  assert.equal(section(withS.user, 'Question'), "What's the stack?");
+  assert.equal(section(withoutS.user, 'Target language sample'), "What's the stack?");
   assert.equal(section(withS.user, 'Intent'), 'stack');
   assert.equal(withS.system, withoutS.system);
   assert.equal(withS.system, SYSTEM_PROMPT);
 });
 
 test('questions that differ only in form send the same bytes to the model', async () => {
-  assert.equal(normalizeQuestion('  Where   is the CODE? '), normalizeQuestion('where is the code?'));
+  // Ruling 2026-09-14 (help gate r9): whitespace and full-width forms fold; case does not.
+  assert.equal(normalizeQuestion('  Where   is the CODE? '), 'Where is the CODE?');
+  assert.notEqual(normalizeQuestion('Where is the CODE?'), normalizeQuestion('where is the code?'));
   assert.equal(normalizeQuestion('ｃｈａｉｎ－ｐｕｌｓｅ'), 'chain-pulse');
   for (const [a, b] of [
-    ['  Where   is the CODE? ', 'where is the code?'],
+    ['  Where   is the CODE? ', 'Where is the CODE?'],
     ['ｃｈａｉｎ－ｐｕｌｓｅ', 'chain-pulse'],
   ]) {
     const provider = recording();
