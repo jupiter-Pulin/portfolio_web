@@ -4,9 +4,13 @@
 export type Stat = { v: string; l: string };
 export type Repo = { label: string; url: string };
 export type Hue = 'cyan' | 'amber' | 'blue' | 'green' | 'violet';
+// Shipping state of a record. Absent means shipped — the four approved entries
+// predate the field and must not be rewritten to say so. See CONTENT.md.
+export type Status = 'shipped' | 'building' | 'archived';
 export type Project = {
   id: string; name: string; hue: Hue; short: string; role: string; stack: string;
   tagline: string; thesis: string; wrong: string; mechanism: string;
+  status?: Status; updated?: string;
   stats: Stat[]; statsNote?: string;
   private?: boolean; scope?: string;
   readmeUrl?: string; readmeNote?: string; repos: Repo[]; readme: string | null;
