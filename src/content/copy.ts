@@ -13,6 +13,24 @@ export const SITE = {
   imageSlot: 'image slot · replace with a product screenshot',
 } as const;
 
+// Chrome for the /work screens, verbatim from the #work overlay in the approved mock.
+export const WORK = {
+  learnMore: 'Learn more →',
+  readmeLink: 'README ↗',
+  privateRepo: 'Private repository',
+  allWork: '← All work',
+  close: 'Close',
+  prev: '← Previous',
+  next: 'Next →',
+  wrong: 'What goes wrong unattended',
+  mechanism: 'The mechanism I built',
+  stackLabel: 'Stack',
+  readmeFile: 'README.md',
+  askProject: 'Any question about this project?',
+  askPending: 'Coming in a later task',
+  openReadme: 'Open README on GitHub ↗',
+} as const;
+
 export const HERO = {
   badge: 'Building at the intersection of fintech × AI',
   headline: 'I build products that turn complex systems into simple experiences.',

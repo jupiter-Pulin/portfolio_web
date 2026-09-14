@@ -172,6 +172,55 @@ svg {
   height: 18px;
 }
 
+/* pill-shaped secondary action, shared by the work gallery and the case pages */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: rgba(17, 26, 46, 0.6);
+  color: var(--text);
+  font: 500 12.5px var(--font-body);
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 1.3;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.chip:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.chip .ic {
+  width: 13px;
+  height: 13px;
+}
+.chip.static,
+.chip.static:hover {
+  cursor: default;
+  color: var(--dim);
+  border-color: var(--line-strong);
+}
+.chip.amber {
+  border-color: rgba(245, 196, 81, 0.45);
+  color: var(--amber);
+  background: rgba(245, 196, 81, 0.08);
+}
+.chip.amber:hover {
+  background: rgba(245, 196, 81, 0.16);
+  color: var(--amber);
+  border-color: rgba(245, 196, 81, 0.7);
+}
+/* the ask drawer is a later task: the button renders, but does nothing yet */
+.chip[aria-disabled="true"],
+.chip[aria-disabled="true"]:hover {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: rgba(245, 196, 81, 0.08);
+  border-color: rgba(245, 196, 81, 0.45);
+}
+
 .toast {
   position: fixed;
   left: 50%;
