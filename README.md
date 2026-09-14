@@ -4,7 +4,6 @@ Pulin Tang's portfolio site. Next.js 16 (App Router, TypeScript, npm, no Tailwin
 
 ## Contract
 
-- `design/mock/index.html` — the approved visual and interaction contract (single-file mock, v0.2, 2026-09-13). Every screen is ported from it section by section; when in doubt, the mock wins.
 - `src/content/` — the only source of copy, links and project data (`copy.ts`, `links.ts`, `projects.ts`). Components import from here and never hardcode a second copy.
 - `tests/content.test.mjs` — red lines on that content (`node --test`, no framework).
 

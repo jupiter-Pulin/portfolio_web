@@ -42,7 +42,7 @@ tried in that order. The build detects it (`src/lib/projectMedia.ts`) and render
 with `next/image`, `alt` = the project name.
 
 - 4:3, suggested 1600×1200 webp. The frame crops with `object-fit: cover`.
-- No file yet → the ported mock diagram renders, captioned "image slot · replace with
+- No file yet → the placeholder diagram renders, captioned "image slot · replace with
   a product screenshot" (`SITE.imageSlot` in `src/content/copy.ts`).
 - Replacing an image is overwriting the file. There is no code change and no import.
 

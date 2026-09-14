@@ -16,7 +16,7 @@ import {
 import { EMAIL, GITHUB, MAILTO } from "../content/links.ts";
 import { LOOKING, PROJECTS, projectById, type Project } from "../content/projects.ts";
 
-/** Pause the guide takes before answering, in ms — the mock's 420. */
+/** Pause the guide takes before answering, in ms. */
 export const TYPING_MS = 420;
 
 /** Reduced motion answers immediately — there is no "guide is typing…" state. */
@@ -69,7 +69,7 @@ const mail = (label: string = GUIDE.mail): Action => ({
 const copy = (): Action => ({ t: "copy", label: GUIDE.copy });
 const link = (href: string, label: string): Action => ({ t: "link", href, label: linkLabel(label) });
 
-/** `<b>Lead</b> — text`, the shape of every report line in the mock. */
+/** `<b>Lead</b> — text`, the shape of every report line. */
 const lead = (leadText: string, body: string): Run[] => [bold(leadText), text(` — ${body}`)];
 
 const reportItems = (items: readonly { id?: string; lead?: string; text: string }[]): ReportItem[] =>

@@ -1,4 +1,4 @@
-// Hero card interactions: the mock's formulas and timings, asserted without a browser.
+// Hero card interactions: formulas and timings, asserted without a browser.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

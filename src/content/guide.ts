@@ -1,4 +1,4 @@
-// Ask-drawer copy, ported verbatim from the #ask drawer in design/mock/index.html.
+// Ask-drawer copy.
 // The drawer is a scripted mock: it navigates, links and quotes, and never sends
 // anything. Every string a visitor can read lives here — components hold none.
 // Figures quoted in prose are the ones projects.ts already carries, with their
@@ -33,7 +33,7 @@ export const GUIDE = {
     "I'm Pulin's site guide. Tell me what you're hiring for or what you want to see, and I'll take you there.",
   greetingFine:
     "In this mock I answer from a fixed script. The live version will use a model with the same site map and the same rules: it navigates, links and quotes; it never sends anything on Pulin's behalf.",
-  // "Scoped to <name>. Pick a question…" — split so the name renders bold, as in the mock.
+  // "Scoped to <name>. Pick a question…" — split so the name renders bold.
   scopedLead: "Scoped to ",
   scopedTail: ". Pick a question below or type your own.",
   reportLabel: "Report",
@@ -94,8 +94,8 @@ export const GUIDE = {
   contact: {
     intro: "Email is the fastest route; the subject line is pre-filled.",
     email: "Email",
-    // Handles read off the links.ts URLs (the mock's LinkedIn slug was an older one);
-    // X has no public handle yet, so the row shows the address links.ts holds.
+    // Handles read off the links.ts URLs; X has no public handle yet, so the row
+    // shows the address links.ts holds.
     rows: [
       { label: "LinkedIn", href: LINKEDIN, text: "pulin-tang" },
       { label: "GitHub", href: GITHUB, text: "jupiter-Pulin" },

@@ -1,4 +1,4 @@
-// Responsive rules from the mock. There is no browser in this suite, so these
+// Responsive rules. There is no browser in this suite, so these
 // assert the stylesheet a browser would apply at each breakpoint, not the layout.
 import test from 'node:test';
 import assert from 'node:assert/strict';

@@ -1,6 +1,4 @@
-/* ask drawer — design/mock/index.html .scrim / .drawer / .ask-head / .msgs /
-   .msg / .chips / .ask-form / .report / .rp-* / .linklist.
-   .chip and .fine are global primitives, so they are reached with :global(). */
+/* ask drawer — .chip and .fine are global primitives, so they are reached with :global(). */
 /* The panel stays in the layout and is hidden by `visibility`, so it can slide
    both ways: a display switch in the same frame would skip the transition, and
    visibility:hidden still keeps the closed drawer out of the tab order and off
@@ -205,7 +203,7 @@
   font-size: 12.5px;
 }
 
-/* a row of chips under a paragraph — the mock's inline margin-top:10px */
+/* a row of chips under a paragraph */
 .actions {
   display: flex;
   flex-wrap: wrap;

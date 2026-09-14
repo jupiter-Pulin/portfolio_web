@@ -1,4 +1,4 @@
-// Page copy, verbatim from the approved mock (design/mock/index.html). Do not paraphrase.
+// Page copy.
 export const SITE = {
   name: 'Pulin Tang',
   wordmark: 'Pulin',
@@ -13,7 +13,7 @@ export const SITE = {
   imageSlot: 'image slot · replace with a product screenshot',
 } as const;
 
-// Chrome for the /work screens, verbatim from the #work overlay in the approved mock.
+// Chrome for the /work screens.
 export const WORK = {
   learnMore: 'Learn more →',
   readmeLink: 'README ↗',

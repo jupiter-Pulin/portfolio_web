@@ -10,7 +10,6 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## This repository (added 2026-09-13)
 
-- Visual + interaction contract: `design/mock/index.html`. Port it section by section; keep its class names and design tokens so screens can be compared side by side.
 - Copy, links and project data live only in `src/content/*.ts`. Never hardcode a second copy in components; if you believe the content is wrong, say so in your log instead of editing it.
 - Every number shown on the site comes from `src/content/projects.ts` and keeps its provenance label (`statsNote`). Do not invent figures.
 - A private project (`private: true`) shows its scope note, never a repository link.

@@ -1,4 +1,4 @@
-// Timing of the terminal checklist in the "How I Build" card (mock: 600ms, then +420ms a line).
+// Timing of the terminal checklist in the "How I Build" card: 600ms, then +420ms a line.
 export const FIRST_LINE_MS = 600;
 export const LINE_STEP_MS = 420;
 

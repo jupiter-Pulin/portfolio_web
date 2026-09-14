@@ -422,7 +422,7 @@ test('the drawer keeps the mock class names and the 450px slide', () => {
   assert.match(css, /\.msg\.guide \{/);
   assert.match(css, /\.msg\.you \{/);
 
-  // Reduced motion: the site-wide reset is what removes the slide, as in the mock,
+  // Reduced motion: the site-wide reset is what removes the slide,
   // so the drawer must not carry a rule that outranks it.
   const globals = read('../src/app/globals.css').replace(/\s+/g, ' ');
   assert.match(

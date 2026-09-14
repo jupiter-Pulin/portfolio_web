@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 
-// Placeholder diagrams, ported verbatim from the `art` object in design/mock/index.html.
+// Placeholder diagrams.
 // They stand in until a real cover lands in public/projects/<id>/ — see CONTENT.md.
 const ART: Record<string, ReactElement> = {
   loop: (

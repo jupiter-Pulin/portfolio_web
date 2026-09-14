@@ -56,7 +56,7 @@ type ChatMsg = {
 };
 
 /**
- * The scripted guide — design/mock/index.html #ask. It renders once, below the
+ * The scripted guide. It renders once, below the
  * page, and holds the whole conversation. Nothing here talks to a model or a
  * server: every answer comes from src/content/guide.ts and src/content/projects.ts.
  */

@@ -1,5 +1,5 @@
 // Pointer-tilt maths for the "How I Build" window card, kept as pure functions
-// so the formulas from design/mock/index.html can be asserted without a browser.
+// so the formulas can be asserted without a browser.
 export const TILT_Y_DEG = 16;
 export const TILT_X_DEG = 12;
 export const PINNED_TRANSFORM = "rotateY(-10deg) rotateX(6deg) scale(1.02)";
@@ -12,7 +12,7 @@ export type Rect = { left: number; top: number; width: number; height: number };
 export type Offset = { px: number; py: number };
 export type PointerState = { reduced: boolean; pinned: boolean; pointerType: string };
 
-/** The mock ignores touch pointers, a pinned card and reduced-motion users. */
+/** Tilt ignores touch pointers, a pinned card and reduced-motion users. */
 export const canTilt = ({ reduced, pinned, pointerType }: PointerState): boolean =>
   !reduced && !pinned && pointerType !== "touch";
 

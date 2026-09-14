@@ -4,7 +4,7 @@ import { useAsk } from "./AskDrawer";
 import { Icon } from "./Icon";
 
 /**
- * Every way into the guide — design/mock [data-ask]. The header opens it with no
+ * Every way into the guide. The header opens it with no
  * scope; a case page opens it scoped to the project whose page it sits on, and
  * keeps `data-scope` so the built page still says which one that is.
  */

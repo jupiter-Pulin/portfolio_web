@@ -1,5 +1,4 @@
-/* the window card — design/mock/index.html .stage / .win
-   (mock's .ship panel is `shipPanel` here, so it does not collide with .tline.ship) */
+/* the window card — the .ship panel is `shipPanel` here, so it does not collide with .tline.ship */
 .stage {
   perspective: 1500px;
   position: relative;

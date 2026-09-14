@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 
-// Paths are the <symbol> bodies from design/mock/index.html, inlined per icon.
+// SVG path data, inlined per icon.
 const stroke = {
   fill: "none",
   stroke: "currentColor",

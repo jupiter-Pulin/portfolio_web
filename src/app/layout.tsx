@@ -5,7 +5,6 @@ import { AskProvider } from "@/components/AskDrawer";
 import { ToastProvider } from "@/components/Toast";
 import { HERO, SITE } from "@/content/copy";
 
-// Three families, same weights and fallback stacks as the approved mock.
 const display = Nunito({
   variable: "--font-display",
   subsets: ["latin"],

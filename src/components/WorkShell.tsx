@@ -4,7 +4,7 @@ import { SITE, WORK } from "@/content/copy";
 import { Icon } from "./Icon";
 import styles from "./WorkShell.module.css";
 
-/** The full-screen dark layer both /work views live in — design/mock .overlay. */
+/** The full-screen dark layer both /work views live in. */
 export function WorkShell({
   subtitle,
   back,
@@ -37,7 +37,7 @@ export function WorkShell({
   );
 }
 
-/** Previous / counter / next, wrapping at both ends — design/mock .ov-foot. */
+/** Previous / counter / next, wrapping at both ends. */
 export function WorkFoot({
   prevHref,
   nextHref,

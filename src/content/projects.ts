@@ -1,4 +1,4 @@
-// Project data, ported verbatim from the approved mock (design/mock/index.html).
+// Project data.
 // Rules: every figure here has a provenance (statsNote marks self-reported ledger numbers);
 // a private project carries a scope note and no repository link; qa.* strings may contain only <em> and <code> tags.
 export type Stat = { v: string; l: string };
