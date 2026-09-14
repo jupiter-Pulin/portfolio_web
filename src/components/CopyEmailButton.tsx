@@ -4,7 +4,14 @@ import { EMAIL } from "@/content/links";
 import { copyToastMessage } from "@/lib/toast";
 import { useToast } from "./Toast";
 
-export function CopyEmailButton({ label }: { label: string }) {
+export function CopyEmailButton({
+  label,
+  // A text link in the page, a chip inside the ask drawer.
+  className = "link-btn",
+}: {
+  label: string;
+  className?: string;
+}) {
   const toast = useToast();
 
   const copy = async () => {
@@ -19,7 +26,7 @@ export function CopyEmailButton({ label }: { label: string }) {
   };
 
   return (
-    <button className="link-btn" type="button" onClick={copy} title={`Copy ${EMAIL}`}>
+    <button className={className} type="button" onClick={copy} title={`Copy ${EMAIL}`}>
       {label}
     </button>
   );

@@ -27,7 +27,6 @@ export const WORK = {
   stackLabel: 'Stack',
   readmeFile: 'README.md',
   askProject: 'Any question about this project?',
-  askPending: 'Coming in a later task',
   openReadme: 'Open README on GitHub ↗',
 } as const;
 

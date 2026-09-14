@@ -4,6 +4,7 @@ import { PROJECTS, type Project } from "@/content/projects";
 import { resolveCover } from "@/lib/projectMedia";
 import { detailEyebrow } from "@/lib/projectMeta";
 import { nextIndex } from "@/lib/workNav";
+import { AskButton } from "./AskButton";
 import { Icon } from "./Icon";
 import { ProjectCover } from "./ProjectCover";
 import { WorkKeys } from "./WorkKeys";
@@ -70,22 +71,10 @@ export function WorkCase({ project: p }: { project: Project }) {
   );
 }
 
-/** Renders only — the ask drawer is a later task, so the button carries its scope and waits. */
-function AskButton({ id }: { id: string }) {
-  return (
-    <button
-      className="chip amber"
-      type="button"
-      aria-disabled="true"
-      aria-haspopup="dialog"
-      title={WORK.askPending}
-      data-scope={id}
-    >
-      <Icon name="spark" className="ic" />
-      {WORK.askProject}
-    </button>
-  );
-}
+/** The guide, opened already scoped to this project. */
+const ProjectAskButton = ({ id }: { id: string }) => (
+  <AskButton className="chip amber" label={WORK.askProject} scopeId={id} />
+);
 
 function Readme({ project: p }: { project: Project }) {
   if (p.private) {
@@ -96,7 +85,7 @@ function Readme({ project: p }: { project: Project }) {
             <Icon name="lock" />
             {WORK.privateRepo}
           </span>
-          <AskButton id={p.id} />
+          <ProjectAskButton id={p.id} />
         </div>
         <div className={`${styles.rmBody} ${styles.plain}`}>
           <p>{p.scope}</p>
@@ -112,7 +101,7 @@ function Readme({ project: p }: { project: Project }) {
           {WORK.readmeFile}
         </span>
         <div className={styles.rmBtns}>
-          <AskButton id={p.id} />
+          <ProjectAskButton id={p.id} />
           <a className="chip" href={p.readmeUrl} target="_blank" rel="noopener">
             {WORK.openReadme}
           </a>
