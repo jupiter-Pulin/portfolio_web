@@ -1,0 +1,106 @@
+/* overview grid — design/mock/index.html .gallery / .gcard / .gimg / .gtext */
+.gallery {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.gcard {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(170px, 42%) 1fr;
+  gap: 18px;
+  align-items: center;
+  text-align: left;
+  background: rgba(17, 26, 46, 0.55);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  transition: border-color 0.15s, transform 0.15s, background 0.15s;
+}
+.gcard:hover {
+  border-color: rgba(125, 227, 245, 0.45);
+  background: rgba(17, 26, 46, 0.85);
+  transform: translateY(-2px);
+}
+.featured {
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(260px, 46%) 1fr;
+  padding: 18px;
+  gap: 30px;
+}
+.gimg {
+  border-radius: 12px;
+}
+.gtext {
+  min-width: 0;
+}
+.gtext h2 {
+  font: 900 24px var(--font-display);
+  margin: 4px 0 6px;
+  letter-spacing: -0.01em;
+}
+.featured .gtext h2 {
+  font-size: 34px;
+}
+.gshort {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+.gtag {
+  margin: 0 0 14px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.badge {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 196, 81, 0.4);
+  color: var(--amber);
+  font: 500 10px var(--font-mono);
+  letter-spacing: 0.08em;
+}
+.gactions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+/* stretched link: the whole card follows "Learn more", without nesting anchors */
+.stretch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+}
+.above {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 1000px) {
+  .gallery {
+    grid-template-columns: 1fr;
+  }
+  .featured {
+    grid-template-columns: minmax(170px, 42%) 1fr;
+    padding: 14px;
+    gap: 18px;
+  }
+  .featured .gtext h2 {
+    font-size: 24px;
+  }
+  .gtag {
+    display: none;
+  }
+}
+@media (max-width: 560px) {
+  .gcard,
+  .featured {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,65 @@
+/* work overlay shell — design/mock/index.html .overlay / .ov-head / .ov-body / .ov-foot */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: rgba(6, 9, 18, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.ovHead {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(10, 14, 26, 0.6);
+}
+.ovTitle {
+  flex: 1;
+  min-width: 0;
+}
+.t {
+  font: 900 22px var(--font-display);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--dim);
+  max-width: 60ch;
+}
+.ovBody {
+  flex: 1;
+  overflow: auto;
+  padding: 30px 28px;
+}
+.ovFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 28px;
+  border-top: 1px solid var(--line);
+  background: rgba(10, 14, 26, 0.6);
+}
+.counter {
+  font: 500 12.5px var(--font-mono);
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 560px) {
+  .ovHead,
+  .ovBody,
+  .ovFoot {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .ovHead {
+    flex-wrap: wrap;
+  }
+}
