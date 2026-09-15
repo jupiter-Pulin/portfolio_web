@@ -130,8 +130,13 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+.pathRun {
+  all: unset;
+  cursor: pointer;
+}
 .linkRun,
-.mailRun {
+.mailRun,
+.pathRun {
   color: var(--amber);
   text-decoration: underline;
   text-decoration-color: rgba(245, 196, 81, 0.4);
@@ -139,8 +144,11 @@
   overflow-wrap: anywhere;
 }
 .linkRun:hover,
-.mailRun:hover {
+.mailRun:hover,
+.pathRun:hover,
+.pathRun:focus-visible {
   text-decoration-color: var(--amber);
+  outline: none;
 }
 .mailRun {
   font: 500 13px var(--font-mono);

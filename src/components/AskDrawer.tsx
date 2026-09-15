@@ -485,6 +485,10 @@ const runNodes = (runs: Run[], go: Go): ReactNode[] =>
           <a key={i} className={styles.mailRun} href={run.href}>
             {run.v}
           </a>
+        ) : run.site ? (
+          <button key={i} type="button" className={styles.pathRun} onClick={() => go.nav(run.href)}>
+            {run.v}
+          </button>
         ) : (
           <a key={i} className={styles.linkRun} href={run.href} target="_blank" rel="noopener">
             {shortAddress(run.v)}

@@ -40,8 +40,8 @@ export type Run =
   | { t: "tech"; v: string }
   // A figure.
   | { t: "num"; v: string }
-  // An address the site lists; `mail` marks the email.
-  | { t: "link"; href: string; v: string; mail?: true };
+  // An address the site lists: `mail` marks the email, `site` a page of this site (reached through the router).
+  | { t: "link"; href: string; v: string; mail?: true; site?: true };
 
 /** What a chip in the transcript can do — all of them local. */
 export type Action =
