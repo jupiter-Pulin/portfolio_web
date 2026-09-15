@@ -9,7 +9,7 @@
       },
       "cases": [
         {
-          "question": "I'm hiring for a payments backend role — is Pulin a fit?",
+          "question": "I'm hiring for a payments backend role — is Nolan a fit?",
           "scopeId": null,
           "mix": "en",
           "expect": {
@@ -39,7 +39,7 @@
           }
         },
         {
-          "question": "Busco un ingeniero backend para pagos, ¿encaja Pulin?",
+          "question": "Busco un ingeniero backend para pagos, ¿encaja Nolan?",
           "scopeId": null,
           "mix": "other",
           "expect": {
@@ -156,7 +156,7 @@
       },
       "cases": [
         {
-          "question": "What kind of role is Pulin looking for?",
+          "question": "What kind of role is Nolan looking for?",
           "scopeId": null,
           "mix": "en",
           "expect": {

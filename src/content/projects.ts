@@ -47,7 +47,7 @@ export const PROJECTS: Project[] = [
         "l": "Total API spend"
       }
     ],
-    "statsNote": "Self-reported from Pulin’s own run ledger; the repository documents the method and the refresh command.",
+    "statsNote": "Self-reported from Nolan’s own run ledger; the repository documents the method and the refresh command.",
     "readmeUrl": "https://github.com/jupiter-Pulin/loop-conductor#readme",
     "repos": [
       {
@@ -59,7 +59,7 @@ export const PROJECTS: Project[] = [
     "qa": {
       "decision": "One model call decides, and it decides only <em>which action</em>. The router sees the recorded facts — never the spec, the diff or the code — and returns one of eight action names. Everything with a side effect (spawning an agent, committing, opening a gate, writing state) is plain deterministic Node. A bad run is therefore either a wrong action name, which is one line in a log, or a kernel bug, which is a failing test — never both at once.",
       "stack": "Node ≥ 22 with zero runtime dependencies. Every agent spawn is a fresh <code>claude -p</code> session with fixed tools; the target repository only ever sees git worktrees and a throwaway merge candidate. <code>state/</code> and <code>dossier/</code> on disk are the source of truth, so the run can be killed at any moment and restarted.",
-      "status": "Open source, solo. 17 tasks run, 10 merged to main, 16/17 one-shot maker pass, $248.67 total API spend — self-reported from Pulin’s own run ledger; the README documents the method. $148.60 of that spend bought zero shipped code, and the current architecture is the response to those failures. Work packages and the plan action are not implemented yet."
+      "status": "Open source, solo. 17 tasks run, 10 merged to main, 16/17 one-shot maker pass, $248.67 total API spend — self-reported from Nolan’s own run ledger; the README documents the method. $148.60 of that spend bought zero shipped code, and the current architecture is the response to those failures. Work packages and the plan action are not implemented yet."
     }
   },
   {

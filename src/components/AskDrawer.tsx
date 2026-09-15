@@ -48,6 +48,8 @@ export type AskApi = {
   msgs: ChatMsg[];
   scopeId: string | null;
   chips: Chip[];
+  /** The home page console's starting points are on offer: nothing asked yet, or a project was just opened. */
+  starters: boolean;
   /** False once the server has said the guide is switched off. */
   available: boolean;
   onChip: (chip: Chip) => void;
@@ -68,6 +70,7 @@ const AskContext = createContext<AskApi>({
   msgs: [],
   scopeId: null,
   chips: [],
+  starters: true,
   available: true,
   onChip: noop,
   onPick: noop,
@@ -94,6 +97,7 @@ export function AskProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [scopeId, setScopeId] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<ChatMsg[]>([]);
+  const [starters, setStarters] = useState(true);
   const [available, setAvailable] = useState(true);
   // Refs, not state: the callbacks below read them without being rebuilt.
   const scope = useRef<string | null>(null);
@@ -116,9 +120,10 @@ export function AskProvider({ children }: { children: ReactNode }) {
     setScopeId(next);
   }, []);
 
-  /** The visitor's line and the typing placeholder go up before the request leaves. */
+  /** The visitor's line and the typing placeholder go up before the request leaves; the starting points step aside. */
   const begin = useCallback((echo: string) => {
     busy.current = true;
+    setStarters(false);
     setMsgs((prev) => pendingMsgs(prev, echo));
   }, []);
 
@@ -136,6 +141,8 @@ export function AskProvider({ children }: { children: ReactNode }) {
 
   const openAsk = useCallback(
     (nextScope?: string) => {
+      // A project opened from the page starts over: its questions are offered again.
+      if (nextScope !== undefined) setStarters(true);
       // On the home page the conversation is already on screen: go there.
       if (inline.current) {
         if (nextScope !== undefined) setScope(nextScope);
@@ -239,6 +246,7 @@ export function AskProvider({ children }: { children: ReactNode }) {
       msgs,
       scopeId,
       chips,
+      starters,
       available,
       onChip,
       onPick,
@@ -248,7 +256,7 @@ export function AskProvider({ children }: { children: ReactNode }) {
       navigate,
       registerInline,
     }),
-    [isOpen, openAsk, closeAsk, msgs, scopeId, chips, available, onChip, onPick, onAsk, startScope, openProject, navigate, registerInline],
+    [isOpen, openAsk, closeAsk, msgs, scopeId, chips, starters, available, onChip, onPick, onAsk, startScope, openProject, navigate, registerInline],
   );
 
   return (

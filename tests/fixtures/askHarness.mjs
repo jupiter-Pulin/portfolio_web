@@ -56,8 +56,11 @@ export function fakeUpstash({ fail = null } = {}) {
 }
 
 /** A chat-completions response in the OpenAI shape. */
-export const completion = (content, usage = { prompt_tokens: 100, completion_tokens: 50 }) =>
-  Response.json({ choices: [{ message: { role: 'assistant', content } }], ...(usage ? { usage } : {}) });
+export const completion = (content, usage = { prompt_tokens: 100, completion_tokens: 50 }, finish) =>
+  Response.json({
+    choices: [{ message: { role: 'assistant', content }, ...(finish ? { finish_reason: finish } : {}) }],
+    ...(usage ? { usage } : {}),
+  });
 
 /**
  * One fetch for both hosts. `model` answers model calls (default: a valid

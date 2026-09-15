@@ -4,6 +4,8 @@ summary: Loop began as a fixed graph of nodes. As models got better the graph be
 tags: [agents, workflow]
 ---
 
+![Don't constrain the path, constrain the outcome. Before: a robot on fixed rails past Analyze, Spec, Implement, Test, Review, Fix and Merge. Now: Router, Spec Agent, Maker and Reviewer inside guardrails, on the way to a delivery gate of tests passed, review valid, safety checks and merge approved.](constrain-the-outcome.webp)
+
 When we first built Loop, we split the process into many nodes: analysis, decomposition, implementation, Review, and we tried to design the failure branches upfront. That was fine at the time. The models were limited, so the engineering process had to prescribe a path for them. Otherwise, things could easily spin out of control.
 
 Later, as models got much better at reasoning, tool use, and context understanding, we started to feel that too many nodes were holding them back. Pre-orchestration has one problem: you have to guess upfront how the task will unfold. But software development rarely follows your guesses. An Agent might find a gap in the Spec while implementing, or after Review decide it should add tests first rather than change the code right away. If every next step is baked into the flowchart, it has to follow the original path even when it sees a better one.

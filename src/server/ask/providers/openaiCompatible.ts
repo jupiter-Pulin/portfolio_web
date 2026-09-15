@@ -26,6 +26,9 @@ export function createOpenAiCompatible(
             temperature: 0,
             max_tokens: MAX_OUTPUT_TOKENS,
             response_format: { type: "json_object" },
+            // DeepSeek V4 thinks by default: the reasoning counts against max_tokens and ignores
+            // temperature, so a question that takes thought ran out before the JSON was written.
+            thinking: { type: "disabled" },
             messages: [
               { role: "system", content: system },
               { role: "user", content: user },
@@ -41,7 +44,7 @@ export function createOpenAiCompatible(
       // Any non-2xx — an outage, a bad key, an exhausted balance — is a provider error.
       if (!res.ok) throw new ProviderError(`model responded ${res.status}`);
       let body: {
-        choices?: { message?: { content?: unknown } }[];
+        choices?: { message?: { content?: unknown }; finish_reason?: unknown }[];
         usage?: { prompt_tokens?: unknown; completion_tokens?: unknown };
       };
       try {
@@ -50,11 +53,16 @@ export function createOpenAiCompatible(
         throw new ProviderError("model response was not JSON");
       }
       const content = body?.choices?.[0]?.message?.content;
+      const finish = body?.choices?.[0]?.finish_reason;
       const input = body?.usage?.prompt_tokens;
       const output = body?.usage?.completion_tokens;
       const usage: Usage | null =
         typeof input === "number" && typeof output === "number" ? { inputTokens: input, outputTokens: output } : null;
-      return { content: typeof content === "string" ? content : "", usage };
+      return {
+        content: typeof content === "string" ? content : "",
+        usage,
+        ...(typeof finish === "string" ? { finishReason: finish } : {}),
+      };
     },
   };
 }
