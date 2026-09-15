@@ -1,8 +1,13 @@
 /* the guide, in place on the home page — .chip, .btn and .fine are global primitives */
+/* a chat window of fixed height: the bubble, composer and rules hold still and only the
+   thread scrolls, so the page never grows and the identity card beside it stays in view.
+   100svh less the 68px header and the hero's 44px + 30px padding fills one screen. */
 .console {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   gap: 14px;
   min-width: 0;
+  height: clamp(520px, calc(100svh - 142px), 760px);
 }
 .bubble {
   position: relative;
@@ -103,6 +108,16 @@
   transform: translateY(-16px);
 }
 .thread {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-right: 4px;
+}
+.lines {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -206,6 +221,10 @@
   }
   .bubble::before {
     display: none;
+  }
+  /* stacked under the card: the window fits one screen below the header */
+  .console {
+    height: clamp(460px, calc(100svh - 96px), 680px);
   }
 }
 @media (max-width: 640px) {
