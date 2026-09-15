@@ -14,8 +14,10 @@ import {
   scopedHeading,
   type AnswerKey,
 } from "../content/guide.ts";
+import BLOG_POSTS from "../generated/ask-blog.json" with { type: "json" };
 import { BLOG, EMAIL, GITHUB, LINKEDIN, MAILTO, X } from "../content/links.ts";
 import { LOOKING, PROJECTS, projectById, type Project } from "../content/projects.ts";
+import type { AskBlogEntry } from "./askIndex.ts";
 
 /** Pause the guide takes before answering, in ms. */
 export const TYPING_MS = 420;
@@ -246,14 +248,42 @@ export function answerActions(
   return [...(found.length ? [actions(...found)] : []), ...picks];
 }
 
-/** The model's answer as plain paragraphs, then the content-built actions. */
-export const modelAnswerBlocks = (answer: string, key: AnswerKey, scopeId: string | null): Block[] => [
-  ...answer
-    .split("\n")
-    .filter((line) => line.trim() !== "")
-    .map((line) => para(text(line))),
-  ...answerActions(key, scopeId),
-];
+/** A chip for each listed post the answer links to, in order of first mention; unknown slugs are ignored. */
+function postActions(answer: string, posts: readonly AskBlogEntry[]): Action[] {
+  const found = new Map<string, Action>();
+  for (const [, slug] of answer.matchAll(/\/blog\/([a-z0-9-]+)/g)) {
+    const post = posts.find((p) => p.slug === slug);
+    if (post && !found.has(slug)) found.set(slug, { t: "nav", href: `/blog/${slug}`, label: post.title });
+  }
+  return [...found.values()];
+}
+
+/**
+ * The model's answer as plain paragraphs, then the content-built actions. Posts
+ * the answer links to join the end of that actions block, ahead of any picker.
+ */
+export const modelAnswerBlocks = (
+  answer: string,
+  key: AnswerKey,
+  scopeId: string | null,
+  posts: readonly AskBlogEntry[] = BLOG_POSTS,
+): Block[] => {
+  const onward = answerActions(key, scopeId);
+  const links = postActions(answer, posts);
+  if (links.length) {
+    // answerActions puts its one actions block, if any, before the picks.
+    const first = onward[0];
+    if (first?.kind === "actions") onward[0] = actions(...first.actions, ...links);
+    else onward.unshift(actions(...links));
+  }
+  return [
+    ...answer
+      .split("\n")
+      .filter((line) => line.trim() !== "")
+      .map((line) => para(text(line))),
+    ...onward,
+  ];
+};
 
 /** Four ways onward when the guide cannot answer: the blog, LinkedIn, X, the projects. */
 export const entryActions = (lang: CopyLang): Action[] => {

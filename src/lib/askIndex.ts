@@ -2,6 +2,7 @@
 // feature-hashed vector. No embedding API and no vector store — the vectors are
 // a pure function of the text, so scripts/build-ask-index.mjs is deterministic
 // and the committed JSON can be regenerated and compared in a test.
+import { Marked, type Token, type Tokens } from "marked";
 import type { Project } from "../content/projects.ts";
 
 export type Chunk = {
@@ -13,10 +14,16 @@ export type Chunk = {
 };
 
 type GuideItem = { id?: string; lead?: string; text: string };
+/** One published post as the index reads it: the raw Markdown body, not the rendered page. */
+export type AskBlogPost = { slug: string; title: string; body: string };
+/** One line of src/generated/ask-blog.json, the post list the guide always sees. */
+export type AskBlogEntry = { slug: string; title: string; tags: string[]; href: string };
 export type Corpus = {
   projects: readonly Project[];
   looking: string;
   guide: { fit: { items: readonly GuideItem[] }; agents: { items: readonly GuideItem[] } };
+  /** Published posts in list order; their chunks come after everything else. */
+  posts?: readonly AskBlogPost[];
 };
 
 export const EMBED_DIM = 512;
@@ -64,6 +71,109 @@ function readmeExcerpts(readme: string): string[] {
   return out;
 }
 
+/** Markup tags in raw HTML; a <br> keeps its line break. */
+const htmlText = (s: string): string => s.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]*>/g, "");
+
+function inlineText(tokens: readonly Token[]): string {
+  return tokens
+    .map((t) => {
+      switch (t.type) {
+        case "image":
+          return "";
+        case "br":
+          return "\n";
+        case "html":
+          return htmlText(t.text);
+        default:
+          // Links keep their words and drop the address; emphasis keeps its words.
+          return "tokens" in t && t.tokens ? inlineText(t.tokens) : "text" in t ? String(t.text) : "";
+      }
+    })
+    .join("");
+}
+
+function blockText(tokens: readonly Token[]): string {
+  return tokens
+    .map((t): string => {
+      switch (t.type) {
+        case "space":
+        case "hr":
+        case "def":
+          return "";
+        case "code":
+          return t.text;
+        case "html":
+          return htmlText(t.text);
+        case "blockquote":
+          return blockText(t.tokens ?? []);
+        case "list":
+          return (t as Tokens.List).items.map((item) => blockText(item.tokens)).join("\n");
+        case "table": {
+          const table = t as Tokens.Table;
+          return [table.header, ...table.rows]
+            .map((cells) => cells.map((c) => inlineText(c.tokens)).join(" | "))
+            .join("\n");
+        }
+        default:
+          return "tokens" in t && t.tokens ? inlineText(t.tokens) : "text" in t ? String(t.text) : "";
+      }
+    })
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+/**
+ * A post's Markdown as the words a reader sees: no markup, no images (alt text
+ * included), no link addresses. Numbers and code stay exactly as written.
+ */
+export const markdownText = (body: string): string => blockText(new Marked({ gfm: true }).lexer(body));
+
+/** Longest post excerpt per chunk, in characters, before the title prefix. */
+const BLOG_CHUNK = 480;
+const SENTENCE_END = /[。！？；!?;]/;
+
+/** Where to cut `s` so the head is at most `max` long: a sentence end, else a space, else anywhere. */
+function cutAt(s: string, max: number): number {
+  const floor = Math.floor(max / 2);
+  for (let i = max; i > floor; i--) {
+    if (SENTENCE_END.test(s[i - 1]) || (s[i - 1] === "." && /\s/.test(s[i]))) return i;
+  }
+  for (let i = max; i > floor; i--) if (/\s/.test(s[i])) return i;
+  // Never split a surrogate pair.
+  return /[\uD800-\uDBFF]/.test(s[max - 1]) ? max - 1 : max;
+}
+
+/** Cleaned post text cut at paragraph breaks, long paragraphs at sentences, into excerpts ≤ BLOG_CHUNK. */
+function blogExcerpts(text: string): string[] {
+  const paras = text
+    .split(/\n\s*\n/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .flatMap((para) => {
+      const pieces: string[] = [];
+      let rest = para;
+      while (rest.length > BLOG_CHUNK) {
+        const i = cutAt(rest, BLOG_CHUNK);
+        pieces.push(rest.slice(0, i).trim());
+        rest = rest.slice(i).trim();
+      }
+      if (rest) pieces.push(rest);
+      return pieces;
+    });
+  const out: string[] = [];
+  let cur = "";
+  for (const para of paras) {
+    if (cur && cur.length + para.length + 1 > BLOG_CHUNK) {
+      out.push(cur);
+      cur = "";
+    }
+    cur = cur ? `${cur}\n${para}` : para;
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+
 /** Every chunk the guide can retrieve, in a fixed order, each with its hashEmbed vector. */
 export function chunkCorpus(corpus: Corpus): Chunk[] {
   const chunks: Chunk[] = [];
@@ -85,6 +195,13 @@ export function chunkCorpus(corpus: Corpus): Chunk[] {
   push(null, "looking", 0, corpus.looking);
   corpus.guide.fit.items.forEach((item, i) => push(item.id ?? null, "fit", i, guideText(item)));
   corpus.guide.agents.items.forEach((item, i) => push(item.id ?? null, "agents", i, guideText(item)));
+  // Posts are the author's own words: no tag stripping, so every character survives.
+  for (const post of corpus.posts ?? []) {
+    blogExcerpts(markdownText(post.body)).forEach((excerpt, n) => {
+      const text = `${post.title}: ${excerpt}`;
+      chunks.push({ id: `blog:${post.slug}:${n}`, projectId: null, field: "blog", text, vector: hashEmbed(text) });
+    });
+  }
   return chunks;
 }
 
