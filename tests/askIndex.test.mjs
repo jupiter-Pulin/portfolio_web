@@ -8,13 +8,16 @@ import { fileURLToPath } from 'node:url';
 import { GUIDE } from '../src/content/guide.ts';
 import { LOOKING, PROJECTS, projectById } from '../src/content/projects.ts';
 import { validateModelOutput } from '../src/lib/askContract.ts';
-import { EMBED_DIM, chunkCorpus, cosine, hashEmbed, stripTags, topK } from '../src/lib/askIndex.ts';
-import { serializeIndex } from '../scripts/build-ask-index.mjs';
+import { EMBED_DIM, chunkCorpus, cosine, hashEmbed, markdownText, stripTags, topK } from '../src/lib/askIndex.ts';
+import { listPosts } from '../src/lib/blog.ts';
+import { buildBlogCatalogue, buildIndex, serializeIndex } from '../scripts/build-ask-index.mjs';
 import { privateFixture } from './fixtures/askPrivate.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const INDEX = fileURLToPath(new URL('../src/generated/ask-index.json', import.meta.url));
+const CATALOGUE = fileURLToPath(new URL('../src/generated/ask-blog.json', import.meta.url));
 const committed = () => JSON.parse(readFileSync(INDEX, 'utf8'));
+const STALE = 'is stale: run node scripts/build-ask-index.mjs';
 
 const FIELDS = ['short', 'role', 'stack', 'tagline', 'thesis', 'wrong', 'mechanism', 'qa.decision', 'qa.stack', 'qa.status'];
 
@@ -57,21 +60,138 @@ test('the index has a chunk for every project field, readme, LOOKING and guide i
   assert.ok(PROJECTS.some((p) => /<(em|code)>/.test(p.qa.decision)), 'the content really carries tags');
 });
 
-test('the committed index is exactly what the script builds, byte for byte', () => {
-  const regenerated = chunkCorpus({ projects: PROJECTS, looking: LOOKING, guide: GUIDE }).map((c) => ({
-    ...c,
-    vector: hashEmbed(c.text),
-  }));
-  assert.deepEqual(committed(), regenerated, 'src/generated/ask-index.json is stale: run node scripts/build-ask-index.mjs');
-  assert.equal(readFileSync(INDEX, 'utf8'), serializeIndex(regenerated));
+test('the committed index and post list are exactly what the script builds, byte for byte', () => {
+  const regenerated = buildIndex().map((c) => ({ ...c, vector: hashEmbed(c.text) }));
+  assert.deepEqual(committed(), regenerated, `src/generated/ask-index.json ${STALE}`);
+  assert.equal(readFileSync(INDEX, 'utf8'), serializeIndex(regenerated), `src/generated/ask-index.json ${STALE}`);
+  const catalogue = buildBlogCatalogue();
+  assert.equal(readFileSync(CATALOGUE, 'utf8'), serializeIndex(catalogue), `src/generated/ask-blog.json ${STALE}`);
 
-  // Two runs of the script leave the file unchanged.
-  const before = readFileSync(INDEX, 'utf8');
+  // Two runs of the script leave both files unchanged.
+  const before = [readFileSync(INDEX, 'utf8'), readFileSync(CATALOGUE, 'utf8')];
   execFileSync(process.execPath, ['scripts/build-ask-index.mjs'], { cwd: ROOT, stdio: 'ignore' });
-  const once = readFileSync(INDEX, 'utf8');
+  const once = [readFileSync(INDEX, 'utf8'), readFileSync(CATALOGUE, 'utf8')];
   execFileSync(process.execPath, ['scripts/build-ask-index.mjs'], { cwd: ROOT, stdio: 'ignore' });
-  assert.equal(readFileSync(INDEX, 'utf8'), once);
-  assert.equal(once, before);
+  assert.deepEqual([readFileSync(INDEX, 'utf8'), readFileSync(CATALOGUE, 'utf8')], once);
+  assert.deepEqual(once, before);
+});
+
+const REAL_SLUGS = ['fewer-nodes-in-the-agent-workflow', 'lp-range-over-apr'];
+const blogChunks = (index, slug) => index.filter((c) => c.id.startsWith(`blog:${slug}:`));
+const EMPTY_GUIDE = { fit: { items: [] }, agents: { items: [] } };
+const fixtureChunks = (post) =>
+  chunkCorpus({ projects: [], looking: '', guide: EMPTY_GUIDE, posts: [post] }).filter((c) => c.field === 'blog');
+const withoutPrefix = (title, c) => {
+  assert.ok(c.text.startsWith(`${title}: `), c.id);
+  return c.text.slice(title.length + 2);
+};
+
+test('every published post is chunked into the index after all other chunks', () => {
+  const index = committed();
+  for (const slug of REAL_SLUGS) {
+    const mine = blogChunks(index, slug);
+    assert.ok(mine.length >= 1, `${slug} has a blog chunk`);
+    mine.forEach((c, n) => {
+      assert.equal(c.id, `blog:${slug}:${n}`);
+      assert.match(c.id, new RegExp(`^blog:${slug}:\\d+$`));
+      assert.equal(c.field, 'blog');
+      assert.equal(c.projectId, null);
+      assert.equal(Object.keys(c).length, 5);
+      assert.equal(c.vector.length, EMBED_DIM);
+    });
+  }
+
+  const rest = index.filter((c) => c.field !== 'blog');
+  assert.deepEqual(rest, chunkCorpus({ projects: PROJECTS, looking: LOOKING, guide: GUIDE }));
+  const lastOther = index.findLastIndex((c) => c.field !== 'blog');
+  const firstBlog = index.findIndex((c) => c.field === 'blog');
+  assert.ok(firstBlog > lastOther, 'blog chunks come last');
+  assert.deepEqual(
+    [...new Set(index.filter((c) => c.field === 'blog').map((c) => c.id.split(':')[1]))],
+    listPosts({ root: ROOT }).map((p) => p.slug),
+    'posts in list order',
+  );
+});
+
+test('a post is chunked as plain words: no markup, images or link addresses', () => {
+  const body = [
+    '# 标题',
+    '',
+    'Some **粗体** and _斜体_ with `inlineCode42` and a [链接文字](https://example.com/x).<br>After the break.',
+    '',
+    '![alt](photo.webp)',
+    '',
+    '```ts',
+    'const fenced = 7;',
+    '```',
+    '',
+    '| 列一 | 列二 |',
+    '|---|---|',
+    '| 单元格甲 | 单元格乙 |',
+  ].join('\n');
+  const chunks = fixtureChunks({ slug: 'fixture', title: 'Fixture', body });
+  assert.ok(chunks.length >= 1);
+  const text = chunks.map((c) => withoutPrefix('Fixture', c)).join('\n');
+  for (const gone of ['![', '](', '**', '```', '<br>', 'https://example.com/x', 'photo.webp', '|---', 'alt']) {
+    assert.ok(!text.includes(gone), `no ${gone}: ${text}`);
+  }
+  assert.doesNotMatch(text, /^#/m);
+  for (const kept of ['标题', '粗体', '斜体', '链接文字', 'inlineCode42', 'const fenced = 7;', '列一', '列二', '单元格甲', '单元格乙']) {
+    assert.ok(text.includes(kept), `keeps ${kept}`);
+  }
+});
+
+test('a long paragraph is cut into excerpts of at most 480 characters that lose nothing', () => {
+  const sentence = '做市商在区间内持续低买高卖，手续费是承担库存风险的补偿，价格离开区间后头寸就不再赚取手续费。';
+  const body = sentence.repeat(Math.ceil(1300 / sentence.length));
+  assert.ok(!body.includes('\n'));
+  const cleaned = markdownText(body);
+  assert.ok(cleaned.length > 1200);
+  const chunks = fixtureChunks({ slug: 'long', title: '长文', body });
+  assert.ok(chunks.length >= 3, `${chunks.length} chunks`);
+  const parts = chunks.map((c) => withoutPrefix('长文', c));
+  for (const part of parts) assert.ok(part.length <= 480, `${part.length} characters`);
+  assert.equal(parts.join('').replace(/\s/g, ''), cleaned.replace(/\s/g, ''));
+});
+
+test("the LP post's numbers survive chunking exactly as the author wrote them", () => {
+  const raw = readFileSync(fileURLToPath(new URL('../src/content/blog/2026-09-14-lp-range-over-apr.md', import.meta.url)), 'utf8');
+  const body = raw.replace(/^---\n[\s\S]*?\n---\n/, '').replace(/\]\([^)]*\)/g, ']');
+  const numbers = body.match(/\d+(?:[.,]\d+)*%?/g);
+  for (const n of ['3,000', '2,800', '3,200', '2,000', '5,000', '0.05', '100%', '30%']) assert.ok(numbers.includes(n), n);
+  const title = listPosts({ root: ROOT }).find((p) => p.slug === 'lp-range-over-apr').title;
+  const text = blogChunks(committed(), 'lp-range-over-apr')
+    .map((c) => withoutPrefix(title, c))
+    .join('\n');
+  for (const n of numbers) assert.ok(text.includes(n), n);
+});
+
+test('drafts and non-post files stay out of the post list and the index; duplicate slugs fail', () => {
+  const root = fileURLToPath(new URL('./fixtures/blog', import.meta.url));
+  const catalogue = buildBlogCatalogue({ root });
+  const index = buildIndex({ root });
+  const slugs = listPosts({ root }).map((p) => p.slug);
+  assert.deepEqual(catalogue.map((e) => e.slug), slugs);
+  for (const e of catalogue) {
+    assert.deepEqual(Object.keys(e), ['slug', 'title', 'tags', 'href']);
+    assert.equal(e.href, `/blog/${e.slug}`);
+  }
+  const blogIds = new Set(index.filter((c) => c.field === 'blog').map((c) => c.id.split(':')[1]));
+  assert.deepEqual([...blogIds].sort(), [...slugs].sort(), 'every published fixture post is chunked');
+  // Project chunks come from src/content whatever the root; only the blog part depends on it.
+  const everything =
+    JSON.stringify(catalogue) +
+    index
+      .filter((c) => c.field === 'blog')
+      .map((c) => `${c.id} ${c.text}`)
+      .join('\n');
+  for (const hidden of ['hidden', 'Not yet', 'Still writing', 'README', 'not a post', 'notes', 'scratch']) {
+    assert.ok(!everything.includes(hidden), hidden);
+  }
+
+  const dup = fileURLToPath(new URL('./fixtures/blog-dup', import.meta.url));
+  assert.throws(() => buildBlogCatalogue({ root: dup }), /Duplicate blog slug/);
+  assert.throws(() => buildIndex({ root: dup }), /Duplicate blog slug/);
 });
 
 test('a private project contributes its scope note and never an address', () => {
@@ -126,6 +246,12 @@ test('retrieval over the committed index finds the project a term belongs to', (
     ['BlackHole', 'live'],
   ]) {
     assert.equal(topK(index, hashEmbed(query), 1)[0].projectId, projectId, query);
+  }
+  for (const [query, slug] of [
+    ['deleted nodes agent workflow Router Maker Reviewer', 'fewer-nodes-in-the-agent-workflow'],
+    ['LP range APR liquidity', 'lp-range-over-apr'],
+  ]) {
+    assert.ok(topK(index, hashEmbed(query), 6).some((c) => c.id.startsWith(`blog:${slug}:`)), query);
   }
 });
 
