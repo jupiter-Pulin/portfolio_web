@@ -9,6 +9,7 @@ export type Route = { key: AnswerKey; scopeId: string | null; scopeChanged: bool
 /** Project id ↔ the words a visitor uses for it. */
 const NAMED: [string, RegExp][] = [
   ["loop", /loop|conductor/],
+  ["guide", /portfolio|guide/],
   ["live", /interpret|meeting|zoom|translat/],
   ["amm", /amm|dex|swap|uniswap|solidity/],
 ];

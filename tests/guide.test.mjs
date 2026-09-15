@@ -64,6 +64,7 @@ const report = (blocks) => blocks.find((b) => b.kind === 'report');
 test('naming a project switches the scope and answers with its overview', () => {
   for (const [text, id] of [
     ['tell me about Loop Conductor', 'loop'],
+    ['what is the portfolio guide?', 'guide'],
     ['does the loop thing work?', 'loop'],
     ['the zoom translation one', 'live'],
     ['how does the interpreter handle silence', 'live'],
@@ -216,7 +217,7 @@ test('the code answer links the repos of every public project', () => {
     rows.map((r) => [r.label, r.right.label ?? r.right.text]),
     expected,
   );
-  assert.equal(rows.filter((r) => r.right.t === 'link').length, 4, 'amm carries two repos');
+  assert.equal(rows.filter((r) => r.right.t === 'link').length, 5, 'amm carries two repos');
   for (const row of rows.filter((r) => r.right.t === 'link')) {
     assert.ok(row.right.href.startsWith('https://github.com/'), row.right.href);
   }

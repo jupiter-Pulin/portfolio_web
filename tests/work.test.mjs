@@ -1,5 +1,5 @@
 // The /work screens, asserted against the build artifacts. `next build` prerenders
-// the overview and the three case pages to HTML, so no server and no browser is needed.
+// the overview and the four case pages to HTML, so no server and no browser is needed.
 // One project's cover is set aside for an extra build so both halves of the image
 // slot — a real image, and the placeholder — are covered by the same test run.
 import test, { after, before } from 'node:test';
@@ -120,7 +120,7 @@ test('the build prerenders the overview and one static page per project', () => 
   }
 });
 
-test('the gallery shows the three projects in registry order, featured first', () => {
+test('the gallery shows the four projects in registry order, featured first', () => {
   const cards = cardsOf(pages.gallery);
   assert.equal(cards.length, PROJECTS.length);
   assert.ok(textOf(pages.gallery).includes(SITE.workTitle), 'work title');
@@ -263,12 +263,12 @@ test('the case pages walk in a loop and offer both ways out', () => {
     assert.equal(tags.length, 2, `${id} has previous and next`);
     return { prev: tags[0], next: tags[1] };
   };
-  // loop is first: previous wraps to amm (last), next is live.
+  // loop is first: previous wraps to amm (last), next is guide.
   assert.match(nav('loop').prev, /href="\/work\/amm"/);
-  assert.match(nav('loop').next, /href="\/work\/live"/);
+  assert.match(nav('loop').next, /href="\/work\/guide"/);
   // amm is last: next wraps back to loop.
   assert.match(nav('amm').next, /href="\/work\/loop"/);
-  assert.ok(textOf(pages.amm).includes(`${total} / ${total}`), 'amm is the last of three');
+  assert.ok(textOf(pages.amm).includes(`${total} / ${total}`), 'amm is the last of four');
 
   PROJECTS.forEach((p, i) => {
     assert.ok(textOf(pages[p.id]).includes(`${p.name} · ${i + 1} of ${total}`), `${p.id} subtitle`);

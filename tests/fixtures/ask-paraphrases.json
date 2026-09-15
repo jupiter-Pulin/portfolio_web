@@ -441,6 +441,55 @@
           }
         }
       ]
+    },
+    {
+      "id": "overview-guide",
+      "expect": {
+        "key": "overview",
+        "scopeId": "guide"
+      },
+      "cases": [
+        {
+          "question": "What is the Portfolio Guide?",
+          "scopeId": null,
+          "mix": "en",
+          "expect": {
+            "key": "overview",
+            "scopeId": "guide",
+            "lang": "en"
+          }
+        },
+        {
+          "question": "介绍一下 Portfolio Guide 这个项目",
+          "scopeId": null,
+          "mix": "mixed",
+          "expect": {
+            "key": "overview",
+            "scopeId": "guide",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "这个网站本身的问答是怎么做的？",
+          "scopeId": null,
+          "mix": "zh",
+          "expect": {
+            "key": "overview",
+            "scopeId": "guide",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "¿Qué es el proyecto Portfolio Guide?",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "overview",
+            "scopeId": "guide",
+            "lang": "es"
+          }
+        }
+      ]
     }
   ],
   "chips": [

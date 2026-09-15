@@ -12,12 +12,12 @@ import { PROJECTS } from '../src/content/projects.ts';
 
 test('previous and next wrap at both ends', () => {
   const total = PROJECTS.length;
-  assert.equal(total, 3);
+  assert.equal(total, 4);
   assert.equal(nextIndex(0, 1, total), 1);
-  assert.equal(nextIndex(1, 1, total), 2);
+  assert.equal(nextIndex(2, 1, total), 3);
   // loop (first) goes back to amm (last); amm goes forward to loop.
-  assert.equal(nextIndex(0, -1, total), 2);
-  assert.equal(nextIndex(2, 1, total), 0);
+  assert.equal(nextIndex(0, -1, total), 3);
+  assert.equal(nextIndex(3, 1, total), 0);
   assert.equal(PROJECTS[nextIndex(0, -1, total)].id, 'amm');
   assert.equal(PROJECTS[nextIndex(total - 1, 1, total)].id, 'loop');
   assert.equal(nextIndex(0, -1, 1), 0);
