@@ -4,17 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { GUIDE } from "@/content/guide";
 import { PROJECTS, projectById } from "@/content/projects";
-import { hasAsked, isPending } from "@/lib/askClient";
+import { atThreadEnd, followThread, hasAsked, isPending } from "@/lib/askClient";
 import { ASK_CLIENT_TIMEOUT_MS } from "@/lib/askContract";
 import { Bubble, useAsk } from "./AskDrawer";
 import { Icon } from "./Icon";
 import styles from "./GuideConsole.module.css";
 
 /**
- * The guide on the home page: its greeting as the headline, the conversation
- * growing in place beneath it, quick questions and the projects as starting
- * points until something is asked, and the composer. State and requests live in
- * AskProvider; this only renders.
+ * The guide on the home page, a fixed-height chat window: its greeting as the
+ * headline, the conversation scrolling inside the window beneath it, quick
+ * questions and the projects as starting points until something is asked, and
+ * the composer. State and requests live in AskProvider; this only renders.
  */
 export function GuideConsole() {
   const ask = useAsk();
@@ -35,11 +35,16 @@ export function GuideConsole() {
     return () => registerInline(null);
   }, [registerInline]);
 
-  // The newest line stays in view as the thread grows.
+  // The thread follows its newest line only while the reader is at its end, or has just asked;
+  // only the thread scrolls, never the page, so the identity card stays where it is.
   const lines = ask.msgs.length;
+  const atEnd = useRef(true);
+  const shown = useRef(ask.msgs);
   useEffect(() => {
-    if (lines > 0) thread.current?.lastElementChild?.scrollIntoView({ block: "nearest" });
-  }, [lines]);
+    const el = thread.current;
+    if (el && followThread(atEnd.current, shown.current, ask.msgs)) el.scrollTop = el.scrollHeight;
+    shown.current = ask.msgs;
+  }, [ask.msgs]);
 
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -75,53 +80,61 @@ export function GuideConsole() {
         </div>
       </div>
 
-      {lines > 0 ? (
-        <div className={styles.thread} ref={thread} aria-live="polite">
-          {ask.msgs.map((m) => (
-            <Bubble key={m.key} msg={m} go={go} onPick={ask.onPick} />
-          ))}
-        </div>
-      ) : null}
-
-      {ask.starters ? (
-        <>
-          <div className={styles.quick}>
-            <span className={styles.label}>
-              {scope ? `${GUIDE.hero.scopedLabel} ${scope.name}` : GUIDE.hero.quickLabel}
-            </span>
-            {ask.chips.map((chip) => (
-              <button
-                className="chip"
-                type="button"
-                key={chip.key + chip.label}
-                onClick={(e) => {
-                  ask.onChip(chip);
-                  // A chip pressed from the keyboard is about to leave the page: the composer takes the focus.
-                  if (e.detail === 0) input.current?.focus({ preventScroll: true });
-                }}
-              >
-                {chip.label}
-              </button>
+      <div
+        className={styles.thread}
+        ref={thread}
+        onScroll={(e) => {
+          atEnd.current = atThreadEnd(e.currentTarget);
+        }}
+      >
+        {lines > 0 ? (
+          <div className={styles.lines} aria-live="polite">
+            {ask.msgs.map((m) => (
+              <Bubble key={m.key} msg={m} go={go} onPick={ask.onPick} />
             ))}
           </div>
+        ) : null}
 
-          <div className={styles.quick}>
-            <span className={styles.label}>{GUIDE.hero.startLabel}</span>
-            {PROJECTS.map((p) => (
-              <button
-                className="chip"
-                type="button"
-                key={p.id}
-                aria-pressed={ask.scopeId === p.id}
-                onClick={() => ask.startScope(p.id)}
-              >
-                <i className={`${styles.dot} ${styles[p.hue]}`} />
-                {p.name}
-              </button>
-            ))}
-          </div>
-        </>
-      ) : null}
+        {ask.starters ? (
+          <>
+            <div className={styles.quick}>
+              <span className={styles.label}>
+                {scope ? `${GUIDE.hero.scopedLabel} ${scope.name}` : GUIDE.hero.quickLabel}
+              </span>
+              {ask.chips.map((chip) => (
+                <button
+                  className="chip"
+                  type="button"
+                  key={chip.key + chip.label}
+                  onClick={(e) => {
+                    ask.onChip(chip);
+                    // A chip pressed from the keyboard is about to leave the page: the composer takes the focus.
+                    if (e.detail === 0) input.current?.focus({ preventScroll: true });
+                  }}
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.quick}>
+              <span className={styles.label}>{GUIDE.hero.startLabel}</span>
+              {PROJECTS.map((p) => (
+                <button
+                  className="chip"
+                  type="button"
+                  key={p.id}
+                  aria-pressed={ask.scopeId === p.id}
+                  onClick={() => ask.startScope(p.id)}
+                >
+                  <i className={`${styles.dot} ${styles[p.hue]}`} />
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : null}
+      </div>
 
       <form className={styles.composer} onSubmit={submit}>
         <Icon name="spark" className={styles.spark} />
