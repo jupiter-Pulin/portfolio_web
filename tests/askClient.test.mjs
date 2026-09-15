@@ -298,5 +298,6 @@ test('the guide copy no longer calls itself a mock, and claims no checking', () 
 
 test('no new runtime dependency', () => {
   const pkg = JSON.parse(read('../package.json'));
-  assert.deepEqual(pkg.dependencies, { next: '16.3.5', react: '19.2.8', 'react-dom': '19.2.8' });
+  // `marked` belongs to the blog (Markdown → HTML at build time); its reason is recorded in README.md.
+  assert.deepEqual(pkg.dependencies, { marked: '^18.0.13', next: '16.3.5', react: '19.2.8', 'react-dom': '19.2.8' });
 });
