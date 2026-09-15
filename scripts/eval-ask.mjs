@@ -90,11 +90,12 @@ export async function evaluate(cases, ask, { runs = 1 } = {}) {
       const route = `${res.key}/${res.scopeId}`;
       if (!seenRoutes.has(c.group)) seenRoutes.set(c.group, new Set());
       seenRoutes.get(c.group).add(route);
+      // A failed answer is still an answer: the report carries its text so a reader can judge it.
       if (res.key === c.expect.key && res.scopeId === c.expect.scopeId) stats.route.pass++;
-      else failures.push({ type: 'route-wrong', label: '路由错误', group: c.group, question: c.question, run, got: route, want: `${c.expect.key}/${c.expect.scopeId}` });
+      else failures.push({ type: 'route-wrong', label: '路由错误', group: c.group, question: c.question, run, got: route, want: `${c.expect.key}/${c.expect.scopeId}`, answer: res.answer });
       const got = detectLang(res.answer);
       if (got === lang) stats.lang.pass++;
-      else failures.push({ type: 'lang-mismatch', label: '语言不符', group: c.group, question: c.question, run, got, want: lang });
+      else failures.push({ type: 'lang-mismatch', label: '语言不符', group: c.group, question: c.question, run, got, want: lang, answer: res.answer });
     }
   }
   for (const [group, routes] of seenRoutes) {

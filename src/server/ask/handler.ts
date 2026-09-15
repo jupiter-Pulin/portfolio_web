@@ -174,7 +174,11 @@ export function createAskHandler(deps: AskDeps) {
       }
       const read = readModelOutput(result.content);
       if (!read.ok) {
-        log.warn(`ask: model output failed the structure check (${read.reason})`);
+        // How the reply ended tells a cut-off answer from a malformed one without logging its text.
+        const finish = result.finishReason ? ` · finish_reason=${result.finishReason}` : "";
+        log.warn(
+          `ask: model output failed the structure check (${read.reason})${finish} · ${result.usage.outputTokens} output tokens`,
+        );
         await count("error:invalid").catch(() => {});
         return system(502);
       }

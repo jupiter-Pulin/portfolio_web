@@ -474,7 +474,18 @@ test('model output is unwrapped losslessly before the structure check; refusals 
     assert.deepEqual(res.body, { ok: false, error: 'system' }, name);
     assert.equal(await num(store, day('error:invalid')), 1, name);
     assert.deepEqual(log.entries.map((e) => e.level), ['warn'], name);
-    assert.equal(log.entries[0].text, `ask: model output failed the structure check (${reason})`, name);
+    assert.equal(log.entries[0].text, `ask: model output failed the structure check (${reason}) · 10 output tokens`, name);
+  }
+
+  // Home console, 2026-09-15: a reply cut off at the output cap read as not-json, and the log could not say so.
+  {
+    const cut = { content: '{"key": "looking", "', usage: { inputTokens: 2591, outputTokens: 700 }, finishReason: 'length' };
+    const { handler, log } = setup({ provider: fakeProvider(() => cut) });
+    assert.equal((await post(handler, { question: 'hi', scopeId: null })).status, 502);
+    assert.deepEqual(log.entries, [
+      { level: 'warn', text: 'ask: model output failed the structure check (not-json) · finish_reason=length · 700 output tokens' },
+    ]);
+    assert.ok(!log.entries[0].text.includes(cut.content), 'the reply itself is never logged');
   }
 
   const { handler, store, log } = setup({ provider: fakeProvider(() => ({ content: '{"key":"stack","scopeId":null,"answer":"OK"}', usage: null })) });

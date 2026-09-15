@@ -50,6 +50,8 @@ test('openai-compatible: one chat-completions POST with the system prompt, key a
   assert.equal(call.body.temperature, 0);
   assert.equal(call.body.max_tokens, 700, 'the reply length is capped');
   assert.deepEqual(call.body.response_format, { type: 'json_object' });
+  // Thinking on, a question that took thought spent all 700 tokens reasoning and returned no JSON.
+  assert.deepEqual(call.body.thinking, { type: 'disabled' }, 'the model answers without thinking first');
   assert.equal(call.body.messages[0].role, 'system');
   assert.equal(call.body.messages[0].content, SYSTEM_PROMPT);
   assert.equal(call.body.messages[1].role, 'user');
@@ -60,7 +62,10 @@ test('openai-compatible: one chat-completions POST with the system prompt, key a
   const out = await provider.ask({ system: 's', user: 'u', signal: new AbortController().signal });
   assert.deepEqual(out.usage, { inputTokens: 1200, outputTokens: 80 });
   assert.equal(out.content, '{"key":"overview","scopeId":"chain","answer":"OK"}');
+  assert.equal(out.finishReason, undefined, 'no finish_reason in the response, none is made up');
   assert.equal(costUsd(out.usage, config), (1200 * 1 + 80 * 2) / 1e6);
+  const cut = await selectProvider(config, fakeFetch({ model: () => completion('{"key": "looking", "', { prompt_tokens: 2591, completion_tokens: 700 }, 'length') })).ask({ system: 's', user: 'u', signal: new AbortController().signal });
+  assert.equal(cut.finishReason, 'length', 'why the model stopped is read off the response');
   assert.equal(selectProvider({ ...config, provider: 'bogus' }, fetch), null);
 
   // No usage in the response: a structure failure, not an answer.
@@ -84,6 +89,8 @@ test('the system prompt states the language, facts and output rules — and clai
   assert.match(p, /target language/i);
   assert.match(p, /Target language sample/);
   assert.match(p, /not the question you answer/);
+  // Thinking off, "他的 email 和 LinkedIn 是什么？" came back as "Email: …\nLinkedIn: …" with no Chinese at all.
+  assert.match(p, /even when the answer is mostly addresses or links: introduce them in a sentence in the target language/);
   assert.match(p, /only from the site material/);
   assert.match(p, /does not cover the question, say plainly that the site does not say/);
   assert.match(p, /Never invent/);
@@ -243,6 +250,7 @@ test('detectLang and evaluate: inconsistent routing and wrong language are repor
   assert.equal(split.ok, false);
   assert.deepEqual(split.failures.filter((f) => f.type === 'route-inconsistent').map((f) => f.group), ['stack-chain']);
   assert.equal(split.failures.find((f) => f.type === 'route-inconsistent').label, '路由不一致');
+  assert.equal(split.failures.find((f) => f.type === 'route-wrong').answer, say.zh, 'the misrouted answer is in the report');
   assert.ok(!split.failures.some((f) => f.type === 'lang-mismatch'));
 
   // Right route, but the chip after a Chinese question is answered in English.
@@ -254,11 +262,14 @@ test('detectLang and evaluate: inconsistent routing and wrong language are repor
   const mismatches = english.failures.filter((f) => f.type === 'lang-mismatch');
   assert.ok(mismatches.length >= 2);
   assert.ok(mismatches.every((f) => f.group.startsWith('chip-') && f.label === '语言不符'));
+  // The eval flagged a language once and could not show what the model wrote; now the text is in the report.
+  assert.ok(mismatches.every((f) => f.answer === say.en), 'each mismatch carries the answer it judged');
   assert.ok(!english.failures.some((f) => f.type.startsWith('route')));
 
   const cli = spawnSync(process.execPath, ['scripts/eval-ask.mjs', '--runs', '1', '--ask', 'tests/fixtures/eval-ask-wrong.mjs'], { cwd: ROOT, encoding: 'utf8' });
   assert.notEqual(cli.status, 0, cli.stderr);
   assert.match(cli.stdout, /路由不一致/);
+  assert.match(cli.stdout, /FAIL 语言不符 .*"answer":"It runs every night\."/, 'the printed report shows the answer text');
   assert.match(cli.stdout, /costUsd \d/);
   assert.match(cli.stdout, /zh: route \d+\/\d+/);
 });

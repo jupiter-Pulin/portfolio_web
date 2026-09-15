@@ -7,8 +7,15 @@ export type Usage = { inputTokens: number; outputTokens: number };
 
 export type Provider = {
   id: string;
-  /** `usage` is null when the provider's response did not report it. */
-  ask(req: { system: string; user: string; signal: AbortSignal }): Promise<{ content: string; usage: Usage | null }>;
+  /**
+   * `usage` is null when the provider's response did not report it. `finishReason` is why the
+   * model stopped, when it says ("length": the reply was cut off at the output cap).
+   */
+  ask(req: { system: string; user: string; signal: AbortSignal }): Promise<{
+    content: string;
+    usage: Usage | null;
+    finishReason?: string;
+  }>;
 };
 
 export class ProviderError extends Error {
