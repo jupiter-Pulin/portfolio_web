@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, JetBrains_Mono, Nunito } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { AskProvider } from "@/components/AskDrawer";
 import { ToastProvider } from "@/components/Toast";
@@ -46,6 +47,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ToastProvider>
           <AskProvider>{children}</AskProvider>
         </ToastProvider>
+        {/* Vercel Web Analytics: page views only, no cookies. Vercel serves the script
+            itself, so this adds no dependency; outside Vercel the request simply 404s. */}
+        <Script id="vercel-analytics-queue" strategy="afterInteractive">
+          {"window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };"}
+        </Script>
+        <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />
       </body>
     </html>
   );
