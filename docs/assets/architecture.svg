@@ -1,0 +1,228 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#97a5bc"/>
+    </marker>
+    <marker id="arrc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#7de3f5"/>
+    </marker>
+    <marker id="arra" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#f5c451"/>
+    </marker>
+    <style>
+      .h1{font-size:30px;font-weight:800;fill:#e8eef7}
+      .sub{font-size:15px;fill:#97a5bc}
+      .col{font-size:12px;font-weight:800;fill:#7de3f5;letter-spacing:.18em}
+      .colm{font-size:12px;fill:#5f6e88;font-family:'SF Mono',Menlo,Consolas,monospace}
+      .t{font-size:15px;font-weight:700;fill:#e8eef7}
+      .d{font-size:12.5px;fill:#97a5bc}
+      .m{font-size:12px;fill:#97a5bc;font-family:'SF Mono',Menlo,Consolas,monospace}
+      .mc{font-size:12px;fill:#7de3f5;font-family:'SF Mono',Menlo,Consolas,monospace}
+      .ma{font-size:12px;fill:#f5c451;font-family:'SF Mono',Menlo,Consolas,monospace}
+      .mg{font-size:12px;fill:#34d399;font-family:'SF Mono',Menlo,Consolas,monospace}
+      .step{font-size:11px;font-weight:800;fill:#06121c}
+      .box{fill:#111a2e;stroke:rgba(148,163,184,.3);stroke-width:1.2}
+      .boxc{fill:#111a2e;stroke:#7de3f5;stroke-width:1.4}
+      .boxa{fill:#111a2e;stroke:#f5c451;stroke-width:1.4}
+      .boxg{fill:#111a2e;stroke:#34d399;stroke-width:1.4}
+      .zone{fill:none;stroke:rgba(148,163,184,.16);stroke-dasharray:5 5}
+      .ln{stroke:#97a5bc;stroke-width:1.6;fill:none;marker-end:url(#arr)}
+      .lnc{stroke:#7de3f5;stroke-width:1.6;fill:none;marker-end:url(#arrc)}
+      .lna{stroke:#f5c451;stroke-width:1.6;fill:none;marker-end:url(#arra)}
+      .lbl{font-size:11.5px;fill:#5f6e88;font-family:'SF Mono',Menlo,Consolas,monospace}
+    </style>
+  </defs>
+
+  <rect width="1600" height="1000" fill="#0a0e1a"/>
+
+  <!-- Title -->
+  <text x="48" y="60" class="h1">portfolio_web · how one question gets answered</text>
+  <text x="48" y="88" class="sub">A static Next.js site with one paid Node route. Content is the only source of truth; the model answers from it, in the visitor's language, and every dollar is counted.</text>
+
+  <!-- ===== Column 1: build time ===== -->
+  <rect x="40" y="124" width="380" height="820" rx="18" class="zone"/>
+  <text x="64" y="156" class="col">BUILD TIME</text>
+  <text x="64" y="176" class="colm">next build · no env needed</text>
+
+  <rect x="64" y="200" width="332" height="150" rx="12" class="box"/>
+  <text x="82" y="228" class="t">src/content/*.ts</text>
+  <text x="82" y="252" class="d">projects.ts · guide.ts · copy.ts · links.ts</text>
+  <text x="82" y="272" class="d">Every figure carries its provenance (statsNote).</text>
+  <text x="82" y="292" class="d">A private project has a scope note, never a repo.</text>
+  <text x="82" y="312" class="d">Components import from here; nothing is</text>
+  <text x="82" y="330" class="d">hardcoded twice.</text>
+
+  <rect x="64" y="378" width="332" height="96" rx="12" class="box"/>
+  <text x="82" y="406" class="t">src/content/blog/*.md</text>
+  <text x="82" y="430" class="d">One Markdown file per post, photos in public/blog/.</text>
+  <text x="82" y="450" class="d">marked renders them at build time.</text>
+
+  <path d="M230 350V378" class="ln"/>
+
+  <rect x="64" y="520" width="332" height="118" rx="12" class="boxc"/>
+  <text x="82" y="548" class="t">Static pages</text>
+  <text x="82" y="572" class="mc">/  /work  /work/&lt;id&gt;  /blog  /blog/&lt;slug&gt;</text>
+  <text x="82" y="596" class="d">Prerendered HTML. Covers are files at</text>
+  <text x="82" y="616" class="d">public/projects/&lt;id&gt;/cover.webp, detected by the build.</text>
+
+  <path d="M230 474V520" class="ln"/>
+
+  <rect x="64" y="690" width="332" height="200" rx="12" class="boxc"/>
+  <text x="82" y="718" class="t">Retrieval index</text>
+  <text x="82" y="742" class="mc">scripts/build-ask-index.mjs</text>
+  <text x="82" y="762" class="mc">→ src/generated/ask-index.json</text>
+  <text x="82" y="788" class="d">Content cut into chunks; each gets a 512-dim</text>
+  <text x="82" y="808" class="d">feature-hashed vector (FNV-1a over words, trigrams,</text>
+  <text x="82" y="828" class="d">CJK bigrams). No embedding API, no vector store.</text>
+  <text x="82" y="848" class="d">Deterministic and committed: npm test regenerates it</text>
+  <text x="82" y="868" class="d">in memory and fails when the two drift.</text>
+
+  <path d="M64 300 H50 V760 H64" class="ln"/>
+
+  <!-- ===== Column 2: browser ===== -->
+  <rect x="460" y="124" width="340" height="820" rx="18" class="zone"/>
+  <text x="484" y="156" class="col">BROWSER</text>
+  <text x="484" y="176" class="colm">client components · no secrets</text>
+
+  <rect x="484" y="200" width="292" height="150" rx="12" class="box"/>
+  <text x="502" y="228" class="t">The guide</text>
+  <text x="502" y="252" class="d">On / it answers in place beside the identity</text>
+  <text x="502" y="272" class="d">card (GuideConsole). Everywhere else it is the</text>
+  <text x="502" y="292" class="d">"Any question?" drawer (AskDrawer).</text>
+  <text x="502" y="316" class="d">Quick-question chips carry an intent; a typed</text>
+  <text x="502" y="336" class="d">question is its own language sample.</text>
+
+  <rect x="484" y="390" width="292" height="122" rx="12" class="box"/>
+  <text x="502" y="418" class="t">Request</text>
+  <text x="502" y="442" class="m">POST /api/ask</text>
+  <text x="502" y="462" class="m">{ question, scopeId,</text>
+  <text x="502" y="482" class="m">  intent?, langSample? }</text>
+  <text x="502" y="502" class="d">Gives up after 6 s.</text>
+
+  <rect x="484" y="560" width="292" height="150" rx="12" class="boxc"/>
+  <text x="502" y="588" class="t">Answer + "under the hood"</text>
+  <text x="502" y="612" class="d">Plain text in the visitor's language, plus a</text>
+  <text x="502" y="632" class="d">meta panel: which chunks the model saw,</text>
+  <text x="502" y="652" class="d">model name, wall-clock ms, tokens, cost.</text>
+  <text x="502" y="680" class="d">An "open project" action when the answer</text>
+  <text x="502" y="698" class="d">is about one project.</text>
+
+  <rect x="484" y="760" width="292" height="130" rx="12" class="boxa"/>
+  <text x="502" y="788" class="t">When the model is not reached</text>
+  <text x="502" y="812" class="d">Fixed copy only, in zh or en: quota used up,</text>
+  <text x="502" y="832" class="d">guide switched off, or system error, with</text>
+  <text x="502" y="852" class="d">links to the projects and the blog.</text>
+  <text x="502" y="876" class="ma">never a scripted "answer"</text>
+
+  <path d="M630 350V390" class="ln"/>
+  <path d="M396 580 H484" class="ln"/>
+  <text x="404" y="572" class="lbl">HTML</text>
+
+  <!-- ===== Column 3: the route ===== -->
+  <rect x="840" y="124" width="400" height="820" rx="18" class="zone"/>
+  <text x="864" y="156" class="col">REQUEST TIME · POST /api/ask</text>
+  <text x="864" y="176" class="colm">Node route on Vercel (hnd1) · deps injectable</text>
+
+  <!-- pipeline steps -->
+  <g>
+    <rect x="864" y="200" width="352" height="54" rx="10" class="box"/>
+    <circle cx="886" cy="227" r="11" fill="#7de3f5"/><text x="886" y="231" text-anchor="middle" class="step">1</text>
+    <text x="906" y="222" class="t">Validate</text>
+    <text x="906" y="242" class="d">question ≤ 100 chars · scopeId is a known project id</text>
+  </g>
+  <path d="M1040 254V270" class="ln"/>
+  <g>
+    <rect x="864" y="270" width="352" height="72" rx="10" class="boxa"/>
+    <circle cx="886" cy="297" r="11" fill="#f5c451"/><text x="886" y="301" text-anchor="middle" class="step">2</text>
+    <text x="906" y="292" class="t">Count, then gate</text>
+    <text x="906" y="312" class="d">visitor: HMAC(IP) · 10 questions a day</text>
+    <text x="906" y="330" class="d">budget: $2 a day · $20 a month → 429 once reached</text>
+  </g>
+  <path d="M1040 342V358" class="ln"/>
+  <g>
+    <rect x="864" y="358" width="352" height="72" rx="10" class="boxc"/>
+    <circle cx="886" cy="385" r="11" fill="#7de3f5"/><text x="886" y="389" text-anchor="middle" class="step">3</text>
+    <text x="906" y="380" class="t">Retrieve</text>
+    <text x="906" y="400" class="d">hashEmbed(question + language sample)</text>
+    <text x="906" y="418" class="d">cosine over the committed index → top 6 chunks</text>
+  </g>
+  <path d="M1040 430V446" class="ln"/>
+  <g>
+    <rect x="864" y="446" width="352" height="108" rx="10" class="box"/>
+    <circle cx="886" cy="473" r="11" fill="#7de3f5"/><text x="886" y="477" text-anchor="middle" class="step">4</text>
+    <text x="906" y="468" class="t">Build the prompt</text>
+    <text x="906" y="488" class="d">One fixed system prompt. The user message is content:</text>
+    <text x="906" y="506" class="d">project catalogue · what Nolan is looking for · site-wide</text>
+    <text x="906" y="524" class="d">summaries · answer keys · scope details ·</text>
+    <text x="906" y="542" class="d">6 candidates · links · language sample · question</text>
+  </g>
+  <path d="M1040 554V570" class="ln"/>
+  <g>
+    <rect x="864" y="570" width="352" height="90" rx="10" class="boxg"/>
+    <circle cx="886" cy="597" r="11" fill="#34d399"/><text x="886" y="601" text-anchor="middle" class="step">5</text>
+    <text x="906" y="592" class="t">Call the model, under a deadline</text>
+    <text x="906" y="612" class="d">temperature 0 · JSON mode · 700 output tokens</text>
+    <text x="906" y="630" class="d">5 s server deadline, below the drawer's 6 s wait</text>
+    <text x="906" y="648" class="d">→ 502 / 504 on failure, never a made-up answer</text>
+  </g>
+  <path d="M1040 660V676" class="ln"/>
+  <g>
+    <rect x="864" y="676" width="352" height="54" rx="10" class="boxa"/>
+    <circle cx="886" cy="703" r="11" fill="#f5c451"/><text x="886" y="707" text-anchor="middle" class="step">6</text>
+    <text x="906" y="698" class="t">Record the cost</text>
+    <text x="906" y="718" class="d">tokens × configured prices → day and month totals</text>
+  </g>
+  <path d="M1040 730V746" class="ln"/>
+  <g>
+    <rect x="864" y="746" width="352" height="108" rx="10" class="boxc"/>
+    <circle cx="886" cy="773" r="11" fill="#7de3f5"/><text x="886" y="777" text-anchor="middle" class="step">7</text>
+    <text x="906" y="768" class="t">Structure check</text>
+    <text x="906" y="788" class="m">{ key, scopeId, answer }</text>
+    <text x="906" y="808" class="d">key ∈ 11 answer keys · scopeId ∈ projects or null ·</text>
+    <text x="906" y="826" class="d">answer non-empty, ≤ 2000 chars. Shape only: the</text>
+    <text x="906" y="844" class="d">words are never read. Fails → 502, counted.</text>
+  </g>
+  <text x="864" y="890" class="mg">200 { ok, key, scopeId, answer, meta }</text>
+  <text x="864" y="912" class="lbl">every outcome is a metric: answered · limited · error:provider · error:timeout · error:invalid …</text>
+
+  <!-- request / answer arrows between browser and route -->
+  <path d="M776 450 H864 V227" class="lnc"/>
+  <text x="784" y="442" class="lbl">JSON</text>
+  <path d="M864 800 H820 V640 H776" class="lnc"/>
+
+  <!-- index → retrieve -->
+  <path d="M396 790 H440 V922 H830 V806 a6 6 0 0 1 0 -12 V456 a6 6 0 0 1 0 -12 V402 H864" class="lnc"/>
+  <text x="520" y="914" class="lbl">ask-index.json · loaded once per instance</text>
+
+  <!-- ===== Column 4: outside ===== -->
+  <rect x="1280" y="124" width="280" height="820" rx="18" class="zone"/>
+  <text x="1304" y="156" class="col">OUTSIDE</text>
+  <text x="1304" y="176" class="colm">server-only env</text>
+
+  <rect x="1304" y="540" width="232" height="150" rx="12" class="boxg"/>
+  <text x="1322" y="568" class="t">Model provider</text>
+  <text x="1322" y="592" class="d">Any OpenAI-compatible</text>
+  <text x="1322" y="612" class="d">chat-completions API.</text>
+  <text x="1322" y="632" class="d">Today: DeepSeek. Base URL,</text>
+  <text x="1322" y="652" class="d">model, key and prices all</text>
+  <text x="1322" y="672" class="d">come from env.</text>
+
+  <rect x="1304" y="240" width="232" height="230" rx="12" class="boxa"/>
+  <text x="1322" y="268" class="t">Upstash Redis</text>
+  <text x="1322" y="290" class="d">Counters over REST, shared by</text>
+  <text x="1322" y="308" class="d">every Vercel instance.</text>
+  <text x="1322" y="336" class="ma">ask:day:&lt;utc&gt;:&lt;metric&gt;</text>
+  <text x="1322" y="356" class="ma">ask:month:&lt;utc&gt;:cost</text>
+  <text x="1322" y="376" class="ma">ask:visitor:&lt;day&gt;:&lt;hmac&gt;</text>
+  <text x="1322" y="404" class="d">No question text and no plain</text>
+  <text x="1322" y="422" class="d">IP is ever written. 30-day TTL.</text>
+  <text x="1322" y="448" class="d">Required in production; memory</text>
+  <text x="1322" y="464" class="d">counters only in dev and tests.</text>
+
+  <path d="M1216 306 H1304" class="lna"/>
+  <path d="M1216 703 H1262 V621 a6 6 0 0 1 0 -12 V440 H1304" class="lna"/>
+  <path d="M1216 615 H1304" class="lnc"/>
+
+  <!-- footer -->
+  <text x="48" y="976" class="lbl">139 tests · node --test, no framework · runtime deps: next, react, marked · /work and /blog asserted against the built HTML · the ask route tested as a plain Request → Response function</text>
+</svg>

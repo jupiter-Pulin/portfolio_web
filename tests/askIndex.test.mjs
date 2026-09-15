@@ -87,12 +87,12 @@ test('stripTags keeps the words and drops only <em> and <code>', () => {
 });
 
 test('hashEmbed is deterministic, unit length, and sees Chinese', () => {
-  const text = 'chain-pulse commits STATUS.md every night';
+  const text = 'AMM DEX trusts nothing but its own balances';
   const a = hashEmbed(text);
   const b = hashEmbed(text);
   assert.deepEqual(a, b);
   assert.equal(a.length, EMBED_DIM);
-  for (const s of [text, '链上监控', 'x', 'Foundry tests', 'chain-pulse 使用 Node.js']) {
+  for (const s of [text, '链上监控', 'x', 'Foundry tests', 'AMM DEX 使用 Foundry']) {
     const norm = Math.sqrt(hashEmbed(s).reduce((sum, x) => sum + x * x, 0));
     assert.ok(Math.abs(norm - 1) <= 1e-9, `${s}: norm ${norm}`);
   }
@@ -124,7 +124,6 @@ test('retrieval over the committed index finds the project a term belongs to', (
   for (const [query, projectId] of [
     ['Foundry tests', 'amm'],
     ['BlackHole', 'live'],
-    ['STATUS.md', 'chain'],
   ]) {
     assert.equal(topK(index, hashEmbed(query), 1)[0].projectId, projectId, query);
   }

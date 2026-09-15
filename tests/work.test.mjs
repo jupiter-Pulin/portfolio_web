@@ -1,11 +1,11 @@
 // The /work screens, asserted against the build artifacts. `next build` prerenders
 // the overview and the four case pages to HTML, so no server and no browser is needed.
-// A cover file is dropped in before the build so both halves of the image slot —
-// a real image, and the placeholder — are covered by the same build.
+// One project's cover is set aside for an extra build so both halves of the image
+// slot — a real image, and the placeholder — are covered by the same test run.
 import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { SITE, WORK } from '../src/content/copy.ts';
 import { GUIDE } from '../src/content/guide.ts';
@@ -20,10 +20,14 @@ const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
   'base64',
 );
-const COVER_DIR = fileURLToPath(new URL('../public/projects/loop/', import.meta.url));
-const COVER = `${COVER_DIR}cover.png`;
-const COVER_SRC = '/projects/loop/cover.png';
-let coverWasAlreadyThere = false;
+const COVER_ID = 'amm';
+const COVER_DIR = fileURLToPath(new URL(`../public/projects/${COVER_ID}/`, import.meta.url));
+// Whatever cover the tree ships for that project, in resolveCover's order; the
+// fixture png is only written when the tree has none.
+const shipped = ['webp', 'png', 'jpg'].map((ext) => `${COVER_DIR}cover.${ext}`).filter((f) => existsSync(f));
+const COVER = shipped[0] ?? `${COVER_DIR}cover.png`;
+const COVER_SRC = `/projects/${COVER_ID}/cover.${COVER.split('.').pop()}`;
+const hidden = (f) => `${f}.hidden`;
 
 const decode = (s) =>
   s
@@ -76,35 +80,38 @@ function mediaBlock(css, px) {
 const squash = (s) => s.replace(/\s+/g, ' ');
 
 const pages = {};
-const withCover = {};
+const noCover = {};
 let buildOutput = '';
 
 const build = () => execFileSync(NEXT, ['build'], { cwd: ROOT, encoding: 'utf8' });
 const readGallery = () => read('../.next/server/app/work.html');
 const readCase = (id) => read(`../.next/server/app/work/${id}.html`);
+const restore = () => {
+  for (const f of shipped) if (existsSync(hidden(f))) renameSync(hidden(f), f);
+  if (shipped.length === 0) rmSync(COVER, { force: true });
+};
 
 before(() => {
-  // First build with a cover file in place, then take it away and build again, so
-  // both halves of the slot are observed on the same project — and so the tree is
-  // left holding exactly the build a plain `npm run build` would produce.
-  coverWasAlreadyThere = existsSync(COVER);
-  if (!coverWasAlreadyThere) {
+  // First build with the project's cover files set aside, then put them back (or drop
+  // the fixture in) and build again, so both halves of the slot are observed on the
+  // same project — and so the tree is left holding exactly the build a plain
+  // `npm run build` would produce.
+  for (const f of shipped) renameSync(f, hidden(f));
+  build();
+  noCover.gallery = readGallery();
+  noCover[COVER_ID] = readCase(COVER_ID);
+
+  restore();
+  if (shipped.length === 0) {
     mkdirSync(COVER_DIR, { recursive: true });
     writeFileSync(COVER, PNG);
   }
-  build();
-  withCover.gallery = readGallery();
-  withCover.loop = readCase('loop');
-
-  if (!coverWasAlreadyThere) rmSync(COVER, { force: true });
   buildOutput = build();
   pages.gallery = readGallery();
   for (const p of PROJECTS) pages[p.id] = readCase(p.id);
 });
 
-after(() => {
-  if (!coverWasAlreadyThere) rmSync(COVER, { force: true });
-});
+after(restore);
 
 test('the build prerenders the overview and one static page per project', () => {
   assert.match(buildOutput, /\/work\/\[id\]/, 'build output lists the dynamic route');
@@ -208,7 +215,7 @@ test('a private case page shows the scope note and links no repository', () => {
 });
 
 test('README notes: a caveat bar with a preview, plain copy without one', () => {
-  for (const id of ['live', 'chain']) {
+  for (const id of ['live']) {
     const p = projectById(id);
     const note = markup(pages[id]).match(/<p class="[^"]*rmNote[^"]*"[^>]*>([\s\S]*?)<\/p>/);
     assert.ok(note, `${id} shows the amber README note bar`);
@@ -256,9 +263,9 @@ test('the case pages walk in a loop and offer both ways out', () => {
     assert.equal(tags.length, 2, `${id} has previous and next`);
     return { prev: tags[0], next: tags[1] };
   };
-  // loop is first: previous wraps to amm (last), next is live.
+  // loop is first: previous wraps to amm (last), next is guide.
   assert.match(nav('loop').prev, /href="\/work\/amm"/);
-  assert.match(nav('loop').next, /href="\/work\/live"/);
+  assert.match(nav('loop').next, /href="\/work\/guide"/);
   // amm is last: next wraps back to loop.
   assert.match(nav('amm').next, /href="\/work\/loop"/);
   assert.ok(textOf(pages.amm).includes(`${total} / ${total}`), 'amm is the last of four');
@@ -273,22 +280,20 @@ const cardFor = (galleryHtml, id) => cardsOf(galleryHtml)[PROJECTS.findIndex((p)
 
 test('a cover file replaces the placeholder, on both screens, with no code change', () => {
   const views = [
-    ['card', cardFor(withCover.gallery, 'loop')],
-    ['case', markup(withCover.loop)],
+    ['card', cardFor(pages.gallery, COVER_ID)],
+    ['case', markup(pages[COVER_ID])],
   ];
   for (const [where, html] of views) {
     assert.match(html, new RegExp(`<img[^>]+src="${COVER_SRC}"`), `${where} renders the cover`);
-    assert.ok(html.includes('alt="Loop Conductor"'), `${where} cover is labelled`);
+    assert.ok(html.includes('alt="AMM DEX"'), `${where} cover is labelled`);
     assert.ok(!html.includes(SITE.imageSlot), `${where} drops the slot caption once a file exists`);
   }
 });
 
 test('without a cover file the ported diagram stands in, captioned as a slot', () => {
   const views = [
-    ['loop card', cardFor(pages.gallery, 'loop')],
-    ['loop case', markup(pages.loop)],
-    ['chain card', cardFor(pages.gallery, 'chain')],
-    ['chain case', markup(pages.chain)],
+    ['amm card', cardFor(noCover.gallery, COVER_ID)],
+    ['amm case', markup(noCover[COVER_ID])],
   ];
   for (const [where, html] of views) {
     assert.match(html, /<figure[^>]*>[\s\S]*?<svg/, `${where} renders ProjectArt`);

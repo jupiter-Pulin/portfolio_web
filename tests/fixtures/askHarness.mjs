@@ -76,7 +76,7 @@ export function fakeFetch({ upstash = null, model } = {}) {
     }
     if (href.startsWith(MODEL_BASE)) {
       modelCalls.push({ url: href, init, body: JSON.parse(init.body) });
-      return model ? model(href, init) : completion('{"key":"overview","scopeId":"chain","answer":"chain-pulse runs nightly."}');
+      return model ? model(href, init) : completion('{"key":"overview","scopeId":"amm","answer":"AMM DEX is a Uniswap-V2-style AMM."}');
     }
     throw new Error(`unexpected fetch ${href}`);
   };
@@ -85,7 +85,7 @@ export function fakeFetch({ upstash = null, model } = {}) {
 }
 
 /** A provider that records every call and answers with `respond(req)`. */
-export function fakeProvider(respond = () => ({ content: '{"key":"overview","scopeId":"chain","answer":"OK"}', usage: { inputTokens: 100, outputTokens: 50 } })) {
+export function fakeProvider(respond = () => ({ content: '{"key":"overview","scopeId":"amm","answer":"OK"}', usage: { inputTokens: 100, outputTokens: 50 } })) {
   const calls = [];
   return {
     id: 'fake',
