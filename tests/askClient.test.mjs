@@ -127,30 +127,29 @@ test('fixed copy picks zh or en from the sample, and has the wording Pulin gave'
   }
 });
 
-test('entry actions: blog placeholder, LinkedIn, X, projects — labels from content', () => {
+test('entry actions: blog, LinkedIn, X, projects — labels from content', () => {
   for (const lang of ['zh', 'en']) {
     const labels = GUIDE.entries[lang];
     const entries = entryActions(lang);
     assert.deepEqual(entries, [
-      { t: 'soon', label: labels.blog },
+      { t: 'nav', href: BLOG.href, label: labels.blog },
       { t: 'link', href: LINKEDIN, label: labels.linkedin },
       { t: 'link', href: X, label: labels.x },
       { t: 'nav', href: '/work', label: labels.work },
     ]);
-    assert.ok(!('href' in entries[0]));
     for (const blocks of [limitedBlocks(lang), unavailableBlocks(lang)]) {
       assert.deepEqual(blocks.find((b) => b.kind === 'actions').actions, entries);
     }
   }
-  assert.equal(BLOG.href, null);
+  // The blog is a page of this site: an in-site route, never an external address.
+  assert.equal(BLOG.href, '/blog');
   for (const file of walk(SRC)) {
     if (!/\.(ts|tsx|css|json)$/.test(file)) continue;
     assert.doesNotMatch(readFileSync(file, 'utf8'), /https?:\/\/[^\s"'`]*blog/i, `${file} names a blog address`);
   }
 
   const drawer = read('../src/components/AskDrawer.tsx').replace(/\s+/g, ' ');
-  assert.match(drawer, /case "soon": .*?<span className=\{`chip \$\{styles\.soon\}`\} aria-disabled="true">/, 'soon is a disabled span');
-  assert.doesNotMatch(drawer.match(/case "soon":.*?<\/span>/)[0], /href|onClick|<a |<button/);
+  assert.doesNotMatch(drawer, /"soon"/, 'the coming-soon chip is gone');
   assert.match(drawer, /closeAsk\(\); router\.push\(href\);/, 'nav closes the drawer first');
   assert.match(drawer, /case "nav": .*?onClick=\{\(\) => go\.nav\(action\.href\)\}/);
 });
@@ -289,7 +288,7 @@ test('the guide copy no longer calls itself a mock, and claims no checking', () 
     "a model answers from the site's own content in the visitor's language, says so when the site doesn't cover something, and never acts on Pulin's behalf.",
   );
   assert.deepEqual(GUIDE.unavailable, { zh: '问答暂时关闭。', en: 'The guide is switched off for now.' });
-  assert.deepEqual(GUIDE.entries.zh, { lead: '你可以先看看这些：', blog: '博客 · 即将上线', linkedin: '领英', x: '推特', work: '项目简介' });
+  assert.deepEqual(GUIDE.entries.zh, { lead: '你可以先看看这些：', blog: '博客', linkedin: '领英', x: '推特', work: '项目简介' });
 
   const drawer = read('../src/components/AskDrawer.tsx');
   const provider = drawer.slice(drawer.indexOf('/**', drawer.indexOf('export const useAsk')), drawer.indexOf('export function AskProvider'));

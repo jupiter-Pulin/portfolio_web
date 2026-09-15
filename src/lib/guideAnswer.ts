@@ -38,9 +38,7 @@ export type Action =
   | { t: "copy"; label: string }
   | { t: "link"; href: string; label: string; amber?: true }
   // An in-site page, reached through the router.
-  | { t: "nav"; href: string; label: string }
-  // A placeholder with nowhere to go yet: rendered, never clickable.
-  | { t: "soon"; label: string };
+  | { t: "nav"; href: string; label: string };
 
 export type Row = { label: string; right: Action | { t: "muted"; text: string } };
 export type ReportItem = { runs: Run[]; action?: Action };
@@ -257,11 +255,11 @@ export const modelAnswerBlocks = (answer: string, key: AnswerKey, scopeId: strin
   ...answerActions(key, scopeId),
 ];
 
-/** Four ways onward when the guide cannot answer: blog (not built yet), LinkedIn, X, the projects. */
+/** Four ways onward when the guide cannot answer: the blog, LinkedIn, X, the projects. */
 export const entryActions = (lang: CopyLang): Action[] => {
   const labels = GUIDE.entries[lang];
   return [
-    BLOG.href ? { t: "link", href: BLOG.href, label: labels.blog } : { t: "soon", label: labels.blog },
+    { t: "nav", href: BLOG.href, label: labels.blog },
     { t: "link", href: LINKEDIN, label: labels.linkedin },
     { t: "link", href: X, label: labels.x },
     { t: "nav", href: "/work", label: labels.work },

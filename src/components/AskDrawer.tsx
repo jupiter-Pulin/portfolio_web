@@ -464,12 +464,5 @@ function ActionChip({ action, go }: { action: Action; go: Go }) {
           {action.label}
         </button>
       );
-    case "soon":
-      // Nowhere to go yet: not a link, not a button, and announced as disabled.
-      return (
-        <span className={`chip ${styles.soon}`} aria-disabled="true">
-          {action.label}
-        </span>
-      );
   }
 }

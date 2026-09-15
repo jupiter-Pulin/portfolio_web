@@ -123,8 +123,8 @@ export const GUIDE = {
   limited: { zh: "今日额度已用完", en: "Today's quota is used up." },
   unavailable: { zh: "问答暂时关闭。", en: "The guide is switched off for now." },
   entries: {
-    zh: { lead: "你可以先看看这些：", blog: "博客 · 即将上线", linkedin: "领英", x: "推特", work: "项目简介" },
-    en: { lead: "In the meantime:", blog: "Blog · coming soon", linkedin: "LinkedIn", x: "X", work: "Projects" },
+    zh: { lead: "你可以先看看这些：", blog: "博客", linkedin: "领英", x: "推特", work: "项目简介" },
+    en: { lead: "In the meantime:", blog: "Blog", linkedin: "LinkedIn", x: "X", work: "Projects" },
   },
   // The input's maxLength and the server's default question limit read the same number.
   limits: { maxQuestionChars: 100 },
