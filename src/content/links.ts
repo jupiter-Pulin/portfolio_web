@@ -4,7 +4,7 @@ export const MAILTO =
   `mailto:${EMAIL}?subject=${encodeURIComponent('Hi Nolan — [role] at [company]')}` +
   `&body=${encodeURIComponent('Hi Nolan,\n\nI saw your work on ... and would like to talk about ...\n\n')}`;
 export const GITHUB = 'https://github.com/jupiter-Pulin';
-export const LINKEDIN = 'https://www.linkedin.com/in/pulin-tang-52b559367/';
+export const LINKEDIN = 'https://www.linkedin.com/in/nolan-tang-52b559367/';
 // Provided by Pulin on 2026-09-13, used as-is. Note: x.com/home is the signed-in home feed,
 // not a public profile URL — replace with https://x.com/<handle> once the handle is confirmed.
 export const X = 'https://x.com/home';

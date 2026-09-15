@@ -134,7 +134,7 @@ export const GUIDE = {
     // Handles read off the links.ts URLs; X has no public handle yet, so the row
     // shows the address links.ts holds.
     rows: [
-      { label: "LinkedIn", href: LINKEDIN, text: "pulin-tang" },
+      { label: "LinkedIn", href: LINKEDIN, text: "nolan-tang" },
       { label: "GitHub", href: GITHUB, text: "jupiter-Pulin" },
       { label: "X", href: X, text: X.replace(/^https?:\/\//, "") },
     ],
