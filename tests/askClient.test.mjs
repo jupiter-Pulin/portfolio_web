@@ -185,8 +185,9 @@ test('answerActions: only the clickable part of the scripted answer', () => {
 
   const answer = 'AMM DEX 从零实现。\n\n配对合约只信任自己的余额。';
   const blocks = modelAnswerBlocks(answer, 'overview', 'amm');
+  // The model's line is kept as written; the project it names is a typed run (answerMarkup.ts).
   assert.deepEqual(blocks, [
-    { kind: 'p', runs: [{ t: 'text', v: 'AMM DEX 从零实现。' }] },
+    { kind: 'p', runs: [{ t: 'ent', id: 'amm', v: 'AMM DEX' }, { t: 'text', v: ' 从零实现。' }] },
     { kind: 'p', runs: [{ t: 'text', v: '配对合约只信任自己的余额。' }] },
     ...answerActions('overview', 'amm'),
   ]);

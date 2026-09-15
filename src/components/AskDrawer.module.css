@@ -99,6 +99,52 @@
 .msg p:global(.fine) {
   margin-top: 8px;
 }
+/* a model answer: the opening paragraph carries the point, the rest steps back */
+.msg.guide > p:not(:global(.fine)) {
+  color: var(--muted);
+}
+.msg.guide > p:first-child {
+  color: var(--text);
+}
+/* what the site recognised in the model's line (answerMarkup.ts) */
+.ent {
+  all: unset;
+  cursor: pointer;
+  color: var(--cyan);
+  text-decoration: underline;
+  text-decoration-color: rgba(125, 227, 245, 0.35);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.ent:hover,
+.ent:focus-visible {
+  text-decoration-color: var(--cyan);
+  outline: none;
+}
+.tech {
+  color: var(--text);
+  font-weight: 500;
+}
+.num {
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.linkRun,
+.mailRun {
+  color: var(--amber);
+  text-decoration: underline;
+  text-decoration-color: rgba(245, 196, 81, 0.4);
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.linkRun:hover,
+.mailRun:hover {
+  text-decoration-color: var(--amber);
+}
+.mailRun {
+  font: 500 13px var(--font-mono);
+}
 .msg.typing {
   color: var(--dim);
   font: 500 12px var(--font-mono);

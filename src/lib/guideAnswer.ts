@@ -16,6 +16,7 @@ import {
 } from "../content/guide.ts";
 import { BLOG, EMAIL, GITHUB, LINKEDIN, MAILTO, X } from "../content/links.ts";
 import { LOOKING, PROJECTS, projectById, type Project } from "../content/projects.ts";
+import { markupLine } from "./answerMarkup.ts";
 
 /** Pause the guide takes before answering, in ms. */
 export const TYPING_MS = 420;
@@ -24,12 +25,21 @@ export const TYPING_MS = 420;
 export const typingPlaceholder = (reduced: boolean): string | null =>
   reduced ? null : GUIDE.typing;
 
-/** A stretch of one paragraph. Text runs may carry <em> / <code> and nothing else. */
+/** A stretch of one paragraph. Text runs may carry <em> / <code> and nothing else;
+    the last four are what answerMarkup.ts recognises in a model-written line. */
 export type Run =
   | { t: "text"; v: string }
   | { t: "b"; v: string }
   | { t: "fine"; v: string }
-  | { t: "br" };
+  | { t: "br" }
+  // A project the site has, by name: clicking opens it.
+  | { t: "ent"; id: string; v: string }
+  // A term from a project's stack field.
+  | { t: "tech"; v: string }
+  // A figure.
+  | { t: "num"; v: string }
+  // An address the site lists; `mail` marks the email.
+  | { t: "link"; href: string; v: string; mail?: true };
 
 /** What a chip in the transcript can do — all of them local. */
 export type Action =
@@ -246,12 +256,12 @@ export function answerActions(
   return [...(found.length ? [actions(...found)] : []), ...picks];
 }
 
-/** The model's answer as plain paragraphs, then the content-built actions. */
+/** The model's answer as paragraphs with the site's own things marked, then the content-built actions. */
 export const modelAnswerBlocks = (answer: string, key: AnswerKey, scopeId: string | null): Block[] => [
   ...answer
     .split("\n")
     .filter((line) => line.trim() !== "")
-    .map((line) => para(text(line))),
+    .map((line) => para(...markupLine(line))),
   ...answerActions(key, scopeId),
 ];
 
