@@ -71,3 +71,28 @@ export const HOW_I_BUILD = {
     ],
   },
 } as const;
+
+// Chrome for the /blog screens. Posts themselves are Markdown files in src/content/blog/.
+export const BLOG = {
+  navLabel: 'Blog',
+  eyebrow: 'Blog',
+  title: 'Notes from building things.',
+  // The trailing part of the title rendered with the blue→cyan gradient.
+  titleAccent: 'building things.',
+  lede: 'Short write-ups on fintech, agents and the unglamorous work of keeping state correct.',
+  searchLabel: 'Search posts',
+  allTag: 'All',
+  postOne: 'post',
+  postMany: 'posts',
+  of: 'of',
+  emptyTitle: 'Nothing matches',
+  emptyHint: 'Try another tag or a shorter search.',
+  noPostsTitle: 'No posts yet',
+  noPostsHint: 'The first Markdown file dropped into the blog folder becomes the first post.',
+  minShort: 'min',
+  minRead: 'min read',
+  backToAll: '← All posts',
+  older: '← Older',
+  newer: 'Newer →',
+  adjacent: 'Adjacent posts',
+} as const;
