@@ -4,8 +4,10 @@
 // typed runs so the drawer can set them apart. Nothing is parsed as markup: an
 // address the site does not list stays ordinary text, so the model cannot make a
 // link clickable by writing one.
-import { EMAIL, GITHUB, LINKEDIN, MAILTO, X } from "../content/links.ts";
+import BLOG_POSTS from "../generated/ask-blog.json" with { type: "json" };
+import { BLOG, EMAIL, GITHUB, LINKEDIN, MAILTO, X } from "../content/links.ts";
 import { PROJECTS, type Project } from "../content/projects.ts";
+import type { AskBlogEntry } from "./askIndex.ts";
 import type { Run } from "./guideAnswer.ts";
 
 export type Lexicon = {
@@ -15,6 +17,8 @@ export type Lexicon = {
   terms: string[];
   /** Public addresses the site lists (links.ts and the projects' repositories). */
   urls: Set<string>;
+  /** Pages of this site: the blog and its posts, the work page and its cases. */
+  paths: Set<string>;
   email: string;
 };
 
@@ -33,7 +37,7 @@ export function stackTerms(stack: string): string[] {
 
 const stripSlash = (url: string) => url.replace(/\/+$/, "");
 
-export function buildLexicon(projects: readonly Project[] = PROJECTS): Lexicon {
+export function buildLexicon(projects: readonly Project[] = PROJECTS, posts: readonly AskBlogEntry[] = BLOG_POSTS): Lexicon {
   const names = [...projects].sort((a, b) => byLength(a.name, b.name)).map((p) => ({ id: p.id, name: p.name }));
   const termSet = new Set<string>();
   for (const p of projects) for (const t of stackTerms(p.stack)) termSet.add(t);
@@ -44,11 +48,14 @@ export function buildLexicon(projects: readonly Project[] = PROJECTS): Lexicon {
     for (const r of p.repos) urls.add(stripSlash(r.url));
     if (p.readmeUrl) urls.add(stripSlash(p.readmeUrl));
   }
-  return { names, terms: [...termSet].sort(byLength), urls, email: EMAIL };
+  const paths = new Set<string>([BLOG.href, "/work", ...projects.map((p) => `/work/${p.id}`), ...posts.map((p) => p.href)]);
+  return { names, terms: [...termSet].sort(byLength), urls, paths, email: EMAIL };
 }
 
 const URL_RE = /https?:\/\/[^\s<>()]+/g;
 const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+/** A page of this site, as the model is told to write it: /blog/<slug> or /work/<id>. */
+const PATH_RE = /\/(?:blog|work)(?:\/[a-z0-9-]+)?/g;
 /** A figure: optional currency, digits with separators, optional % or unit suffix like 5-second. */
 const NUM_RE = /[$€£¥]?\d[\d,.]*(?:-\d[\d,.]*)*(?:%|-[A-Za-z]+)?/g;
 /** Punctuation an address may end a sentence with; it is not part of the address. */
@@ -77,6 +84,14 @@ function findAddresses(s: string, lex: Lexicon): Span[] {
     if (m[0].toLowerCase() !== lex.email.toLowerCase()) continue;
     const start = m.index ?? 0;
     out.push({ start, end: start + m[0].length, run: { t: "link", href: MAILTO, v: m[0], mail: true } });
+  }
+  for (const m of s.matchAll(PATH_RE)) {
+    const start = m.index ?? 0;
+    const end = start + m[0].length;
+    // Not the tail of an address (github.com/work), and not a longer path (/blog/x-y-z-more).
+    if (latin(s[start - 1]) || s[start - 1] === "/" || s[end] === "/" || latin(s[end])) continue;
+    if (!lex.paths.has(m[0])) continue;
+    out.push({ start, end, run: { t: "link", href: m[0], v: m[0], site: true } });
   }
   return out;
 }

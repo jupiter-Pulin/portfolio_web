@@ -350,7 +350,12 @@ test('a model answer that links a listed post gets a chip for it, after the cont
   const answer = '见 /blog/fewer-nodes-in-the-agent-workflow。\n另见 /blog/lp-range-over-apr 和 /blog/fewer-nodes-in-the-agent-workflow';
   const blocks = modelAnswerBlocks(answer, 'agents', null, POSTS);
   const paras = blocks.filter((b) => b.kind === 'p');
-  assert.deepEqual(paras, answer.split('\n').map((line) => ({ kind: 'p', runs: [{ t: 'text', v: line }] })));
+  // The text is kept as written; the listed paths in it are site links (answerMarkup.ts).
+  assert.deepEqual(paras.map((b) => runText(b.runs)), answer.split('\n'));
+  assert.deepEqual(
+    paras.flatMap((b) => b.runs.filter((r) => r.t === 'link' && r.site).map((r) => r.href)),
+    ['/blog/fewer-nodes-in-the-agent-workflow', '/blog/lp-range-over-apr', '/blog/fewer-nodes-in-the-agent-workflow'],
+  );
   const navs = [
     { t: 'nav', href: '/blog/fewer-nodes-in-the-agent-workflow', label: 'T-Nodes' },
     { t: 'nav', href: '/blog/lp-range-over-apr', label: 'T-LP' },

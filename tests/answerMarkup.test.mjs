@@ -5,6 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EMAIL, GITHUB, LINKEDIN, MAILTO } from '../src/content/links.ts';
 import { PROJECTS } from '../src/content/projects.ts';
+import BLOG_POSTS from '../src/generated/ask-blog.json' with { type: 'json' };
 import { LEXICON, buildLexicon, markupLine, shortAddress, stackTerms } from '../src/lib/answerMarkup.ts';
 import { modelAnswerBlocks } from '../src/lib/guideAnswer.ts';
 
@@ -85,4 +86,18 @@ test('modelAnswerBlocks marks each paragraph and keeps the text intact', () => {
   assert.equal(paras.map((b) => joined(b.runs)).join('\n'), answer.replace('\n\n', '\n'));
   assert.equal(paras[0].runs[0].t, 'ent');
   assert.ok(paras[1].runs.some((r) => r.t === 'link' && r.mail));
+});
+
+test('a page of this site becomes a site link: listed posts and cases only, whole path only', () => {
+  const post = BLOG_POSTS[0];
+  const runs = markupLine(`详见 ${post.href}，也看 /work/loop 和 /work 与 /blog。`);
+  const site = ofType(runs, 'link').filter((r) => r.site);
+  assert.deepEqual(site.map((r) => r.href), [post.href, '/work/loop', '/work', '/blog']);
+  assert.equal(site[0].v, post.href, 'shown as written');
+  assert.equal(joined(runs), `详见 ${post.href}，也看 /work/loop 和 /work 与 /blog。`);
+
+  assert.equal(ofType(markupLine('see /blog/no-such-post'), 'link').length, 0, 'an unlisted slug stays text');
+  assert.equal(ofType(markupLine('see /work/loop/extra'), 'link').length, 0, 'a longer path is not a page');
+  assert.equal(ofType(markupLine(`${GITHUB}/work`), 'link').filter((r) => r.site).length, 0, 'the tail of an address is not a page');
+  assert.equal(ofType(markupLine('unix/work dir'), 'link').length, 0);
 });
