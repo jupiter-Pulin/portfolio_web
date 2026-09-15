@@ -17,7 +17,8 @@ import {
 import { EMAIL, GITHUB, LINKEDIN, MAILTO, X } from '../src/content/links.ts';
 import { LOOKING, PROJECTS, projectById } from '../src/content/projects.ts';
 import { SITE } from '../src/content/copy.ts';
-import { TYPING_MS, answerBlocks, openIntro, typingPlaceholder } from '../src/lib/guideAnswer.ts';
+import BLOG_POSTS from '../src/generated/ask-blog.json' with { type: 'json' };
+import { TYPING_MS, answerActions, answerBlocks, modelAnswerBlocks, openIntro, typingPlaceholder } from '../src/lib/guideAnswer.ts';
 import { chipsFor, echoLabel, route } from '../src/lib/guideRoute.ts';
 import { inlineNodes, tokenizeInline } from '../src/lib/inlineMarkup.ts';
 import { keyAction } from '../src/lib/workNav.ts';
@@ -336,6 +337,57 @@ test('only <em> and <code> survive as elements; every other tag stays text', () 
   const tail = tokenizeInline(source).at(-1);
   assert.equal(tail.tag, 'text');
   assert.equal(tail.text, ' <script>x</script> & <b>c</b>', 'the rest is characters, not markup');
+});
+
+const POSTS = [
+  { slug: 'lp-range-over-apr', title: 'T-LP', tags: [], href: '/blog/lp-range-over-apr' },
+  { slug: 'fewer-nodes-in-the-agent-workflow', title: 'T-Nodes', tags: [], href: '/blog/fewer-nodes-in-the-agent-workflow' },
+];
+const postNavs = (blocks) =>
+  blocks.flatMap((b) => (b.kind === 'actions' ? b.actions : [])).filter((a) => a.t === 'nav' && a.href.startsWith('/blog/'));
+
+test('a model answer that links a listed post gets a chip for it, after the content actions and before the picks', () => {
+  const answer = '见 /blog/fewer-nodes-in-the-agent-workflow。\n另见 /blog/lp-range-over-apr 和 /blog/fewer-nodes-in-the-agent-workflow';
+  const blocks = modelAnswerBlocks(answer, 'agents', null, POSTS);
+  const paras = blocks.filter((b) => b.kind === 'p');
+  assert.deepEqual(paras, answer.split('\n').map((line) => ({ kind: 'p', runs: [{ t: 'text', v: line }] })));
+  const navs = [
+    { t: 'nav', href: '/blog/fewer-nodes-in-the-agent-workflow', label: 'T-Nodes' },
+    { t: 'nav', href: '/blog/lp-range-over-apr', label: 'T-LP' },
+  ];
+  assert.deepEqual(postNavs(blocks), navs);
+  const [content] = answerActions('agents', null);
+  assert.equal(content.kind, 'actions');
+  const merged = blocks.filter((b) => b.kind === 'actions');
+  assert.equal(merged.length, 1);
+  assert.deepEqual(merged[0].actions, [...content.actions, ...navs]);
+  const lastActions = blocks.findLastIndex((b) => b.kind === 'actions');
+  const firstPicks = blocks.findIndex((b) => b.kind === 'picks');
+  assert.ok(firstPicks === -1 || lastActions < firstPicks);
+});
+
+test('unknown or longer slugs make no chip; a new actions block sits before the picks; the default list is ask-blog.json', () => {
+  const unknown = '读 /blog/unknown-post 或 /blog/lp-range-over-apr-2';
+  assert.deepEqual(modelAnswerBlocks(unknown, 'agents', null, POSTS), modelAnswerBlocks(unknown, 'agents', null, []));
+  assert.deepEqual(postNavs(modelAnswerBlocks(unknown, 'agents', null, POSTS)), []);
+
+  const answer = 'Read /blog/lp-range-over-apr.';
+  const chip = { kind: 'actions', actions: [{ t: 'nav', href: '/blog/lp-range-over-apr', label: 'T-LP' }] };
+  const all = modelAnswerBlocks(answer, 'all', null, POSTS);
+  assert.deepEqual(answerActions('all', null), []);
+  assert.deepEqual(all.at(-1), chip);
+
+  assert.deepEqual(answerActions('stack', null), [{ kind: 'picks', then: 'stack' }]);
+  const stack = modelAnswerBlocks(answer, 'stack', null, POSTS);
+  const picks = stack.findIndex((b) => b.kind === 'picks');
+  assert.deepEqual(stack[picks], { kind: 'picks', then: 'stack' });
+  assert.deepEqual(stack[picks - 1], chip);
+
+  const title = BLOG_POSTS.find((p) => p.slug === 'lp-range-over-apr').title;
+  assert.deepEqual(postNavs(modelAnswerBlocks(answer, 'all', null)), [{ t: 'nav', href: '/blog/lp-range-over-apr', label: title }]);
+  // A full address still points at the page inside the site; the text stays as written.
+  const full = modelAnswerBlocks('https://nolan-tang.vercel.app/blog/lp-range-over-apr', 'all', null, POSTS);
+  assert.deepEqual(full, [{ kind: 'p', runs: [{ t: 'text', v: 'https://nolan-tang.vercel.app/blog/lp-range-over-apr' }] }, chip]);
 });
 
 test('tokenizing a qa string loses nothing and invents no tag', () => {

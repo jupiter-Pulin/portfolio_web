@@ -64,3 +64,16 @@ test('globals carry the mock tokens, the grid and both glows', () => {
   assert.equal((css.match(/radial-gradient\(\d+px \d+px at/g) ?? []).length, 2, 'two glows');
   assert.equal((css.match(/1px, transparent 1px\)/g) ?? []).length, 2, 'grid lines');
 });
+
+test('the home guide is a fixed-height window: only its thread scrolls', () => {
+  const css = squash(read('../src/components/GuideConsole.module.css'));
+  assert.match(css, /\.console \{[^}]*height: clamp\(/, 'the window has a height of its own');
+  assert.match(css, /\.console \{[^}]*grid-template-rows: auto minmax\(0, 1fr\) auto auto/, 'the thread row takes what is left');
+  assert.match(css, /\.thread \{[^}]*overflow-y: auto/);
+  assert.match(css, /\.thread \{[^}]*overscroll-behavior: contain/, 'reaching the end does not scroll the page');
+  assert.match(css, /\.thread \{[^}]*min-height: 0/);
+  const home = read('../src/components/GuideConsole.tsx');
+  const thread = home.indexOf('className={styles.thread}');
+  const composer = home.indexOf('<form className={styles.composer}');
+  assert.ok(thread > 0 && thread < home.indexOf('{lines > 0 ?') && home.indexOf('{ask.starters ? (') < composer, 'lines and starting points share the scrolling row');
+});

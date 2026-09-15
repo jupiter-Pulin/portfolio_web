@@ -31,6 +31,7 @@ import {
 } from "@/lib/askClient";
 import { openIntro, type Action, type Block, type Run } from "@/lib/guideAnswer";
 import { chipsFor, echoLabel } from "@/lib/guideRoute";
+import { shortAddress } from "@/lib/answerMarkup";
 import { inlineNodes } from "@/lib/inlineMarkup";
 import { CopyEmailButton } from "./CopyEmailButton";
 import { Icon } from "./Icon";
@@ -446,21 +447,53 @@ function Hud({ meta }: { meta: HudMeta }) {
   );
 }
 
-/** Content runs: <em> and <code> come from the string, every other tag is text. */
-const runNodes = (runs: Run[]): ReactNode[] =>
-  runs.map((run, i) =>
-    run.t === "br" ? (
-      <br key={i} />
-    ) : run.t === "b" ? (
-      <b key={i}>{run.v}</b>
-    ) : run.t === "fine" ? (
-      <span key={i} className="fine">
-        {run.v}
-      </span>
-    ) : (
-      <Fragment key={i}>{inlineNodes(run.v)}</Fragment>
-    ),
-  );
+/** Content runs: <em> and <code> come from the string, every other tag is text.
+    The typed runs are what the site recognised in a model line (see answerMarkup.ts). */
+const runNodes = (runs: Run[], go: Go): ReactNode[] =>
+  runs.map((run, i) => {
+    switch (run.t) {
+      case "br":
+        return <br key={i} />;
+      case "b":
+        return <b key={i}>{run.v}</b>;
+      case "fine":
+        return (
+          <span key={i} className="fine">
+            {run.v}
+          </span>
+        );
+      case "ent":
+        return (
+          <button key={i} type="button" className={styles.ent} onClick={() => go.open(run.id)}>
+            {run.v}
+          </button>
+        );
+      case "tech":
+        return (
+          <span key={i} className={styles.tech}>
+            {run.v}
+          </span>
+        );
+      case "num":
+        return (
+          <span key={i} className={styles.num}>
+            {run.v}
+          </span>
+        );
+      case "link":
+        return run.mail ? (
+          <a key={i} className={styles.mailRun} href={run.href}>
+            {run.v}
+          </a>
+        ) : (
+          <a key={i} className={styles.linkRun} href={run.href} target="_blank" rel="noopener">
+            {shortAddress(run.v)}
+          </a>
+        );
+      default:
+        return <Fragment key={i}>{inlineNodes(run.v)}</Fragment>;
+    }
+  });
 
 function BlockNode({
   block,
@@ -473,7 +506,7 @@ function BlockNode({
 }) {
   switch (block.kind) {
     case "p":
-      return <p className={block.fine ? "fine" : undefined}>{runNodes(block.runs)}</p>;
+      return <p className={block.fine ? "fine" : undefined}>{runNodes(block.runs, go)}</p>;
     case "report":
       return (
         <div className={styles.report}>
@@ -484,7 +517,7 @@ function BlockNode({
           <ol className={styles.rpList}>
             {block.items.map((item, i) => (
               <li key={i}>
-                {runNodes(item.runs)}
+                {runNodes(item.runs, go)}
                 {item.action ? (
                   <>
                     <br />

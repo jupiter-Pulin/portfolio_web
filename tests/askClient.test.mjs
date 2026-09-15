@@ -185,8 +185,9 @@ test('answerActions: only the clickable part of the scripted answer', () => {
 
   const answer = 'AMM DEX 从零实现。\n\n配对合约只信任自己的余额。';
   const blocks = modelAnswerBlocks(answer, 'overview', 'amm');
+  // The model's line is kept as written; the project it names is a typed run (answerMarkup.ts).
   assert.deepEqual(blocks, [
-    { kind: 'p', runs: [{ t: 'text', v: 'AMM DEX 从零实现。' }] },
+    { kind: 'p', runs: [{ t: 'ent', id: 'amm', v: 'AMM DEX' }, { t: 'text', v: ' 从零实现。' }] },
     { kind: 'p', runs: [{ t: 'text', v: '配对合约只信任自己的余额。' }] },
     ...answerActions('overview', 'amm'),
   ]);
@@ -374,4 +375,25 @@ test('an answer carries the server meta, and hudLines spells it out from guide.t
   assert.equal(lines[3].text, `${GUIDE.hud.languageFrom} “技术栈是什么”`);
   assert.equal(hudLines({ ...hud, scopeId: null, langSample: null })[0].text, 'key=stack · scopeId=null');
   assert.equal(hudLines({ ...hud, langSample: null })[3].text, GUIDE.hud.languageNone);
+});
+
+test('the home console follows new lines only while the reader is at the bottom, or when they ask', async () => {
+  const { atThreadEnd, followThread } = await import('../src/lib/askClient.ts');
+  // 1000px of lines in a 400px window: the end is scrollTop 600.
+  assert.equal(atThreadEnd({ scrollTop: 600, scrollHeight: 1000, clientHeight: 400 }), true);
+  assert.equal(atThreadEnd({ scrollTop: 580, scrollHeight: 1000, clientHeight: 400 }), true, 'a few px short still counts');
+  assert.equal(atThreadEnd({ scrollTop: 200, scrollHeight: 1000, clientHeight: 400 }), false, 'scrolled up to read');
+  assert.equal(atThreadEnd({ scrollTop: 0, scrollHeight: 300, clientHeight: 400 }), true, 'nothing to scroll');
+
+  const asked = pendingMsgs([], 'hi');
+  const answered = settleMsgs(asked, { kind: 'error' }, { scopeId: null, langSample: 'hi' }).msgs;
+  assert.equal(followThread(false, asked, answered), false, 'a reply landing does not pull a reader back down');
+  assert.equal(followThread(true, asked, answered), true, 'at the bottom, the reply is followed');
+  assert.equal(followThread(false, answered, pendingMsgs(answered, 'more')), true, 'their own question brings them down');
+
+  const home = read('../src/components/GuideConsole.tsx');
+  assert.doesNotMatch(home, /lastElementChild\?\.scrollIntoView/, 'the page itself is never scrolled to the newest line');
+  assert.match(home, /onScroll=\{/, 'the thread remembers whether the reader is at its end');
+  assert.match(home, /followThread\(/);
+  assert.match(home, /el\.scrollTop = el\.scrollHeight/, 'following moves only the thread');
 });

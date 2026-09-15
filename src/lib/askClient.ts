@@ -114,6 +114,23 @@ export const isPending = (msgs: readonly ChatMsg[]) => msgs.some((m) => m.typing
 /** The visitor has put something to the guide — typed, a chip or a pick — not just been greeted. */
 export const hasAsked = (msgs: readonly ChatMsg[]) => msgs.some((m) => m.who === "you");
 
+/** How far short of the end a scrolled thread still counts as at its end, in px. */
+const THREAD_END_SLACK = 24;
+
+/** The reader is at the end of a scrolling thread (or it does not scroll at all). */
+export const atThreadEnd = (box: { scrollTop: number; scrollHeight: number; clientHeight: number }) =>
+  box.scrollHeight - box.scrollTop - box.clientHeight <= THREAD_END_SLACK;
+
+/**
+ * Whether the thread scrolls to its newest line after `prev` became `next`: while
+ * the reader sits at the end, or when they have just asked something themselves.
+ * A reply landing while they read further up leaves them where they are.
+ */
+export const followThread = (atEnd: boolean, prev: readonly ChatMsg[], next: readonly ChatMsg[]) => {
+  const asked = (msgs: readonly ChatMsg[]) => msgs.filter((m) => m.who === "you").length;
+  return atEnd || asked(next) > asked(prev);
+};
+
 /**
  * The visitor's line and "guide is typing…", together. While a request is
  * already in flight nothing is added — the caller sends nothing either.

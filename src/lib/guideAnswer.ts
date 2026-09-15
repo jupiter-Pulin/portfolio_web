@@ -14,8 +14,11 @@ import {
   scopedHeading,
   type AnswerKey,
 } from "../content/guide.ts";
+import BLOG_POSTS from "../generated/ask-blog.json" with { type: "json" };
 import { BLOG, EMAIL, GITHUB, LINKEDIN, MAILTO, X } from "../content/links.ts";
 import { LOOKING, PROJECTS, projectById, type Project } from "../content/projects.ts";
+import { markupLine } from "./answerMarkup.ts";
+import type { AskBlogEntry } from "./askIndex.ts";
 
 /** Pause the guide takes before answering, in ms. */
 export const TYPING_MS = 420;
@@ -24,12 +27,21 @@ export const TYPING_MS = 420;
 export const typingPlaceholder = (reduced: boolean): string | null =>
   reduced ? null : GUIDE.typing;
 
-/** A stretch of one paragraph. Text runs may carry <em> / <code> and nothing else. */
+/** A stretch of one paragraph. Text runs may carry <em> / <code> and nothing else;
+    the last four are what answerMarkup.ts recognises in a model-written line. */
 export type Run =
   | { t: "text"; v: string }
   | { t: "b"; v: string }
   | { t: "fine"; v: string }
-  | { t: "br" };
+  | { t: "br" }
+  // A project the site has, by name: clicking opens it.
+  | { t: "ent"; id: string; v: string }
+  // A term from a project's stack field.
+  | { t: "tech"; v: string }
+  // A figure.
+  | { t: "num"; v: string }
+  // An address the site lists; `mail` marks the email.
+  | { t: "link"; href: string; v: string; mail?: true };
 
 /** What a chip in the transcript can do — all of them local. */
 export type Action =
@@ -246,14 +258,43 @@ export function answerActions(
   return [...(found.length ? [actions(...found)] : []), ...picks];
 }
 
-/** The model's answer as plain paragraphs, then the content-built actions. */
-export const modelAnswerBlocks = (answer: string, key: AnswerKey, scopeId: string | null): Block[] => [
-  ...answer
-    .split("\n")
-    .filter((line) => line.trim() !== "")
-    .map((line) => para(text(line))),
-  ...answerActions(key, scopeId),
-];
+/** A chip for each listed post the answer links to, in order of first mention; unknown slugs are ignored. */
+function postActions(answer: string, posts: readonly AskBlogEntry[]): Action[] {
+  const found = new Map<string, Action>();
+  for (const [, slug] of answer.matchAll(/\/blog\/([a-z0-9-]+)/g)) {
+    const post = posts.find((p) => p.slug === slug);
+    if (post && !found.has(slug)) found.set(slug, { t: "nav", href: `/blog/${slug}`, label: post.title });
+  }
+  return [...found.values()];
+}
+
+/**
+ * The model's answer as paragraphs with the site's own things marked (answerMarkup.ts),
+ * then the content-built actions. Posts the answer links to join the end of that
+ * actions block, ahead of any picker.
+ */
+export const modelAnswerBlocks = (
+  answer: string,
+  key: AnswerKey,
+  scopeId: string | null,
+  posts: readonly AskBlogEntry[] = BLOG_POSTS,
+): Block[] => {
+  const onward = answerActions(key, scopeId);
+  const links = postActions(answer, posts);
+  if (links.length) {
+    // answerActions puts its one actions block, if any, before the picks.
+    const first = onward[0];
+    if (first?.kind === "actions") onward[0] = actions(...first.actions, ...links);
+    else onward.unshift(actions(...links));
+  }
+  return [
+    ...answer
+      .split("\n")
+      .filter((line) => line.trim() !== "")
+      .map((line) => para(...markupLine(line))),
+    ...onward,
+  ];
+};
 
 /** Four ways onward when the guide cannot answer: the blog, LinkedIn, X, the projects. */
 export const entryActions = (lang: CopyLang): Action[] => {
