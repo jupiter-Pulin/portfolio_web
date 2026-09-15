@@ -18,6 +18,7 @@ import { PROJECTS, projectById } from "@/content/projects";
 import {
   askBody,
   askGuide,
+  hudLines,
   nextKey,
   nextLangSample,
   pendingMsgs,
@@ -25,6 +26,7 @@ import {
   type AskInput,
   type AskResult,
   type ChatMsg,
+  type HudMeta,
   isPending,
 } from "@/lib/askClient";
 import { openIntro, type Action, type Block, type Run } from "@/lib/guideAnswer";
@@ -34,17 +36,46 @@ import { CopyEmailButton } from "./CopyEmailButton";
 import { Icon } from "./Icon";
 import styles from "./AskDrawer.module.css";
 
+/** The home page console announces itself so openAsk can focus it instead of the drawer. */
+export type InlineHost = { focus: () => void };
+
 export type AskApi = {
   isOpen: boolean;
-  /** Open the drawer, optionally scoped to one project id. */
+  /** Open the guide, optionally scoped to one project id: the drawer, or the home page console when one is mounted. */
   openAsk: (scopeId?: string) => void;
   closeAsk: () => void;
+  /** The one conversation, shared by the drawer and the home page console. */
+  msgs: ChatMsg[];
+  scopeId: string | null;
+  chips: Chip[];
+  /** False once the server has said the guide is switched off. */
+  available: boolean;
+  onChip: (chip: Chip) => void;
+  onPick: (id: string, then: AnswerKey) => void;
+  onAsk: (typed: string) => void;
+  /** Put one project in scope, or none, without asking anything. */
+  startScope: (id: string | null) => void;
+  openProject: (id: string) => void;
+  navigate: (href: string) => void;
+  registerInline: (host: InlineHost | null) => void;
 };
 
+const noop = () => {};
 const AskContext = createContext<AskApi>({
   isOpen: false,
-  openAsk: () => {},
-  closeAsk: () => {},
+  openAsk: noop,
+  closeAsk: noop,
+  msgs: [],
+  scopeId: null,
+  chips: [],
+  available: true,
+  onChip: noop,
+  onPick: noop,
+  onAsk: noop,
+  startScope: noop,
+  openProject: noop,
+  navigate: noop,
+  registerInline: noop,
 });
 
 export const useAsk = () => useContext(AskContext);
@@ -54,13 +85,16 @@ export const useAsk = () => useContext(AskContext);
  * conversation. Typed questions, chips and picks all go to /api/ask, where a
  * paid model writes the answer text; the links and buttons under it are built
  * from src/content. When the model is not reached, the drawer shows fixed copy
- * from src/content/guide.ts — never a canned answer.
+ * from src/content/guide.ts — never a canned answer. The home page mounts the
+ * same conversation in place (GuideConsole); there, opening the guide focuses
+ * that console instead of sliding the drawer in.
  */
 export function AskProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [scopeId, setScopeId] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<ChatMsg[]>([]);
+  const [available, setAvailable] = useState(true);
   // Refs, not state: the callbacks below read them without being rebuilt.
   const scope = useRef<string | null>(null);
   // The visitor's last typed question: the language every answer is written in.
@@ -68,6 +102,7 @@ export function AskProvider({ children }: { children: ReactNode }) {
   const busy = useRef(false);
   const greeted = useRef(false);
   const trigger = useRef<HTMLElement | null>(null);
+  const inline = useRef<InlineHost | null>(null);
 
   const append = useCallback((...added: Omit<ChatMsg, "key">[]) => {
     setMsgs((prev) => {
@@ -91,6 +126,7 @@ export function AskProvider({ children }: { children: ReactNode }) {
   const finish = useCallback(
     (result: AskResult, sent: { scopeId: string | null; langSample: string | null }) => {
       busy.current = false;
+      if (result.kind === "unavailable") setAvailable(false);
       const settled = settleMsgs([], result, sent);
       setMsgs((prev) => settleMsgs(prev, result, sent).msgs);
       setScope(settled.scopeId);
@@ -100,6 +136,12 @@ export function AskProvider({ children }: { children: ReactNode }) {
 
   const openAsk = useCallback(
     (nextScope?: string) => {
+      // On the home page the conversation is already on screen: go there.
+      if (inline.current) {
+        if (nextScope !== undefined) setScope(nextScope);
+        inline.current.focus();
+        return;
+      }
       trigger.current = (document.activeElement as HTMLElement | null) ?? null;
       const next = nextScope ?? null;
       const intro = openIntro({
@@ -141,13 +183,27 @@ export function AskProvider({ children }: { children: ReactNode }) {
   const onChip = useCallback(
     async (chip: Chip) => {
       if (busy.current) return;
+      // "← All questions" only leaves the project; there is nothing to ask the model.
+      if (chip.key === "all") {
+        setScope(null);
+        append({ who: "guide", blocks: [{ kind: "p", runs: [{ t: "text", v: GUIDE.all }] }] });
+        return;
+      }
       const input: AskInput = { via: "chip", question: echoLabel(chip.label), intent: chip.key };
       const convo = { scopeId: scope.current, langSample: langSample.current };
       begin(input.question);
       finish(await askGuide(askBody(input, convo)), convo);
     },
-    [begin, finish],
+    [append, begin, finish, setScope],
   );
+
+  const startScope = useCallback((id: string | null) => setScope(id), [setScope]);
+
+  /** The console shows the greeting itself, so the drawer never repeats it afterwards. */
+  const registerInline = useCallback((host: InlineHost | null) => {
+    inline.current = host;
+    if (host) greeted.current = true;
+  }, []);
 
   const onPick = useCallback(
     async (id: string, then: AnswerKey) => {
@@ -173,7 +229,27 @@ export function AskProvider({ children }: { children: ReactNode }) {
     [begin, finish],
   );
 
-  const api = useMemo(() => ({ isOpen, openAsk, closeAsk }), [isOpen, openAsk, closeAsk]);
+  const chips = useMemo(() => chipsFor(scopeId ? projectById(scopeId)?.name ?? null : null), [scopeId]);
+
+  const api = useMemo<AskApi>(
+    () => ({
+      isOpen,
+      openAsk,
+      closeAsk,
+      msgs,
+      scopeId,
+      chips,
+      available,
+      onChip,
+      onPick,
+      onAsk,
+      startScope,
+      openProject,
+      navigate,
+      registerInline,
+    }),
+    [isOpen, openAsk, closeAsk, msgs, scopeId, chips, available, onChip, onPick, onAsk, startScope, openProject, navigate, registerInline],
+  );
 
   return (
     <AskContext.Provider value={api}>
@@ -181,7 +257,7 @@ export function AskProvider({ children }: { children: ReactNode }) {
       <AskDrawer
         isOpen={isOpen}
         msgs={msgs}
-        chips={chipsFor(scopeId ? projectById(scopeId)?.name ?? null : null)}
+        chips={chips}
         onChip={onChip}
         onPick={onPick}
         onAsk={onAsk}
@@ -310,9 +386,10 @@ function AskDrawer({
 }
 
 /** Where an action chip can take the visitor: a case page, or another page of the site. */
-type Go = { open: (id: string) => void; nav: (href: string) => void };
+export type Go = { open: (id: string) => void; nav: (href: string) => void };
 
-function Bubble({
+/** One transcript line, shared by the drawer and the home page console. */
+export function Bubble({
   msg,
   go,
   onPick,
@@ -333,7 +410,31 @@ function Bubble({
       {(msg.blocks ?? []).map((block, i) => (
         <BlockNode key={i} block={block} go={go} onPick={onPick} />
       ))}
+      {msg.meta ? <Hud meta={msg.meta} /> : null}
     </div>
+  );
+}
+
+/** "Under the hood": what the server did for this answer, folded away until asked for. */
+function Hud({ meta }: { meta: HudMeta }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button className={styles.hudToggle} type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        {GUIDE.hud.toggle}
+      </button>
+      {open ? (
+        <div className={styles.hud}>
+          {hudLines(meta).map((line) => (
+            <Fragment key={line.label}>
+              <b>{line.label}</b>
+              <span>{line.text}</span>
+            </Fragment>
+          ))}
+          <p className={styles.hudNote}>{GUIDE.hud.note}</p>
+        </div>
+      ) : null}
+    </>
   );
 }
 

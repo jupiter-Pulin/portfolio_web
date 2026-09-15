@@ -22,25 +22,24 @@ function mediaBlock(css, px) {
 
 const squash = (s) => s.replace(/\s+/g, ' ');
 
-test('hero is two columns by default and one column below 1024px', () => {
+test('hero is card + guide by default and one column below 1024px', () => {
   const css = read('../src/components/Hero.module.css');
-  assert.match(squash(css), /\.hero \{[^}]*grid-template-columns: 1\.02fr 1fr/);
+  assert.match(squash(css), /\.hero \{[^}]*grid-template-columns: 372px minmax\(0, 1fr\)/);
   assert.match(squash(mediaBlock(css, 1024)), /\.hero \{[^}]*grid-template-columns: 1fr/);
 });
 
-test('tiles become a snapping horizontal scroller below 1024px', () => {
+test('the work strip is one scrollable row at every width, narrower tiles on phones', () => {
   const css = read('../src/components/SelectedWorkStrip.module.css');
-  assert.match(squash(css), /\.tiles \{[^}]*grid-template-columns: repeat\(4, 1fr\)/);
-  const narrow = squash(mediaBlock(css, 1024));
-  assert.match(narrow, /\.tiles \{[^}]*overflow-x: auto/);
-  assert.match(narrow, /\.tiles \{[^}]*scroll-snap-type: x mandatory/);
-  assert.match(narrow, /\.tile \{[^}]*scroll-snap-align: start/);
+  assert.match(squash(css), /\.tiles \{[^}]*overflow-x: auto/);
+  assert.match(squash(css), /\.track \{[^}]*width: max-content/);
+  assert.match(squash(css), /\.tile \{[^}]*flex: 0 0 300px/);
+  assert.match(squash(mediaBlock(css, 640)), /\.tile \{[^}]*flex-basis: 262px/);
 });
 
-test('terminal and ship panel stack, step captions drop, below 640px', () => {
-  const phone = squash(mediaBlock(read('../src/components/HowIBuildCard.module.css'), 640));
-  assert.match(phone, /\.winBottom \{[^}]*grid-template-columns: 1fr/);
-  assert.match(phone, /\.steps small \{[^}]*display: none/);
+test('the identity card stacks its facts and shrinks the avatar below 640px', () => {
+  const phone = squash(mediaBlock(read('../src/components/IdentityCard.module.css'), 640));
+  assert.match(phone, /\.avatar \{[^}]*width: 92px/);
+  assert.match(phone, /\.fact \{[^}]*grid-template-columns: 1fr/);
 });
 
 test('the header ask button keeps only its icon below 640px', () => {

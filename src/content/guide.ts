@@ -50,6 +50,41 @@ export const GUIDE = {
   // The location line is the same fact the footer states; it stays in one place.
   location: SITE.location,
 
+  // The home page, where the guide answers in place instead of in the drawer.
+  hero: {
+    who: "Pulin's site guide",
+    online: "Online",
+    off: "Switched off",
+    headline: "Tell me what you're hiring for, or what you want to see.",
+    headlineAccent: "I'll take you there.",
+    quickLabel: "Quick questions",
+    scopedLabel: "Scoped to",
+    startLabel: "Or start from a project",
+    askProject: "ask about this project ↑",
+    // Fixed lines under the composer; the two numbers are the ones the server enforces.
+    rules: {
+      quota: (n: number) => `${n} questions a day per visitor`,
+      language: "answers in the language you ask in",
+      wait: (seconds: number) => `usually under ${seconds} s`,
+      behalf: "never acts on Pulin's behalf",
+    },
+  },
+
+  // "Under the hood": what the server did for one answer, shown beneath it.
+  hud: {
+    toggle: "under the hood",
+    route: "route",
+    retrieval: "retrieval",
+    retrievalNote: (k: number) => `local hash index · top-${k}`,
+    model: "model",
+    tokens: (input: number, output: number) =>
+      `${input.toLocaleString("en-US")} in / ${output.toLocaleString("en-US")} out tokens`,
+    language: "language",
+    languageFrom: "sample from your last typed question:",
+    languageNone: "this question",
+    note: "No embedding API, no vector database: chunks are hashed locally, the model routes and writes the answer in one call.",
+  },
+
   fit: {
     intro: "Two places to look, in order.",
     title: "Fit · payments / fintech backend",
@@ -126,8 +161,9 @@ export const GUIDE = {
     zh: { lead: "你可以先看看这些：", blog: "博客", linkedin: "领英", x: "推特", work: "项目简介" },
     en: { lead: "In the meantime:", blog: "Blog", linkedin: "LinkedIn", x: "X", work: "Projects" },
   },
-  // The input's maxLength and the server's default question limit read the same number.
-  limits: { maxQuestionChars: 100 },
+  // The input's maxLength and the server's default question limit read the same number;
+  // the daily quota the home page states is the server's default visitor limit.
+  limits: { maxQuestionChars: 100, visitorDailyQuestions: 10 },
 
   chips: {
     global: [

@@ -51,6 +51,12 @@ const ICONS = {
       <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" />
     </g>
   ),
+  send: (
+    <g {...stroke}>
+      <path d="M4 12 20 4l-4 16-4-7z" />
+      <path d="M12 13 20 4" />
+    </g>
+  ),
   check: (
     <g {...stroke} strokeWidth={3.2}>
       <path d="m5 12 5 5 9-10" />

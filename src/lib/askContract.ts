@@ -33,8 +33,19 @@ export type AskRequest = {
 
 export type ModelOutput = { key: AnswerKey; scopeId: string | null; answer: string };
 
+/** What the server did for one answer; the drawer shows it as "under the hood". */
+export type AskMeta = {
+  /** Ids of the index chunks handed to the model, best first. */
+  candidates: string[];
+  model: string;
+  /** Wall-clock time of the model call, in ms. */
+  ms: number;
+  usage: { inputTokens: number; outputTokens: number };
+  costUsd: number;
+};
+
 export type AskResponse =
-  | ({ ok: true } & ModelOutput)
+  | ({ ok: true; meta?: AskMeta } & ModelOutput)
   | { ok: false; error: "invalid" | "unavailable" | "system" }
   | { ok: false; error: "limited"; reason: "visitor" | "budget" };
 
@@ -74,4 +85,23 @@ export function validateModelOutput(raw: unknown): ModelOutput | null {
   if (modelOutputProblem(value)) return null;
   const o = value as ModelOutput;
   return { key: o.key, scopeId: o.scopeId, answer: o.answer };
+}
+
+/** The meta block of a 200 reply, or null when it is missing or malformed. */
+export function readMeta(raw: unknown): AskMeta | null {
+  const m = (raw as { meta?: unknown } | null)?.meta;
+  if (!m || typeof m !== "object") return null;
+  const o = m as Record<string, unknown>;
+  const usage = o.usage as Record<string, unknown> | undefined;
+  const num = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
+  if (!Array.isArray(o.candidates) || !o.candidates.every((c) => typeof c === "string")) return null;
+  if (typeof o.model !== "string" || !num(o.ms) || !num(o.costUsd)) return null;
+  if (!usage || !num(usage.inputTokens) || !num(usage.outputTokens)) return null;
+  return {
+    candidates: o.candidates,
+    model: o.model,
+    ms: o.ms,
+    usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens },
+    costUsd: o.costUsd,
+  };
 }

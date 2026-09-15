@@ -10,7 +10,7 @@ import { GUIDE } from '../src/content/guide.ts';
 import { BLOG, EMAIL, GITHUB, LINKEDIN, MAILTO, X } from '../src/content/links.ts';
 import { PROJECTS } from '../src/content/projects.ts';
 import { ASK_CLIENT_TIMEOUT_MS } from '../src/lib/askContract.ts';
-import { askBody, askGuide, copyLang, nextLangSample, pendingMsgs, settleMsgs } from '../src/lib/askClient.ts';
+import { askBody, askGuide, copyLang, hudLines, nextLangSample, pendingMsgs, settleMsgs } from '../src/lib/askClient.ts';
 import {
   answerActions,
   answerBlocks,
@@ -299,4 +299,38 @@ test('no new runtime dependency', () => {
   const pkg = JSON.parse(read('../package.json'));
   // `marked` belongs to the blog (Markdown → HTML at build time); its reason is recorded in README.md.
   assert.deepEqual(pkg.dependencies, { marked: '^18.0.13', next: '16.3.5', react: '19.2.8', 'react-dom': '19.2.8' });
+});
+
+test('an answer carries the server meta, and hudLines spells it out from guide.ts', async () => {
+  const meta = {
+    candidates: ['chain:short:0', 'chain:stack:0'],
+    model: 'deepseek-flash',
+    ms: 2426,
+    usage: { inputTokens: 2077, outputTokens: 235 },
+    costUsd: 0.000905,
+  };
+  const good = { ok: true, key: 'stack', scopeId: 'chain', answer: 'Node only.' };
+  const res = await askGuide({ question: 'q', scopeId: null }, { fetch: replying(200, { ...good, meta }) });
+  assert.deepEqual(res, { kind: 'answer', key: 'stack', scopeId: 'chain', answer: 'Node only.', meta });
+  // A missing or malformed meta block drops silently; the answer is still an answer.
+  for (const bad of [undefined, null, 'x', { model: 1 }, { ...meta, candidates: [1] }, { ...meta, usage: { inputTokens: '1' } }]) {
+    const r = await askGuide({ question: 'q', scopeId: null }, { fetch: replying(200, { ...good, meta: bad }) });
+    assert.deepEqual(r, { kind: 'answer', key: 'stack', scopeId: 'chain', answer: 'Node only.' }, JSON.stringify(bad));
+  }
+
+  const pending = pendingMsgs([], '技术栈是什么');
+  const settled = settleMsgs(pending, res, { scopeId: null, langSample: '技术栈是什么' });
+  const hud = { ...meta, key: 'stack', scopeId: 'chain', langSample: '技术栈是什么' };
+  assert.deepEqual(settled.msgs[1], { key: 1, who: 'guide', blocks: modelAnswerBlocks('Node only.', 'stack', 'chain'), meta: hud });
+  const plain = settleMsgs(pending, { kind: 'answer', key: 'stack', scopeId: 'chain', answer: 'Node only.' }, { scopeId: null, langSample: null });
+  assert.ok(!('meta' in plain.msgs[1]), 'no meta, no panel');
+
+  const lines = hudLines(hud);
+  assert.deepEqual(lines.map((l) => l.label), [GUIDE.hud.route, GUIDE.hud.retrieval, GUIDE.hud.model, GUIDE.hud.language]);
+  assert.equal(lines[0].text, 'key=stack · scopeId=chain');
+  assert.equal(lines[1].text, `${GUIDE.hud.retrievalNote(2)} · chain:short:0 chain:stack:0`);
+  assert.equal(lines[2].text, 'deepseek-flash · 2.4 s · 2,077 in / 235 out tokens · $0.0009');
+  assert.equal(lines[3].text, `${GUIDE.hud.languageFrom} “技术栈是什么”`);
+  assert.equal(hudLines({ ...hud, scopeId: null, langSample: null })[0].text, 'key=stack · scopeId=null');
+  assert.equal(hudLines({ ...hud, langSample: null })[3].text, GUIDE.hud.languageNone);
 });

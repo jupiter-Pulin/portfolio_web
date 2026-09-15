@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import index from '../src/generated/ask-index.json' with { type: 'json' };
 import { COUNTER_TTL_SEC, dayKey, monthKey, visitorKey } from '../src/server/ask/limits.ts';
-import { createAskHandler } from '../src/server/ask/handler.ts';
+import { TOP_K, createAskHandler } from '../src/server/ask/handler.ts';
 import { DEV_IP_SALT } from '../src/server/ask/config.ts';
 import { createMemoryStore } from '../src/server/ask/store.ts';
 import { ProviderError } from '../src/server/ask/providers/index.ts';
@@ -38,7 +38,7 @@ function setup({ env = baseEnv(), provider = fakeProvider(), store = createMemor
 
 const CHAIN_ANSWER = 'chain-pulse 每晚运行，并提交 reports/STATUS.md。';
 
-test('a valid answer comes back with exactly ok, key, scopeId and answer', async () => {
+test('a valid answer comes back with ok, key, scopeId, answer and the meta block', async () => {
   const provider = fakeProvider(() => ({
     content: JSON.stringify({ key: 'overview', scopeId: 'chain', answer: CHAIN_ANSWER }),
     usage: { inputTokens: 100, outputTokens: 50 },
@@ -46,8 +46,17 @@ test('a valid answer comes back with exactly ok, key, scopeId and answer', async
   const { handler, store } = setup({ provider });
   const res = await readJson(await post(handler, { question: 'chain-pulse 是什么', scopeId: null }));
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body, { ok: true, key: 'overview', scopeId: 'chain', answer: CHAIN_ANSWER });
-  assert.equal(Object.keys(res.body).length, 4);
+  const { meta, ...rest } = res.body;
+  assert.deepEqual(rest, { ok: true, key: 'overview', scopeId: 'chain', answer: CHAIN_ANSWER });
+  assert.equal(Object.keys(res.body).length, 5);
+  // "Under the hood": the chunks the model saw, the model, the wall-clock time, tokens and cost.
+  assert.deepEqual(Object.keys(meta).sort(), ['candidates', 'costUsd', 'model', 'ms', 'usage']);
+  assert.equal(meta.candidates.length, TOP_K);
+  assert.ok(meta.candidates.every((id) => index.some((c) => c.id === id)), 'candidate ids are index chunk ids');
+  assert.equal(meta.model, baseEnv().ASK_MODEL);
+  assert.ok(Number.isInteger(meta.ms) && meta.ms >= 0, 'ms is a duration');
+  assert.deepEqual(meta.usage, { inputTokens: 100, outputTokens: 50 });
+  assert.ok(Math.abs(meta.costUsd - 0.0002) < 1e-12);
   assert.equal(await num(store, day('answered')), 1);
   // 100 × $1 + 50 × $2 per million tokens.
   assert.ok(Math.abs((await num(store, day('cost'))) - 0.0002) < 1e-12);
@@ -445,7 +454,9 @@ test('model output is unwrapped losslessly before the structure check; refusals 
     const { handler, store } = setup({ provider: fakeProvider(() => ({ content, usage })) });
     const res = await readJson(await post(handler, { question: 'hi', scopeId: null }));
     assert.equal(res.status, 200, name);
-    assert.deepEqual(res.body, { ok: true, key: name === 'name in lower case' ? 'stack' : 'decision', scopeId, answer }, name);
+    const rest = { ...res.body };
+    delete rest.meta;
+    assert.deepEqual(rest, { ok: true, key: name === 'name in lower case' ? 'stack' : 'decision', scopeId, answer }, name);
     assert.equal(await num(store, day('answered')), 1, name);
   }
 

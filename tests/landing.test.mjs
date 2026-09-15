@@ -6,10 +6,11 @@ import { execFileSync, spawn } from 'node:child_process';
 import { createServer } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
-import { HERO, HOW_I_BUILD, SITE } from '../src/content/copy.ts';
+import { IDENTITY, SITE } from '../src/content/copy.ts';
 import { GUIDE } from '../src/content/guide.ts';
 import { EMAIL, MAILTO, SOCIALS } from '../src/content/links.ts';
 import { PROJECTS } from '../src/content/projects.ts';
+import { ASK_CLIENT_TIMEOUT_MS } from '../src/lib/askContract.ts';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const NEXT = fileURLToPath(new URL('../node_modules/.bin/next', import.meta.url));
@@ -85,48 +86,30 @@ before(async () => {
 
 after(() => server?.kill());
 
-test('the landing page renders the hero copy verbatim from src/content', async () => {
+test('the landing page renders the identity card and the guide from src/content', () => {
   const body = textOf(pages.home);
   assert.match(pages.home, new RegExp(`<title>${SITE.title}</title>`));
-  assert.ok(body.includes(HERO.badge), 'hero badge');
-  assert.ok(body.includes(HERO.headline), 'full headline, accent span included');
-  assert.ok(body.includes(HERO.lede), 'lede');
-  assert.ok(body.includes(HERO.ctaWork), 'view my work');
-  assert.ok(body.includes(HERO.ctaHire), 'hire me');
-  assert.ok(body.includes(HERO.ctaCopy), 'copy email');
-  assert.ok(body.includes(HERO.tiltHint), 'tilt hint');
-});
+  assert.ok(body.includes(IDENTITY.eyebrow), 'card eyebrow');
+  assert.ok(body.includes(IDENTITY.status), 'open to work');
+  assert.ok(body.includes(SITE.name) && body.includes(IDENTITY.role), 'name and role');
+  for (const f of IDENTITY.facts) assert.ok(body.includes(`${f.label} ${f.text}`), f.label);
+  assert.ok(body.includes(IDENTITY.ctaHire) && body.includes(IDENTITY.ctaCopy), 'hire me / copy email');
+  const avatar = decode(pages.home).match(/<img\b[^>]*src="\/avatar\.jpg"[^>]*>/);
+  assert.ok(avatar, 'the avatar is a plain image from public/');
+  assert.ok(avatar[0].includes(`alt="${IDENTITY.avatarAlt}"`), 'the avatar carries its alt text');
 
-test('the How I Build card renders every step, log line and ship stat', () => {
-  const body = textOf(pages.home);
-  assert.ok(body.includes(HOW_I_BUILD.title), 'card title');
-  assert.ok(body.includes(HOW_I_BUILD.flow), 'flow line');
-  assert.ok(body.includes(HOW_I_BUILD.live), 'live badge');
-  assert.ok(body.includes(HOW_I_BUILD.subtitle), 'card subtitle');
-  for (const step of HOW_I_BUILD.steps) {
-    assert.ok(body.includes(`${step.n}. ${step.name}`), `step ${step.name}`);
-    assert.ok(body.includes(step.desc), `step desc ${step.name}`);
-  }
-  assert.ok(body.includes(HOW_I_BUILD.terminal.prompt), 'terminal prompt');
-  for (const line of HOW_I_BUILD.terminal.lines) assert.ok(body.includes(line), line);
-  assert.ok(body.includes(HOW_I_BUILD.terminal.shipping), 'shipping line stays');
-  assert.ok(body.includes(HOW_I_BUILD.ship.title), 'ship title');
-  assert.ok(body.includes(HOW_I_BUILD.ship.text), 'ship text');
-  for (const stat of HOW_I_BUILD.ship.stats) {
-    assert.ok(body.includes(stat.v), stat.v);
-    assert.ok(body.includes(stat.l), stat.l);
-  }
-});
-
-test('the build log starts unticked and keeps the shipping line spinning', () => {
-  // The five lines must arrive as work still to do — a page that ships them
-  // already ticked would satisfy the copy assertions but lose the animation.
-  const ticks = pages.home.match(/data-done="(true|false)"/g) ?? [];
-  assert.deepEqual(ticks, Array(HOW_I_BUILD.terminal.lines.length).fill('data-done="false"'));
-  assert.ok(
-    textOf(pages.home).includes(HOW_I_BUILD.terminal.shipping),
-    'Shipping... is not part of the checklist and never ticks',
-  );
+  // The guide answers in place: its greeting is the headline, the chips are on the page.
+  assert.ok(body.includes(GUIDE.hero.who), 'who is speaking');
+  assert.ok(body.includes(`${GUIDE.hero.headline} ${GUIDE.hero.headlineAccent}`), 'headline, accent span included');
+  assert.ok(body.includes(GUIDE.greetingFine), 'the fine print');
+  assert.ok(body.includes(GUIDE.hero.quickLabel) && body.includes(GUIDE.hero.startLabel), 'chip labels');
+  for (const chip of GUIDE.chips.global) assert.ok(body.includes(chip.label), chip.label);
+  for (const p of PROJECTS) assert.ok(body.includes(p.name), `${p.name} as a starting point`);
+  assert.ok(body.includes(GUIDE.hero.rules.quota(GUIDE.limits.visitorDailyQuestions)), 'the quota line');
+  assert.ok(body.includes(GUIDE.hero.rules.wait(ASK_CLIENT_TIMEOUT_MS / 1000)), 'the wait line');
+  assert.ok(body.includes(GUIDE.hero.rules.language) && body.includes(GUIDE.hero.rules.behalf), 'the other two lines');
+  assert.match(pages.home, new RegExp(`maxlength="${GUIDE.limits.maxQuestionChars}"`, 'i'), 'the composer keeps the question limit');
+  assert.ok(!body.includes('How I Build'), 'the old card is gone');
 });
 
 test('the toast host ships with the page, empty and hidden', () => {
@@ -135,12 +118,6 @@ test('the toast host ships with the page, empty and hidden', () => {
   assert.match(tag[0], /role="status"/);
   assert.match(tag[0], /aria-live="polite"/);
   assert.match(tag[0], /hidden(=""|\s|>)/, 'the toast is hidden until something is copied');
-});
-
-test('the hero card announces the tilt hint it will swap on pin', () => {
-  const body = textOf(pages.home);
-  assert.ok(body.includes(HERO.tiltHint), 'unpinned hint');
-  assert.ok(!body.includes(HERO.tiltPinned), 'the pinned hint only appears after a click');
 });
 
 test('header socials use the links.ts urls and open in a new tab', () => {
@@ -186,7 +163,7 @@ test('Hire Me points at the prefilled mailto from links.ts', () => {
   assert.ok(textOf(pages.home).includes(EMAIL), 'footer shows the address');
 });
 
-test('selected work tiles link to /work/<id> and show role, name and short', () => {
+test('selected work tiles link to /work/<id>, show role, name, short and stack, and repeat once for the loop', () => {
   const body = textOf(pages.home);
   assert.ok(body.includes(SITE.stripTitle), 'strip eyebrow');
   assert.ok(body.includes(SITE.stripOpenAll), 'open all');
@@ -194,9 +171,12 @@ test('selected work tiles link to /work/<id> and show role, name and short', () 
     const tag = tagWithHref(pages.home, `/work/${p.id}`);
     assert.ok(tag, `no link to /work/${p.id}`);
     assert.match(tag, /^<a\b/);
-    assert.ok(body.includes(`${p.role} ${p.name} ${p.short}`), `tile content for ${p.id}`);
+    assert.ok(body.includes(`${p.role} ${p.name} ${p.short} ${p.stack} ${GUIDE.hero.askProject}`), `tile content for ${p.id}`);
+    // The strip carries every tile twice so it can drift without an edge; the copy is hidden from readers.
+    assert.equal((decode(pages.home).match(new RegExp(`href="/work/${p.id}"`, 'g')) ?? []).length, 2, `${p.id} appears twice`);
   }
-  assert.ok(tagWithHref(pages.home, '/work'), 'View My Work / open all link to /work');
+  assert.match(pages.home, /aria-hidden="true"[^>]*>\s*<div[^>]*class="[^"]*tile/, 'the second copy is aria-hidden');
+  assert.ok(tagWithHref(pages.home, '/work'), 'open all links to /work');
 });
 
 test('footer carries the identity block and the three text links', () => {

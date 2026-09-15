@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SITE } from "@/content/copy";
 import { PROJECTS } from "@/content/projects";
+import { WorkMarquee } from "./WorkMarquee";
 import styles from "./SelectedWorkStrip.module.css";
 
 export function SelectedWorkStrip() {
@@ -14,15 +15,9 @@ export function SelectedWorkStrip() {
           {SITE.stripOpenAll}
         </Link>
       </div>
-      <div className={styles.tiles}>
-        {PROJECTS.map((p) => (
-          <Link className={styles.tile} key={p.id} href={`/work/${p.id}`}>
-            <span className={styles.tileRole}>{p.role}</span>
-            <b>{p.name}</b>
-            <p>{p.short}</p>
-          </Link>
-        ))}
-      </div>
+      <WorkMarquee
+        projects={PROJECTS.map(({ id, name, role, short, stack, hue }) => ({ id, name, role, short, stack, hue }))}
+      />
     </section>
   );
 }

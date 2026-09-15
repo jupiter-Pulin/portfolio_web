@@ -210,3 +210,55 @@
   gap: 8px;
   margin-top: 10px;
 }
+
+/* ---------- under the hood ---------- */
+.hudToggle {
+  margin-top: 10px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font: 500 11.5px var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--dim);
+}
+.hudToggle:hover {
+  color: var(--cyan);
+}
+.hudToggle::before {
+  content: "▸";
+  font-size: 10px;
+}
+.hudToggle[aria-expanded="true"]::before {
+  content: "▾";
+}
+.hud {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: 500 12px / 1.75 var(--font-mono);
+  color: var(--muted);
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 0 12px;
+}
+.hud b {
+  color: var(--dim);
+  font-weight: 500;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-top: 2px;
+}
+.hud span {
+  overflow-wrap: anywhere;
+}
+.hudNote {
+  grid-column: 1 / -1;
+  margin: 6px 0 0;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+  color: var(--dim);
+  font-size: 11px;
+}

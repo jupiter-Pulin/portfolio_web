@@ -3,7 +3,7 @@
 // wires these to state and events.
 import type { AnswerKey } from "../content/guide.ts";
 import { GUIDE } from "../content/guide.ts";
-import { ASK_CLIENT_TIMEOUT_MS, validateModelOutput, type AskRequest } from "./askContract.ts";
+import { ASK_CLIENT_TIMEOUT_MS, readMeta, validateModelOutput, type AskMeta, type AskRequest } from "./askContract.ts";
 import {
   errorBlocks,
   limitedBlocks,
@@ -21,7 +21,7 @@ export type AskInput =
 export type Convo = { scopeId: string | null; langSample: string | null };
 
 export type AskResult =
-  | { kind: "answer"; key: AnswerKey; scopeId: string | null; answer: string }
+  | { kind: "answer"; key: AnswerKey; scopeId: string | null; answer: string; meta?: AskMeta }
   | { kind: "limited" }
   | { kind: "unavailable" }
   | { kind: "error" };
@@ -77,7 +77,10 @@ export async function askGuide(
       }
       if (res.status !== 200 || (data as { ok?: unknown } | null)?.ok !== true) return { kind: "error" };
       const output = validateModelOutput(data);
-      return output ? { kind: "answer", ...output } : { kind: "error" };
+      if (!output) return { kind: "error" };
+      // A reply without a usable meta block is still an answer; it just has nothing to show under it.
+      const meta = readMeta(data);
+      return { kind: "answer", ...output, ...(meta ? { meta } : {}) };
     } catch {
       return { kind: "error" };
     }
@@ -89,6 +92,9 @@ export async function askGuide(
   }
 }
 
+/** The server's meta for one answer plus what the client knows about the same request. */
+export type HudMeta = AskMeta & { key: AnswerKey; scopeId: string | null; langSample: string | null };
+
 /** One transcript entry. A guide entry is either a typing placeholder or blocks. */
 export type ChatMsg = {
   key: number;
@@ -96,6 +102,8 @@ export type ChatMsg = {
   text?: string;
   blocks?: Block[];
   typing?: string;
+  /** Only an answer the server described carries this. */
+  meta?: HudMeta;
 };
 
 export const nextKey = (msgs: readonly ChatMsg[]) => msgs.reduce((max, m) => Math.max(max, m.key + 1), 0);
@@ -132,8 +140,33 @@ export function settleMsgs(
         : result.kind === "unavailable"
           ? unavailableBlocks(lang)
           : errorBlocks(lang);
+  const meta: HudMeta | undefined =
+    result.kind === "answer" && result.meta
+      ? { ...result.meta, key: result.key, scopeId: result.scopeId, langSample: sent.langSample }
+      : undefined;
   return {
-    msgs: msgs.map((m) => (m.typing !== undefined ? { key: m.key, who: "guide", blocks } : m)),
+    msgs: msgs.map((m) =>
+      m.typing !== undefined ? { key: m.key, who: "guide", blocks, ...(meta ? { meta } : {}) } : m,
+    ),
     scopeId: result.kind === "answer" ? result.scopeId : sent.scopeId,
   };
+}
+
+export type HudLine = { label: string; text: string };
+
+/** The "under the hood" rows for one answer, as label + text, from the copy in guide.ts. */
+export function hudLines(meta: HudMeta): HudLine[] {
+  const seconds = (meta.ms / 1000).toFixed(1);
+  return [
+    { label: GUIDE.hud.route, text: `key=${meta.key} · scopeId=${meta.scopeId ?? "null"}` },
+    { label: GUIDE.hud.retrieval, text: `${GUIDE.hud.retrievalNote(meta.candidates.length)} · ${meta.candidates.join(" ")}` },
+    {
+      label: GUIDE.hud.model,
+      text: `${meta.model} · ${seconds} s · ${GUIDE.hud.tokens(meta.usage.inputTokens, meta.usage.outputTokens)} · $${meta.costUsd.toFixed(4)}`,
+    },
+    {
+      label: GUIDE.hud.language,
+      text: meta.langSample ? `${GUIDE.hud.languageFrom} “${meta.langSample}”` : GUIDE.hud.languageNone,
+    },
+  ];
 }

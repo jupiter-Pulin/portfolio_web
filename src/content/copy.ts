@@ -4,6 +4,8 @@ export const SITE = {
   wordmark: 'Pulin',
   title: 'Pulin Tang',
   location: 'Shenzhen, China · UTC+8 · Open to relocation and to remote',
+  description:
+    'Pulin Tang, a product-minded software engineer with experience in fintech, blockchain and AI. Ask the site guide about the work, the stack, or how to reach him.',
   askLabel: 'Any question?',
   workTitle: 'Selected Work',
   workSubtitle: 'Four systems, one recurring problem: keeping state correct when the environment is not reliable.',
@@ -30,46 +32,27 @@ export const WORK = {
   openReadme: 'Open README on GitHub ↗',
 } as const;
 
-export const HERO = {
-  badge: 'Building at the intersection of fintech × AI',
-  headline: 'I build products that turn complex systems into simple experiences.',
-  // The trailing part of the headline rendered with the blue→cyan gradient.
-  headlineAccent: 'simple experiences.',
-  lede: "I'm Pulin, a product-minded software engineer with experience in fintech, blockchain and AI. I enjoy taking ideas from 0 to 1 — from product design and system architecture to development, deployment and real users.",
-  ctaWork: 'View My Work',
-  ctaHire: 'Hire Me',
-  ctaCopy: 'copy email',
-  tiltHint: 'move the mouse to tilt · click to pin',
-  tiltPinned: 'pinned · click to release',
-} as const;
-
-export const HOW_I_BUILD = {
-  flow: 'Ideas → Code → Users',
-  live: 'Live',
-  title: 'How I Build',
-  subtitle: 'From idea to real-world products, end to end.',
-  activeStep: 3,
-  steps: [
-    { n: 1, name: 'Idea', desc: 'Find real problems and define scope', icon: 'bulb' },
-    { n: 2, name: 'Design', desc: 'Turn ideas into product plans', icon: 'file' },
-    { n: 3, name: 'Build', desc: 'Frontend, backend, AI and infrastructure', icon: 'code' },
-    { n: 4, name: 'Deploy', desc: 'Ship to production with reliability', icon: 'rocket' },
-    { n: 5, name: 'Iterate', desc: 'Learn from users and keep improving', icon: 'chart' },
+// The identity card on the home page: short forms of what LOOKING and
+// SITE.location already say, plus the avatar's alt text.
+export const IDENTITY = {
+  eyebrow: 'Pulin Tang · identity',
+  status: 'Open to work',
+  role: 'Product-minded software engineer · fintech × AI',
+  avatarAlt: 'Pulin, drawn as a small horned creature resting its chin on its hands',
+  facts: [
+    { label: 'Based', text: 'Shenzhen, China · UTC+8' },
+    {
+      label: 'Looking for',
+      text: 'Backend or full-stack work where being wrong has a cost: payments & settlement, trading, AI infrastructure',
+    },
+    {
+      label: 'Experience',
+      text: 'TypeScript · Node day to day · a year of production work in a team · four systems taken end to end solo',
+    },
+    { label: 'Open to', text: 'Relocation · remote' },
   ],
-  terminal: {
-    prompt: '> building...',
-    lines: ['Product architecture', 'Backend services', 'AI agent workflows', 'Frontend experience', 'Production infrastructure'],
-    shipping: 'Shipping...',
-  },
-  ship: {
-    title: 'Ship useful products.',
-    text: 'Build things that people actually use, and make a positive impact.',
-    stats: [
-      { v: '0 → 1', l: 'Product Experience' },
-      { v: 'Real Users', l: 'Production Systems' },
-      { v: 'Keep Learning', l: 'Always improving' },
-    ],
-  },
+  ctaHire: 'Hire me',
+  ctaCopy: 'copy email',
 } as const;
 
 // Chrome for the /blog screens. Posts themselves are Markdown files in src/content/blog/.

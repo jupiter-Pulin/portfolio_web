@@ -142,6 +142,7 @@ export function createAskHandler(deps: AskDeps) {
       const user = buildUserPrompt({ question, scopeId: body.scopeId, intent: body.intent, langSample, candidates });
 
       let result: Awaited<ReturnType<Provider["ask"]>>;
+      const started = Date.now();
       try {
         if (deadline.signal.aborted) throw new Timeout();
         const aborted = new Promise<never>((_, reject) =>
@@ -186,6 +187,14 @@ export function createAskHandler(deps: AskDeps) {
         // "all" leaves every project, whatever the model said.
         scopeId: output.key === "all" ? null : output.scopeId,
         answer: output.answer,
+        // What happened on the way, for the "under the hood" panel beneath the answer.
+        meta: {
+          candidates: candidates.map((c) => c.id),
+          model: config.model,
+          ms: Date.now() - started,
+          usage: result.usage,
+          costUsd: costUsd(result.usage, config),
+        },
       });
     } finally {
       clearTimeout(timer);

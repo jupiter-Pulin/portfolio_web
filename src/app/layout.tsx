@@ -3,7 +3,7 @@ import { IBM_Plex_Sans, JetBrains_Mono, Nunito } from "next/font/google";
 import "./globals.css";
 import { AskProvider } from "@/components/AskDrawer";
 import { ToastProvider } from "@/components/Toast";
-import { HERO, SITE } from "@/content/copy";
+import { SITE } from "@/content/copy";
 
 const display = Nunito({
   variable: "--font-display",
@@ -31,7 +31,7 @@ const mono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: SITE.title,
-  description: HERO.lede.split(" — ")[0],
+  description: SITE.description,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

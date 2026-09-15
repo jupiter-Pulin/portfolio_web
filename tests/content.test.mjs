@@ -2,7 +2,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EMAIL, MAILTO, GITHUB, LINKEDIN, X, SOCIALS } from '../src/content/links.ts';
-import { HERO, HOW_I_BUILD, SITE } from '../src/content/copy.ts';
+import { IDENTITY, SITE } from '../src/content/copy.ts';
+import { GUIDE } from '../src/content/guide.ts';
 import { PROJECTS, LOOKING, projectById } from '../src/content/projects.ts';
 
 test('links are the ones Pulin provided', () => {
@@ -13,16 +14,20 @@ test('links are the ones Pulin provided', () => {
   assert.equal(SOCIALS.length, 3);
 });
 
-test('hero and window copy are verbatim from the approved mock', () => {
-  assert.equal(HERO.badge, 'Building at the intersection of fintech × AI');
-  assert.equal(HERO.headline, 'I build products that turn complex systems into simple experiences.');
-  assert.ok(HERO.headline.endsWith(HERO.headlineAccent));
-  assert.equal(HOW_I_BUILD.title, 'How I Build');
-  assert.equal(HOW_I_BUILD.steps.length, 5);
-  assert.equal(HOW_I_BUILD.steps[HOW_I_BUILD.activeStep - 1].name, 'Build');
-  assert.equal(HOW_I_BUILD.terminal.lines.length, 5);
-  assert.equal(HOW_I_BUILD.ship.stats.length, 3);
+test('identity card and guide hero copy are verbatim from the approved mock', () => {
+  assert.equal(IDENTITY.status, 'Open to work');
+  assert.equal(IDENTITY.role, 'Product-minded software engineer · fintech × AI');
+  assert.deepEqual(
+    IDENTITY.facts.map((f) => f.label),
+    ['Based', 'Looking for', 'Experience', 'Open to'],
+  );
+  assert.ok(IDENTITY.facts.every((f) => f.text.length > 0));
+  assert.equal(GUIDE.hero.headline, "Tell me what you're hiring for, or what you want to see.");
+  assert.equal(GUIDE.hero.headlineAccent, "I'll take you there.");
+  assert.equal(GUIDE.hero.rules.quota(10), '10 questions a day per visitor');
+  assert.equal(GUIDE.hero.rules.wait(6), 'usually under 6 s');
   assert.equal(SITE.title, 'Pulin Tang');
+  assert.ok(SITE.description.startsWith('Pulin Tang'), 'the page description names him');
 });
 
 test('four projects with unique ids, required fields and honest source links', () => {

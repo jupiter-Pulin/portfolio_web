@@ -22,7 +22,10 @@ npm run build
 ### Any question? — `/api/ask`
 
 The site is static except for one Node route, `POST /api/ask`, which answers the
-"Any question?" drawer with a paid model.
+site guide with a paid model. On the home page the guide answers in place, beside the
+identity card; on the other pages it is the "Any question?" drawer. Each answer also
+carries a `meta` block (index chunks handed to the model, model name, wall-clock time,
+tokens, cost) that the page shows as "under the hood".
 
 - **Cost.** Model calls are paid by Pulin and are bounded by daily / monthly budget
   thresholds (`ASK_DAILY_BUDGET_USD`, `ASK_MONTHLY_BUDGET_USD`) and a per-visitor daily

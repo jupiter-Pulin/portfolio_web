@@ -115,6 +115,6 @@ Ordinary Markdown (GitHub flavour: tables, fenced code, task lists).
 
 ## Copy
 
-Page chrome lives in `src/content/copy.ts` (`SITE`, `HERO`, `HOW_I_BUILD`, `WORK`, `BLOG`),
+Page chrome lives in `src/content/copy.ts` (`SITE`, `IDENTITY`, `WORK`, `BLOG`),
 contact details in `src/content/links.ts`. Components import from there; never
 hardcode a second copy of a string in a component.

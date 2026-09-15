@@ -88,7 +88,7 @@ export function readConfig(env: Env): Config | ConfigError {
 
   const dailyBudgetUsd = number("ASK_DAILY_BUDGET_USD", 2);
   const monthlyBudgetUsd = number("ASK_MONTHLY_BUDGET_USD", 20);
-  const visitorDailyLimit = number("ASK_VISITOR_DAILY_LIMIT", 10);
+  const visitorDailyLimit = number("ASK_VISITOR_DAILY_LIMIT", GUIDE.limits.visitorDailyQuestions);
   const questionChars = number("ASK_MAX_QUESTION_CHARS", GUIDE.limits.maxQuestionChars);
   const serverDeadlineMs = number("ASK_SERVER_DEADLINE_MS", 5000);
   // The server must give up before the drawer does.
