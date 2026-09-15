@@ -7,7 +7,7 @@ import { GUIDE } from '../src/content/guide.ts';
 import { PROJECTS, LOOKING, projectById } from '../src/content/projects.ts';
 
 test('links are the ones Pulin provided', () => {
-  assert.equal(LINKEDIN, 'https://www.linkedin.com/in/pulin-tang-52b559367/');
+  assert.equal(LINKEDIN, 'https://www.linkedin.com/in/nolan-tang-52b559367/');
   assert.equal(X, 'https://x.com/home');
   assert.equal(GITHUB, 'https://github.com/jupiter-Pulin');
   assert.ok(MAILTO.startsWith(`mailto:${EMAIL}?subject=`));
