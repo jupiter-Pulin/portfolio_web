@@ -10,7 +10,7 @@ import { GUIDE } from '../src/content/guide.ts';
 import { BLOG, EMAIL, GITHUB, LINKEDIN, MAILTO, X } from '../src/content/links.ts';
 import { PROJECTS } from '../src/content/projects.ts';
 import { ASK_CLIENT_TIMEOUT_MS } from '../src/lib/askContract.ts';
-import { askBody, askGuide, copyLang, hudLines, nextLangSample, pendingMsgs, settleMsgs } from '../src/lib/askClient.ts';
+import { askBody, askGuide, copyLang, hasAsked, hudLines, nextLangSample, pendingMsgs, settleMsgs } from '../src/lib/askClient.ts';
 import {
   answerActions,
   answerBlocks,
@@ -263,6 +263,47 @@ test('the drawer sends typed questions, chips and picks to /api/ask and nothing 
   assert.equal(GUIDE.limits.maxQuestionChars, 100);
   assert.equal(maxQuestionChars({}), GUIDE.limits.maxQuestionChars);
   assert.match(read('../src/server/ask/config.ts'), /"ASK_MAX_QUESTION_CHARS", GUIDE\.limits\.maxQuestionChars/);
+});
+
+test('the home console offers its starting points until something is asked, and again when a project is opened', () => {
+  const drawer = read('../src/components/AskDrawer.tsx');
+  const begin = drawer.slice(drawer.indexOf('const begin = useCallback('), drawer.indexOf('const finish = useCallback('));
+  assert.match(begin, /setStarters\(false\);/, 'a question going up hides them');
+  for (const name of ['onAsk', 'onChip', 'onPick']) assert.match(callback(drawer, name), /begin\(/, `${name} goes through begin`);
+  assert.match(callback(drawer, 'openAsk'), /if \(nextScope !== undefined\) setStarters\(true\);/, 'a project opened from the page brings them back');
+
+  const home = read('../src/components/GuideConsole.tsx');
+  const gate = home.indexOf('{ask.starters ? (');
+  const composer = home.indexOf('<form className={styles.composer}');
+  assert.ok(gate > 0 && gate < composer, 'one gate, above the composer');
+  const rows = home.slice(gate, composer);
+  for (const part of ['GUIDE.hero.quickLabel', 'ask.chips.map', 'GUIDE.hero.startLabel', 'PROJECTS.map']) {
+    assert.ok(rows.includes(part), `${part} sits behind it`);
+  }
+  assert.equal((home.match(/styles\.quick\b/g) ?? []).length, 2, 'no row is left outside it');
+  // A chip pressed from the keyboard disappears with its row; the focus goes to the composer instead of the body.
+  assert.match(rows, /if \(e\.detail === 0\) input\.current\?\.focus\(\{ preventScroll: true \}\);/);
+});
+
+test('the home console folds its greeting away once something is asked, and keeps who is answering', () => {
+  const greeting = [{ key: 0, who: 'guide', blocks: [] }];
+  assert.equal(hasAsked([]), false);
+  assert.equal(hasAsked(greeting), false, 'a guide line alone, such as "← All questions", asks nothing');
+  assert.equal(hasAsked(pendingMsgs(greeting, 'hi')), true, 'the question counts from the moment it goes up');
+
+  const home = read('../src/components/GuideConsole.tsx');
+  const gate = home.indexOf('<div className={`${styles.greet}${hasAsked(ask.msgs) ? ` ${styles.gone}` : ""}`}>');
+  assert.ok(gate > 0, 'the greeting is wrapped and folded by hasAsked');
+  const folded = home.slice(gate, home.indexOf('{lines > 0 ?'));
+  assert.ok(folded.includes('GUIDE.hero.headline') && folded.includes('GUIDE.greetingFine'), 'headline and fine print fold');
+  const who = home.indexOf('className={styles.who}');
+  assert.ok(who > 0 && who < gate, 'the name, pill and status stay above the fold');
+
+  const css = read('../src/components/GuideConsole.module.css').replace(/\s+/g, ' ');
+  assert.match(css, /\.greet \{[^}]*grid-template-rows: 1fr;[^}]*transition: grid-template-rows/, 'the height slides');
+  assert.match(css, /\.greet > div \{[^}]*min-height: 0;[^}]*overflow: hidden/);
+  assert.match(css, /\.greet\.gone \{[^}]*grid-template-rows: 0fr;[^}]*visibility: hidden;/, 'folded, and gone for screen readers too');
+  assert.doesNotMatch(css, /!important/, 'the reduced-motion reset still stills the slide');
 });
 
 test('the guide copy no longer calls itself a mock, and claims no checking', () => {

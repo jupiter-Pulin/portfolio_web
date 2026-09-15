@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { GUIDE } from "@/content/guide";
 import { PROJECTS, projectById } from "@/content/projects";
-import { isPending } from "@/lib/askClient";
+import { hasAsked, isPending } from "@/lib/askClient";
 import { ASK_CLIENT_TIMEOUT_MS } from "@/lib/askContract";
 import { Bubble, useAsk } from "./AskDrawer";
 import { Icon } from "./Icon";
@@ -12,8 +12,9 @@ import styles from "./GuideConsole.module.css";
 
 /**
  * The guide on the home page: its greeting as the headline, the conversation
- * growing in place beneath it, quick questions, the projects as starting points
- * and the composer. State and requests live in AskProvider; this only renders.
+ * growing in place beneath it, quick questions and the projects as starting
+ * points until something is asked, and the composer. State and requests live in
+ * AskProvider; this only renders.
  */
 export function GuideConsole() {
   const ask = useAsk();
@@ -63,10 +64,15 @@ export function GuideConsole() {
             {ask.available ? GUIDE.hero.online : GUIDE.hero.off}
           </span>
         </div>
-        <h2 className={styles.headline}>
-          {GUIDE.hero.headline} <span className={styles.grad}>{GUIDE.hero.headlineAccent}</span>
-        </h2>
-        <p className={`fine ${styles.fine}`}>{GUIDE.greetingFine}</p>
+        {/* Once something is asked the greeting folds away; who is answering stays. */}
+        <div className={`${styles.greet}${hasAsked(ask.msgs) ? ` ${styles.gone}` : ""}`}>
+          <div>
+            <h2 className={styles.headline}>
+              {GUIDE.hero.headline} <span className={styles.grad}>{GUIDE.hero.headlineAccent}</span>
+            </h2>
+            <p className={`fine ${styles.fine}`}>{GUIDE.greetingFine}</p>
+          </div>
+        </div>
       </div>
 
       {lines > 0 ? (
@@ -77,32 +83,45 @@ export function GuideConsole() {
         </div>
       ) : null}
 
-      <div className={styles.quick}>
-        <span className={styles.label}>
-          {scope ? `${GUIDE.hero.scopedLabel} ${scope.name}` : GUIDE.hero.quickLabel}
-        </span>
-        {ask.chips.map((chip) => (
-          <button className="chip" type="button" key={chip.key + chip.label} onClick={() => ask.onChip(chip)}>
-            {chip.label}
-          </button>
-        ))}
-      </div>
+      {ask.starters ? (
+        <>
+          <div className={styles.quick}>
+            <span className={styles.label}>
+              {scope ? `${GUIDE.hero.scopedLabel} ${scope.name}` : GUIDE.hero.quickLabel}
+            </span>
+            {ask.chips.map((chip) => (
+              <button
+                className="chip"
+                type="button"
+                key={chip.key + chip.label}
+                onClick={(e) => {
+                  ask.onChip(chip);
+                  // A chip pressed from the keyboard is about to leave the page: the composer takes the focus.
+                  if (e.detail === 0) input.current?.focus({ preventScroll: true });
+                }}
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
 
-      <div className={styles.quick}>
-        <span className={styles.label}>{GUIDE.hero.startLabel}</span>
-        {PROJECTS.map((p) => (
-          <button
-            className="chip"
-            type="button"
-            key={p.id}
-            aria-pressed={ask.scopeId === p.id}
-            onClick={() => ask.startScope(p.id)}
-          >
-            <i className={`${styles.dot} ${styles[p.hue]}`} />
-            {p.name}
-          </button>
-        ))}
-      </div>
+          <div className={styles.quick}>
+            <span className={styles.label}>{GUIDE.hero.startLabel}</span>
+            {PROJECTS.map((p) => (
+              <button
+                className="chip"
+                type="button"
+                key={p.id}
+                aria-pressed={ask.scopeId === p.id}
+                onClick={() => ask.startScope(p.id)}
+              >
+                <i className={`${styles.dot} ${styles[p.hue]}`} />
+                {p.name}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : null}
 
       <form className={styles.composer} onSubmit={submit}>
         <Icon name="spark" className={styles.spark} />

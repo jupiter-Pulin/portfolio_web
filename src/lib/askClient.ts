@@ -111,6 +111,9 @@ export const nextKey = (msgs: readonly ChatMsg[]) => msgs.reduce((max, m) => Mat
 /** A request is in flight while a typing placeholder is on screen. */
 export const isPending = (msgs: readonly ChatMsg[]) => msgs.some((m) => m.typing !== undefined);
 
+/** The visitor has put something to the guide — typed, a chip or a pick — not just been greeted. */
+export const hasAsked = (msgs: readonly ChatMsg[]) => msgs.some((m) => m.who === "you");
+
 /**
  * The visitor's line and "guide is typing…", together. While a request is
  * already in flight nothing is added — the caller sends nothing either.
