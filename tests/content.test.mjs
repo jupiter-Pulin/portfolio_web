@@ -49,7 +49,7 @@ test('four projects with unique ids, required fields and honest source links', (
     for (const s of p.stats) assert.ok(s.v && s.l, `${p.id} stat`);
   }
   assert.ok(projectById('loop').statsNote.includes('Self-reported'));
-  assert.deepEqual(PROJECTS.map((p) => p.id), ['loop', 'live', 'chain', 'amm'], 'registry order; the first is featured');
+  assert.deepEqual(PROJECTS.map((p) => p.id), ['loop', 'guide', 'live', 'amm'], 'registry order; the first is featured');
   assert.equal(projectById('nope'), undefined);
   assert.ok(LOOKING.startsWith('Backend or full-stack work'));
 });

@@ -296,49 +296,49 @@
       ]
     },
     {
-      "id": "stack-chain",
+      "id": "stack-amm",
       "expect": {
         "key": "stack",
-        "scopeId": "chain"
+        "scopeId": "amm"
       },
       "cases": [
         {
-          "question": "What is the stack of chain-pulse?",
+          "question": "What is the stack of AMM DEX?",
           "scopeId": null,
           "mix": "en",
           "expect": {
             "key": "stack",
-            "scopeId": "chain",
+            "scopeId": "amm",
             "lang": "en"
           }
         },
         {
-          "question": "chain-pulse 用了什么技术栈？",
+          "question": "AMM DEX 用了什么技术栈？",
           "scopeId": null,
           "mix": "mixed",
           "expect": {
             "key": "stack",
-            "scopeId": "chain",
+            "scopeId": "amm",
             "lang": "zh"
           }
         },
         {
           "question": "这个项目用了什么技术？",
-          "scopeId": "chain",
+          "scopeId": "amm",
           "mix": "zh",
           "expect": {
             "key": "stack",
-            "scopeId": "chain",
+            "scopeId": "amm",
             "lang": "zh"
           }
         },
         {
-          "question": "¿Qué tecnologías usa chain-pulse?",
+          "question": "¿Qué tecnologías usa AMM DEX?",
           "scopeId": null,
           "mix": "other",
           "expect": {
             "key": "stack",
-            "scopeId": "chain",
+            "scopeId": "amm",
             "lang": "es"
           }
         }
@@ -441,17 +441,66 @@
           }
         }
       ]
+    },
+    {
+      "id": "overview-guide",
+      "expect": {
+        "key": "overview",
+        "scopeId": "guide"
+      },
+      "cases": [
+        {
+          "question": "What is the Portfolio Guide?",
+          "scopeId": null,
+          "mix": "en",
+          "expect": {
+            "key": "overview",
+            "scopeId": "guide",
+            "lang": "en"
+          }
+        },
+        {
+          "question": "介绍一下 Portfolio Guide 这个项目",
+          "scopeId": null,
+          "mix": "mixed",
+          "expect": {
+            "key": "overview",
+            "scopeId": "guide",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "这个网站本身的问答是怎么做的？",
+          "scopeId": null,
+          "mix": "zh",
+          "expect": {
+            "key": "overview",
+            "scopeId": "guide",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "¿Qué es el proyecto Portfolio Guide?",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "overview",
+            "scopeId": "guide",
+            "lang": "es"
+          }
+        }
+      ]
     }
   ],
   "chips": [
     {
       "question": "What is the stack?",
       "intent": "stack",
-      "scopeId": "chain",
-      "langSample": "chain-pulse 用了什么技术",
+      "scopeId": "amm",
+      "langSample": "AMM DEX 用了什么技术",
       "expect": {
         "key": "stack",
-        "scopeId": "chain",
+        "scopeId": "amm",
         "lang": "zh"
       }
     },

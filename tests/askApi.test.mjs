@@ -36,18 +36,18 @@ function setup({ env = baseEnv(), provider = fakeProvider(), store = createMemor
   return { handler, store, provider, clock, log };
 }
 
-const CHAIN_ANSWER = 'chain-pulse 每晚运行，并提交 reports/STATUS.md。';
+const AMM_ANSWER = 'AMM DEX 是一个 Uniswap V2 风格的 AMM。';
 
 test('a valid answer comes back with ok, key, scopeId, answer and the meta block', async () => {
   const provider = fakeProvider(() => ({
-    content: JSON.stringify({ key: 'overview', scopeId: 'chain', answer: CHAIN_ANSWER }),
+    content: JSON.stringify({ key: 'overview', scopeId: 'amm', answer: AMM_ANSWER }),
     usage: { inputTokens: 100, outputTokens: 50 },
   }));
   const { handler, store } = setup({ provider });
-  const res = await readJson(await post(handler, { question: 'chain-pulse 是什么', scopeId: null }));
+  const res = await readJson(await post(handler, { question: 'AMM DEX 是什么', scopeId: null }));
   assert.equal(res.status, 200);
   const { meta, ...rest } = res.body;
-  assert.deepEqual(rest, { ok: true, key: 'overview', scopeId: 'chain', answer: CHAIN_ANSWER });
+  assert.deepEqual(rest, { ok: true, key: 'overview', scopeId: 'amm', answer: AMM_ANSWER });
   assert.equal(Object.keys(res.body).length, 5);
   // "Under the hood": the chunks the model saw, the model, the wall-clock time, tokens and cost.
   assert.deepEqual(Object.keys(meta).sort(), ['candidates', 'costUsd', 'model', 'ms', 'usage']);
@@ -66,7 +66,7 @@ test('a valid answer comes back with ok, key, scopeId, answer and the meta block
   assert.equal(back.status, 200);
   assert.equal(back.body.scopeId, null, '"all" always clears the scope');
 
-  const chip = await post(handler, { question: "What's the stack?", scopeId: 'chain', intent: 'stack', langSample: '技术栈是什么' });
+  const chip = await post(handler, { question: "What's the stack?", scopeId: 'amm', intent: 'stack', langSample: '技术栈是什么' });
   assert.equal(chip.status, 200);
 });
 
@@ -141,7 +141,7 @@ test('budget is checked before the call; a call may overshoot, the next one is r
   }
 
   // $0.05: 50,000 input tokens at $1 per million.
-  const provider = fakeProvider(() => ({ content: '{"key":"overview","scopeId":"chain","answer":"OK"}', usage: { inputTokens: 50000, outputTokens: 0 } }));
+  const provider = fakeProvider(() => ({ content: '{"key":"overview","scopeId":"amm","answer":"OK"}', usage: { inputTokens: 50000, outputTokens: 0 } }));
   const { handler, store } = setup({ provider });
   await store.incrByFloat(day('cost'), 1.99, 60);
   assert.equal((await post(handler, { question: 'hi', scopeId: null })).status, 200);
@@ -174,7 +174,7 @@ test('provider failures and malformed output are 502 system; content is never fi
   const cases = [
     ['throws', 'error:provider', { provider: fakeProvider(() => { throw new ProviderError('boom'); }) }],
     ['402', 'error:provider', { provider: null, model: () => Response.json({ error: { message: 'Insufficient Balance' } }, { status: 402 }) }],
-    ['not json', 'error:invalid', { content: 'Sure! chain-pulse is…' }],
+    ['not json', 'error:invalid', { content: 'Sure! AMM DEX is…' }],
     ['bad key', 'error:invalid', { content: '{"key":"weather","scopeId":null,"answer":"OK"}' }],
     ['bad scope', 'error:invalid', { content: '{"key":"stack","scopeId":"ghost","answer":"OK"}' }],
     ['empty answer', 'error:invalid', { content: '{"key":"stack","scopeId":null,"answer":""}' }],
@@ -299,7 +299,7 @@ test('Upstash receives day counters, a hashed visitor key, a bearer token and fl
     log: captureLog(),
     fetch,
   });
-  const res = await post(handler, { question: 'chain-pulse 是什么', scopeId: null }, { 'x-forwarded-for': '203.0.113.7' });
+  const res = await post(handler, { question: 'AMM DEX 是什么', scopeId: null }, { 'x-forwarded-for': '203.0.113.7' });
   assert.equal(res.status, 200);
 
   const commands = upstash.requests.flatMap((r) => JSON.parse(r.body));
@@ -340,13 +340,13 @@ test('a day of mixed outcomes lands in Upstash as counts, never as text or IPs',
   const env = upstashEnv({ ASK_IP_SALT: 'pepper' });
   const make = (extraEnv, provider) =>
     createAskHandler({ env: { ...env, ...extraEnv }, index, clock, log: captureLog(), provider, fetch: fakeFetch({ upstash }) });
-  const ok = fakeProvider(() => ({ content: '{"key":"stack","scopeId":"chain","answer":"Node only."}', usage: { inputTokens: 10000, outputTokens: 0 } }));
+  const ok = fakeProvider(() => ({ content: '{"key":"stack","scopeId":"amm","answer":"Node only."}', usage: { inputTokens: 10000, outputTokens: 0 } }));
 
   const questions = ['What is the stack?', 'limit me', 'budget me', 'break me', 'switch me off'];
   const ips = ['203.0.113.21', '203.0.113.22', '203.0.113.23', '203.0.113.24', '203.0.113.25'];
   const sample = '这个项目用了什么技术';
 
-  assert.equal((await post(make({}, ok), { question: questions[0], scopeId: 'chain', intent: 'stack', langSample: sample }, { 'x-forwarded-for': ips[0] })).status, 200);
+  assert.equal((await post(make({}, ok), { question: questions[0], scopeId: 'amm', intent: 'stack', langSample: sample }, { 'x-forwarded-for': ips[0] })).status, 200);
   upstash.data.set(visitorKey(ips[1], 'pepper', new Date(NOON)), '10');
   assert.equal((await post(make({}, ok), { question: questions[1], scopeId: null }, { 'x-forwarded-for': ips[1] })).status, 429);
   assert.equal((await readJson(await post(make({ ASK_DAILY_BUDGET_USD: '0.01' }, ok), { question: questions[2], scopeId: null }, { 'x-forwarded-for': ips[2] }))).body.reason, 'budget');
@@ -391,7 +391,7 @@ test('sentinel secrets never reach a response body or a log line', async () => {
   };
   await run({});
   await run({}, { body: { question: 'x'.repeat(101), scopeId: null } });
-  await run({}, { body: { question: 'hi', scopeId: 'chain', intent: 'code', langSample: '代码在哪' } });
+  await run({}, { body: { question: 'hi', scopeId: 'amm', intent: 'code', langSample: '代码在哪' } });
   await run({ ASK_ENABLED: 'false' });
   await run({ ASK_MODEL: '' });
   await run({ NODE_ENV: 'production', ASK_IP_SALT: '' });
@@ -461,7 +461,7 @@ test('model output is unwrapped losslessly before the structure check; refusals 
   }
 
   const refusals = [
-    ['prose only', 'Sure! chain-pulse is…', 'not-json'],
+    ['prose only', 'Sure! AMM DEX is…', 'not-json'],
     ['broken braces', 'answer: {key: stack}', 'not-json'],
     ['bad key', '{"key":"weather","scopeId":null,"answer":"OK"}', 'bad-key'],
     ['unknown name', '{"key":"stack","scopeId":"BIBO","answer":"OK"}', 'bad-scope'],

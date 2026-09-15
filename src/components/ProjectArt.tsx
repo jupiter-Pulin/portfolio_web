@@ -36,23 +36,6 @@ const ART: Record<string, ReactElement> = {
       <text x="208" y="94" fontFamily="var(--font-mono)" fontSize="11" fill="var(--amber)">socket drops → still a meeting you can hear</text>
     </svg>
   ),
-  chain: (
-    <svg viewBox="0 0 400 300" fill="none" aria-hidden="true">
-      <g fill="var(--green)">
-        <rect x="52" y="150" width="14" height="80" rx="3"/><rect x="74" y="120" width="14" height="110" rx="3"/><rect x="96" y="160" width="14" height="70" rx="3"/>
-        <rect x="118" y="105" width="14" height="125" rx="3"/><rect x="140" y="135" width="14" height="95" rx="3"/><rect x="162" y="128" width="14" height="102" rx="3"/>
-        <rect x="206" y="112" width="14" height="118" rx="3"/><rect x="228" y="145" width="14" height="85" rx="3"/><rect x="250" y="98" width="14" height="132" rx="3"/>
-        <rect x="272" y="140" width="14" height="90" rx="3"/><rect x="294" y="122" width="14" height="108" rx="3"/><rect x="316" y="152" width="14" height="78" rx="3"/><rect x="338" y="116" width="14" height="114" rx="3"/>
-      </g>
-      <rect x="184" y="212" width="14" height="18" rx="3" fill="var(--amber)"/>
-      <path d="M52 232H352" stroke="var(--line-strong)" strokeWidth="1.5"/>
-      <g fontFamily="var(--font-mono)" fontSize="11" fill="var(--muted)">
-        <text x="52" y="72">one bar per night · Ethereum mainnet · raw JSON-RPC</text>
-        <text x="52" y="258">STATUS.md committed every run, success or failure</text>
-      </g>
-      <text x="191" y="205" fontFamily="var(--font-mono)" fontSize="10.5" fill="var(--amber)" textAnchor="middle">rpc failed · still committed</text>
-    </svg>
-  ),
   amm: (
     <svg viewBox="0 0 400 300" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M60 40V240H340" stroke="var(--line-strong)" strokeWidth="2"/>
