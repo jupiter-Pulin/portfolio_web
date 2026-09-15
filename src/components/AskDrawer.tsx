@@ -16,17 +16,20 @@ import { SITE, WORK } from "@/content/copy";
 import { GUIDE, type AnswerKey, type Chip } from "@/content/guide";
 import { PROJECTS, projectById } from "@/content/projects";
 import {
-  TYPING_MS,
-  answerBlocks,
-  openIntro,
-  typingPlaceholder,
-  type Action,
-  type Block,
-  type Run,
-} from "@/lib/guideAnswer";
-import { chipsFor, echoLabel, route } from "@/lib/guideRoute";
+  askBody,
+  askGuide,
+  nextKey,
+  nextLangSample,
+  pendingMsgs,
+  settleMsgs,
+  type AskInput,
+  type AskResult,
+  type ChatMsg,
+  isPending,
+} from "@/lib/askClient";
+import { openIntro, type Action, type Block, type Run } from "@/lib/guideAnswer";
+import { chipsFor, echoLabel } from "@/lib/guideRoute";
 import { inlineNodes } from "@/lib/inlineMarkup";
-import { useReducedMotion } from "@/lib/useReducedMotion";
 import { CopyEmailButton } from "./CopyEmailButton";
 import { Icon } from "./Icon";
 import styles from "./AskDrawer.module.css";
@@ -46,40 +49,31 @@ const AskContext = createContext<AskApi>({
 
 export const useAsk = () => useContext(AskContext);
 
-/** One transcript entry. A guide entry is either a typing placeholder or blocks. */
-type ChatMsg = {
-  key: number;
-  who: "you" | "guide";
-  text?: string;
-  blocks?: Block[];
-  typing?: string;
-};
-
 /**
- * The scripted guide. It renders once, below the
- * page, and holds the whole conversation. Nothing here talks to a model or a
- * server: every answer comes from src/content/guide.ts and src/content/projects.ts.
+ * The site guide. It renders once, below the page, and holds the whole
+ * conversation. Typed questions, chips and picks all go to /api/ask, where a
+ * paid model writes the answer text; the links and buttons under it are built
+ * from src/content. When the model is not reached, the drawer shows fixed copy
+ * from src/content/guide.ts — never a canned answer.
  */
 export function AskProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const reduced = useReducedMotion();
   const [isOpen, setIsOpen] = useState(false);
   const [scopeId, setScopeId] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<ChatMsg[]>([]);
-  // Refs, not state: the callbacks below read the scope without being rebuilt.
+  // Refs, not state: the callbacks below read them without being rebuilt.
   const scope = useRef<string | null>(null);
+  // The visitor's last typed question: the language every answer is written in.
+  const langSample = useRef<string | null>(null);
+  const busy = useRef(false);
   const greeted = useRef(false);
   const trigger = useRef<HTMLElement | null>(null);
-  const seq = useRef(0);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  useEffect(() => {
-    const pending = timers.current;
-    return () => pending.forEach(clearTimeout);
-  }, []);
-
-  const append = useCallback((...added: ChatMsg[]) => {
-    setMsgs((prev) => [...prev, ...added]);
+  const append = useCallback((...added: Omit<ChatMsg, "key">[]) => {
+    setMsgs((prev) => {
+      const at = nextKey(prev);
+      return [...prev, ...added.map((m, i) => ({ ...m, key: at + i }))];
+    });
   }, []);
 
   const setScope = useCallback((next: string | null) => {
@@ -87,35 +81,21 @@ export function AskProvider({ children }: { children: ReactNode }) {
     setScopeId(next);
   }, []);
 
-  /** The guide answers after a beat, unless the visitor asked for less motion. */
-  const reply = useCallback(
-    (blocks: Block[]) => {
-      const placeholder = typingPlaceholder(reduced);
-      const key = seq.current++;
-      if (placeholder === null) {
-        append({ key, who: "guide", blocks });
-        return;
-      }
-      append({ key, who: "guide", typing: placeholder });
-      timers.current.push(
-        setTimeout(() => {
-          setMsgs((prev) => prev.map((m) => (m.key === key ? { key, who: "guide", blocks } : m)));
-        }, TYPING_MS),
-      );
-    },
-    [append, reduced],
-  );
+  /** The visitor's line and the typing placeholder go up before the request leaves. */
+  const begin = useCallback((echo: string) => {
+    busy.current = true;
+    setMsgs((prev) => pendingMsgs(prev, echo));
+  }, []);
 
-  /** A chip or a pick: echo it as the visitor's line, then answer it. */
-  const answer = useCallback(
-    (key: AnswerKey, label: string, nextScope: string | null) => {
-      // "← All questions" drops the scope; everything else keeps or sets it.
-      const withScope = key === "all" ? null : nextScope;
-      setScope(withScope);
-      append({ key: seq.current++, who: "you", text: echoLabel(label) });
-      reply(answerBlocks(key, withScope));
+  /** The placeholder becomes the outcome; only an answer moves the scope. */
+  const finish = useCallback(
+    (result: AskResult, sent: { scopeId: string | null; langSample: string | null }) => {
+      busy.current = false;
+      const settled = settleMsgs([], result, sent);
+      setMsgs((prev) => settleMsgs(prev, result, sent).msgs);
+      setScope(settled.scopeId);
     },
-    [append, reply, setScope],
+    [setScope],
   );
 
   const openAsk = useCallback(
@@ -129,7 +109,7 @@ export function AskProvider({ children }: { children: ReactNode }) {
       });
       greeted.current = true;
       setScope(next);
-      append(...intro.map((blocks) => ({ key: seq.current++, who: "guide" as const, blocks })));
+      append(...intro.map((blocks) => ({ who: "guide" as const, blocks })));
       setIsOpen(true);
     },
     [append, setScope],
@@ -149,24 +129,48 @@ export function AskProvider({ children }: { children: ReactNode }) {
     [closeAsk, router],
   );
 
+  /** An in-site entry such as the projects page: same order, drawer first. */
+  const navigate = useCallback(
+    (href: string) => {
+      closeAsk();
+      router.push(href);
+    },
+    [closeAsk, router],
+  );
+
   const onChip = useCallback(
-    (chip: Chip) => answer(chip.key, chip.label, scope.current),
-    [answer],
+    async (chip: Chip) => {
+      if (busy.current) return;
+      const input: AskInput = { via: "chip", question: echoLabel(chip.label), intent: chip.key };
+      const convo = { scopeId: scope.current, langSample: langSample.current };
+      begin(input.question);
+      finish(await askGuide(askBody(input, convo)), convo);
+    },
+    [begin, finish],
   );
 
   const onPick = useCallback(
-    (id: string, then: AnswerKey) => answer(then, projectById(id)?.name ?? id, id),
-    [answer],
+    async (id: string, then: AnswerKey) => {
+      if (busy.current) return;
+      const input: AskInput = { via: "pick", question: projectById(id)?.name ?? id, intent: then };
+      const before = { scopeId: scope.current, langSample: langSample.current };
+      begin(input.question);
+      // A pick asks about the project it names; a failure leaves the scope where it was.
+      finish(await askGuide(askBody(input, { ...before, scopeId: id })), before);
+    },
+    [begin, finish],
   );
 
   const onAsk = useCallback(
-    (typed: string) => {
-      const next = route(typed, scope.current);
-      setScope(next.scopeId);
-      append({ key: seq.current++, who: "you", text: typed });
-      reply(answerBlocks(next.key, next.scopeId));
+    async (typed: string) => {
+      if (busy.current) return;
+      const input: AskInput = { via: "typed", question: typed };
+      const convo = { scopeId: scope.current, langSample: langSample.current };
+      langSample.current = nextLangSample(langSample.current, input);
+      begin(typed);
+      finish(await askGuide(askBody(input, convo)), { ...convo, langSample: langSample.current });
     },
-    [append, reply, setScope],
+    [begin, finish],
   );
 
   const api = useMemo(() => ({ isOpen, openAsk, closeAsk }), [isOpen, openAsk, closeAsk]);
@@ -182,6 +186,7 @@ export function AskProvider({ children }: { children: ReactNode }) {
         onPick={onPick}
         onAsk={onAsk}
         onOpenProject={openProject}
+        onNavigate={navigate}
         onClose={closeAsk}
       />
     </AskContext.Provider>
@@ -196,6 +201,7 @@ function AskDrawer({
   onPick,
   onAsk,
   onOpenProject,
+  onNavigate,
   onClose,
 }: {
   isOpen: boolean;
@@ -205,6 +211,7 @@ function AskDrawer({
   onPick: (id: string, then: AnswerKey) => void;
   onAsk: (typed: string) => void;
   onOpenProject: (id: string) => void;
+  onNavigate: (href: string) => void;
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState("");
@@ -237,7 +244,8 @@ function AskDrawer({
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const typed = draft.trim();
-    if (!typed) return;
+    // One question at a time: while the guide is answering, the draft stays put.
+    if (!typed || isPending(msgs)) return;
     setDraft("");
     onAsk(typed);
   };
@@ -266,7 +274,7 @@ function AskDrawer({
         </div>
         <div className={styles.msgs} ref={transcript} aria-live="polite">
           {msgs.map((m) => (
-            <Bubble key={m.key} msg={m} onOpen={onOpenProject} onPick={onPick} />
+            <Bubble key={m.key} msg={m} go={{ open: onOpenProject, nav: onNavigate }} onPick={onPick} />
           ))}
         </div>
         <div className={styles.chips}>
@@ -289,6 +297,7 @@ function AskDrawer({
             onChange={(e) => setDraft(e.target.value)}
             placeholder={GUIDE.placeholder}
             autoComplete="off"
+            maxLength={GUIDE.limits.maxQuestionChars}
             aria-label={GUIDE.inputLabel}
           />
           <button className="btn btn-primary sm" type="submit">
@@ -300,13 +309,16 @@ function AskDrawer({
   );
 }
 
+/** Where an action chip can take the visitor: a case page, or another page of the site. */
+type Go = { open: (id: string) => void; nav: (href: string) => void };
+
 function Bubble({
   msg,
-  onOpen,
+  go,
   onPick,
 }: {
   msg: ChatMsg;
-  onOpen: (id: string) => void;
+  go: Go;
   onPick: (id: string, then: AnswerKey) => void;
 }) {
   if (msg.typing) {
@@ -319,7 +331,7 @@ function Bubble({
   return (
     <div className={`${styles.msg} ${styles.guide}`}>
       {(msg.blocks ?? []).map((block, i) => (
-        <BlockNode key={i} block={block} onOpen={onOpen} onPick={onPick} />
+        <BlockNode key={i} block={block} go={go} onPick={onPick} />
       ))}
     </div>
   );
@@ -343,11 +355,11 @@ const runNodes = (runs: Run[]): ReactNode[] =>
 
 function BlockNode({
   block,
-  onOpen,
+  go,
   onPick,
 }: {
   block: Block;
-  onOpen: (id: string) => void;
+  go: Go;
   onPick: (id: string, then: AnswerKey) => void;
 }) {
   switch (block.kind) {
@@ -367,7 +379,7 @@ function BlockNode({
                 {item.action ? (
                   <>
                     <br />
-                    <ActionChip action={item.action} onOpen={onOpen} />
+                    <ActionChip action={item.action} go={go} />
                   </>
                 ) : null}
               </li>
@@ -376,7 +388,7 @@ function BlockNode({
           {block.note ? <p className={styles.rpNote}>{block.note}</p> : null}
           <div className={styles.rpActions}>
             {block.actions.map((a, i) => (
-              <ActionChip key={i} action={a} onOpen={onOpen} />
+              <ActionChip key={i} action={a} go={go} />
             ))}
           </div>
         </div>
@@ -390,7 +402,7 @@ function BlockNode({
               {row.right.t === "muted" ? (
                 <span className={styles.muted}>{row.right.text}</span>
               ) : (
-                <ActionChip action={row.right} onOpen={onOpen} />
+                <ActionChip action={row.right} go={go} />
               )}
             </li>
           ))}
@@ -400,7 +412,7 @@ function BlockNode({
       return (
         <div className={styles.actions}>
           {block.actions.map((a, i) => (
-            <ActionChip key={i} action={a} onOpen={onOpen} />
+            <ActionChip key={i} action={a} go={go} />
           ))}
         </div>
       );
@@ -422,8 +434,8 @@ function BlockNode({
   }
 }
 
-/** The four things the guide can offer: a case page, mail, the clipboard, a link. */
-function ActionChip({ action, onOpen }: { action: Action; onOpen: (id: string) => void }) {
+/** What the guide can offer: a case page, a site page, mail, the clipboard, a link, or a placeholder. */
+function ActionChip({ action, go }: { action: Action; go: Go }) {
   const amber = "amber" in action && action.amber ? " amber" : "";
   switch (action.t) {
     case "mail":
@@ -442,9 +454,22 @@ function ActionChip({ action, onOpen }: { action: Action; onOpen: (id: string) =
       return <CopyEmailButton className="chip" label={action.label} />;
     case "open":
       return (
-        <button className="chip" type="button" onClick={() => onOpen(action.id)}>
+        <button className="chip" type="button" onClick={() => go.open(action.id)}>
           {action.label}
         </button>
+      );
+    case "nav":
+      return (
+        <button className="chip" type="button" onClick={() => go.nav(action.href)}>
+          {action.label}
+        </button>
+      );
+    case "soon":
+      // Nowhere to go yet: not a link, not a button, and announced as disabled.
+      return (
+        <span className={`chip ${styles.soon}`} aria-disabled="true">
+          {action.label}
+        </span>
       );
   }
 }
