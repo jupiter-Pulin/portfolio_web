@@ -1,4 +1,4 @@
-/* Design tokens and global primitives, ported from design/mock/index.html.
+/* Design tokens and global primitives.
    --font-display / --font-body / --font-mono are defined by next/font on <html>. */
 :root {
   --bg: #0a0e1a;

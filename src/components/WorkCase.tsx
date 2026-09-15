@@ -11,7 +11,7 @@ import { WorkKeys } from "./WorkKeys";
 import { WorkFoot, WorkShell } from "./WorkShell";
 import styles from "./WorkCase.module.css";
 
-/** One project — design/mock caseHTML(). Server component; the cover is read at build time. */
+/** One project. Server component; the cover is read at build time. */
 export function WorkCase({ project: p }: { project: Project }) {
   const total = PROJECTS.length;
   const i = PROJECTS.findIndex((x) => x.id === p.id);

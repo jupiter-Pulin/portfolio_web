@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { SITE } from "@/content/copy";
+import { BLOG, SITE } from "@/content/copy";
 import { SOCIALS } from "@/content/links";
 import { AskButton } from "./AskButton";
 import { Icon, type IconName } from "./Icon";
+import { NavLink } from "./NavLink";
 import styles from "./Header.module.css";
 
 export function Header() {
@@ -14,6 +15,9 @@ export function Header() {
           <b>.</b>
         </Link>
         <nav className={styles.topRight} aria-label="Links">
+          <NavLink className={styles.navLink} href="/blog">
+            {BLOG.navLabel}
+          </NavLink>
           {SOCIALS.map((s) => (
             <a
               key={s.key}

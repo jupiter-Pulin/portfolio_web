@@ -9,7 +9,7 @@ import { WorkShell } from "./WorkShell";
 import styles from "./WorkGallery.module.css";
 
 /**
- * The overview grid — design/mock galleryHTML(). The whole card is clickable via
+ * The overview grid. The whole card is clickable via
  * a stretched "Learn more" link; the README link sits above it, so no <a> nests.
  * Server component: resolveCover() reads the filesystem at build time.
  */

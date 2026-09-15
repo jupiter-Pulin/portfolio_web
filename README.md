@@ -4,8 +4,9 @@ Pulin Tang's portfolio site. Next.js 16 (App Router, TypeScript, npm, no Tailwin
 
 ## Contract
 
-- `design/mock/index.html` — the approved visual and interaction contract (single-file mock, v0.2, 2026-09-13). Every screen is ported from it section by section; when in doubt, the mock wins.
 - `src/content/` — the only source of copy, links and project data (`copy.ts`, `links.ts`, `projects.ts`). Components import from here and never hardcode a second copy.
+- `src/content/blog/` — blog posts, one Markdown file each, photos in `public/blog/<slug>/`. Publishing a post is adding a file; the contract is in `CONTENT.md`.
+- `marked` is the one runtime dependency beyond Next/React: it turns those Markdown files into HTML at build time (`src/lib/blog.ts`). It is small, synchronous and dependency-free; a hand-written parser would have to be maintained against every post ever written.
 - `tests/content.test.mjs` — red lines on that content (`node --test`, no framework).
 
 ## Run
@@ -13,18 +14,44 @@ Pulin Tang's portfolio site. Next.js 16 (App Router, TypeScript, npm, no Tailwin
 ```bash
 npm install
 npm run dev     # http://localhost:3000
-npm test        # content red lines
+npm test        # content red lines, /work and /blog built-page checks
 npm run lint
 npm run build
 ```
 
-## Delivery plan (Loop Conductor task chain)
+### Any question? — `/api/ask`
 
-1. Landing page: header, hero with the tilting "How I Build" window, Selected work strip, footer.
-2. Work view: `/work` gallery (projects side by side) → `/work/[id]` detail (image, decision, README preview, source).
-3. "Any question?" guide drawer: scripted concierge that produces report cards and navigates.
+The site is static except for one Node route, `POST /api/ask`, which answers the
+site guide with a paid model. On the home page the guide answers in place, beside the
+identity card; on the other pages it is the "Any question?" drawer. Each answer also
+carries a `meta` block (index chunks handed to the model, model name, wall-clock time,
+tokens, cost) that the page shows as "under the hood".
 
-Briefs live in `design/briefs/`.
+- **Cost.** Model calls are paid by Pulin and are bounded by daily / monthly budget
+  thresholds (`ASK_DAILY_BUDGET_USD`, `ASK_MONTHLY_BUDGET_USD`) and a per-visitor daily
+  limit; once a threshold is reached the guide stops calling the model.
+- **Env.** Copy `.env.example` to `.env.local`. Every variable is server-only. Without the
+  model variables the route answers 503 and the rest of the site is unaffected; the build
+  needs no env at all.
+- **Counters.** Production must configure Upstash (`UPSTASH_REDIS_REST_URL`,
+  `UPSTASH_REDIS_REST_TOKEN`) and `ASK_IP_SALT`, or the route refuses to call the model.
+  Upstash may incur additional charges. On Vercel's multiple instances, in-memory counters
+  would only be a weak per-instance limit, which is why production requires Upstash.
+- **Local.** Outside production (`npm run dev`), missing Upstash env falls back to in-memory
+  counters — the model is still called for real and still billed.
+- **Retrieval index.** After changing `src/content`, rebuild and commit the index
+  (`npm test` fails when it is stale):
+
+  ```bash
+  node scripts/build-ask-index.mjs
+  ```
+
+- **Evaluation (paid).** Checks routing and answer language across English, Chinese,
+  mixed and other-language paraphrases, including chips clicked after a Chinese question:
+
+  ```bash
+  node scripts/eval-ask.mjs --runs 2
+  ```
 
 ## Branching
 

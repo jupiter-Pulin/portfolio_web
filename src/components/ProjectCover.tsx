@@ -20,7 +20,7 @@ const HUE: Record<Hue, string> = {
 
 /**
  * The 4:3 slot in front of a project. A file at public/projects/<id>/cover.<ext>
- * wins; with no file the ported mock diagram stands in, labelled as a slot.
+ * wins; with no file the placeholder diagram stands in, labelled as a slot.
  */
 export function ProjectCover({
   project,

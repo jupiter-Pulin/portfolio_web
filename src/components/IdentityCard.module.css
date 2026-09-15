@@ -1,0 +1,136 @@
+/* identity card — .icon-btn, .btn and .link-btn are global primitives. */
+.card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  padding: 18px 18px 16px;
+  background: linear-gradient(180deg, rgba(17, 26, 46, 0.92), rgba(11, 17, 32, 0.96));
+  box-shadow: var(--shadow);
+}
+.card::before {
+  content: "";
+  position: absolute;
+  inset: -40% -20% auto;
+  height: 60%;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(90, 169, 255, 0.28), transparent 70%);
+}
+.card > * {
+  position: relative;
+}
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.mono {
+  font: 500 11px var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.15);
+}
+.head {
+  display: grid;
+  grid-template-columns: 124px 1fr;
+  gap: 16px;
+  align-items: center;
+  margin-top: 16px;
+}
+.avatar {
+  width: 124px;
+  height: 124px;
+  border-radius: 20px;
+  object-fit: cover;
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 0 6px rgba(90, 169, 255, 0.08);
+}
+.name {
+  font: 900 26px / 1.1 var(--font-display);
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+}
+.role {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+.facts {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 9px;
+}
+.fact {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.fact dt {
+  font: 500 10.5px var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding-top: 3px;
+}
+.fact dd {
+  margin: 0;
+}
+.foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.socials {
+  display: flex;
+  gap: 2px;
+}
+.socials :global(.icon-btn) {
+  width: 34px;
+  height: 34px;
+}
+.ctas {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .head {
+    grid-template-columns: 92px 1fr;
+    gap: 14px;
+  }
+  .avatar {
+    width: 92px;
+    height: 92px;
+    border-radius: 16px;
+  }
+  .name {
+    font-size: 22px;
+  }
+  .fact {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}

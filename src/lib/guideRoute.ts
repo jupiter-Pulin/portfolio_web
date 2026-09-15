@@ -1,4 +1,4 @@
-// Free-text routing for the ask drawer — the mock's route() as a pure function.
+// Free-text routing for the ask drawer, as a pure function.
 // A project name wins over every keyword: naming one sets the scope and answers
 // with that project's overview. Nothing here touches the DOM or the network.
 import { GUIDE, scopedChips, type AnswerKey, type Chip } from "../content/guide.ts";
@@ -6,7 +6,7 @@ import { GUIDE, scopedChips, type AnswerKey, type Chip } from "../content/guide.
 /** A typed question resolves to one scripted answer, and possibly a new scope. */
 export type Route = { key: AnswerKey; scopeId: string | null; scopeChanged: boolean };
 
-/** Project id ↔ the words a visitor uses for it. Order is the mock's. */
+/** Project id ↔ the words a visitor uses for it. */
 const NAMED: [string, RegExp][] = [
   ["loop", /loop|conductor/],
   ["live", /interpret|meeting|zoom|translat/],
@@ -14,7 +14,7 @@ const NAMED: [string, RegExp][] = [
   ["amm", /amm|dex|swap|uniswap|solidity/],
 ];
 
-/** Keyword table, in the mock's order — the first match wins. */
+/** Keyword table — the first match wins. */
 const KEYWORDS: [AnswerKey, RegExp][] = [
   ["payments", /(payment|fintech|settle|ledger|bank|money|trading|finance)/],
   ["agents", /(agent|llm|\bai\b|model|claude|automation|pipeline)/],

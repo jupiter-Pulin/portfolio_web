@@ -14,3 +14,5 @@ export const SOCIALS = [
   { key: 'linkedin', label: 'LinkedIn', href: LINKEDIN, title: 'LinkedIn · Pulin Tang' },
   { key: 'x', label: 'X', href: X, title: 'X' },
 ] as const;
+// The blog is a page of this site (src/app/blog), so this is a route, not an external address.
+export const BLOG = { href: '/blog' } as const;

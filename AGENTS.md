@@ -10,9 +10,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## This repository (added 2026-09-13)
 
-- Visual + interaction contract: `design/mock/index.html`. Port it section by section; keep its class names and design tokens so screens can be compared side by side.
-- Copy, links and project data live only in `src/content/*.ts`. Never hardcode a second copy in components; if you believe the content is wrong, say so in your log instead of editing it.
-- Every number shown on the site comes from `src/content/projects.ts` and keeps its provenance label (`statsNote`). Do not invent figures.
+- Copy, links and project data live only in `src/content/*.ts`; blog posts are Markdown files in `src/content/blog/` with photos in `public/blog/<slug>/` (contract in `CONTENT.md`). Never hardcode a second copy in components; if you believe the content is wrong, say so in your log instead of editing it.
+- Every project figure shown on the site comes from `src/content/projects.ts` and keeps its provenance label (`statsNote`). Do not invent figures. Numbers inside a blog post are part of the author's text and stay as written.
 - A private project (`private: true`) shows its scope note, never a repository link.
 - `npm test` is `node --test tests/*.test.mjs` (Node ≥ 22.18 strips TS types; no test framework). Add UI tests there; do not add vitest/jest.
 - No new runtime dependencies without a reason written in the task log.

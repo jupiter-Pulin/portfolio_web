@@ -1,6 +1,4 @@
-/* ask drawer — design/mock/index.html .scrim / .drawer / .ask-head / .msgs /
-   .msg / .chips / .ask-form / .report / .rp-* / .linklist.
-   .chip and .fine are global primitives, so they are reached with :global(). */
+/* ask drawer — .chip and .fine are global primitives, so they are reached with :global(). */
 /* The panel stays in the layout and is hidden by `visibility`, so it can slide
    both ways: a display switch in the same frame would skip the transition, and
    visibility:hidden still keeps the closed drawer out of the tab order and off
@@ -205,10 +203,62 @@
   font-size: 12.5px;
 }
 
-/* a row of chips under a paragraph — the mock's inline margin-top:10px */
+/* a row of chips under a paragraph */
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
+}
+
+/* ---------- under the hood ---------- */
+.hudToggle {
+  margin-top: 10px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font: 500 11.5px var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--dim);
+}
+.hudToggle:hover {
+  color: var(--cyan);
+}
+.hudToggle::before {
+  content: "▸";
+  font-size: 10px;
+}
+.hudToggle[aria-expanded="true"]::before {
+  content: "▾";
+}
+.hud {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: 500 12px / 1.75 var(--font-mono);
+  color: var(--muted);
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 0 12px;
+}
+.hud b {
+  color: var(--dim);
+  font-weight: 500;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-top: 2px;
+}
+.hud span {
+  overflow-wrap: anywhere;
+}
+.hudNote {
+  grid-column: 1 / -1;
+  margin: 6px 0 0;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+  color: var(--dim);
+  font-size: 11px;
 }
