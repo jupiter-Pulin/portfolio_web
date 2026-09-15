@@ -144,7 +144,7 @@ test('routing: site-wide keys take a null scope, and the looking / site-wide mat
   assert.match(p, /"agents" with scopeId null/);
   assert.match(p, /that is "looking", never "fallback"/);
   const user = buildUserPrompt({ question: '他在找什么样的工作？', scopeId: 'loop', candidates: [] });
-  assert.equal(section(user, 'What Pulin is looking for'), LOOKING);
+  assert.equal(section(user, 'What Nolan is looking for'), LOOKING);
   const summaries = section(user, 'Site-wide summaries');
   for (const item of [...GUIDE.fit.items, ...GUIDE.agents.items]) assert.ok(summaries.includes(item.text), item.text);
   assert.doesNotMatch(summaries, /https?:\/\//);

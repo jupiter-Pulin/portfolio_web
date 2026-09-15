@@ -174,7 +174,7 @@ test('a case page renders every field of its record', () => {
     assert.ok(body.includes(s.v), `stat ${s.v}`);
     assert.ok(body.includes(s.l), `stat ${s.l}`);
   }
-  assert.match(pages.loop, /<title>Loop Conductor · Pulin Tang<\/title>/);
+  assert.match(pages.loop, /<title>Loop Conductor · Nolan Tang<\/title>/);
 
   const pre = markup(pages.loop).match(/<pre\b[^>]*>([\s\S]*?)<\/pre>/);
   assert.ok(pre, 'the README preview is a <pre>');

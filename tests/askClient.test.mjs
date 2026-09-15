@@ -321,12 +321,12 @@ test('the guide copy no longer calls itself a mock, and claims no checking', () 
   assert.equal(GUIDE.pill, 'AI · answers from site content');
   assert.equal(
     GUIDE.greetingFine,
-    "Answers are written by an AI model from this site's own content, in the language you ask in. It can get things wrong — the case pages are the source. It never sends anything on Pulin's behalf.",
+    "Answers are written by an AI model from this site's own content, in the language you ask in. It can get things wrong — the case pages are the source. It never sends anything on Nolan's behalf.",
   );
   assert.equal(GUIDE.fallback, "That isn't something this site covers yet — try a chip, or name a project.");
   assert.equal(
     GUIDE.agents.items[2].text,
-    "a model answers from the site's own content in the visitor's language, says so when the site doesn't cover something, and never acts on Pulin's behalf.",
+    "a model answers from the site's own content in the visitor's language, says so when the site doesn't cover something, and never acts on Nolan's behalf.",
   );
   assert.deepEqual(GUIDE.unavailable, { zh: '问答暂时关闭。', en: 'The guide is switched off for now.' });
   assert.deepEqual(GUIDE.entries.zh, { lead: '你可以先看看这些：', blog: '博客', linkedin: '领英', x: '推特', work: '项目简介' });

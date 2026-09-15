@@ -27,19 +27,19 @@ export type Chip = { key: AnswerKey; label: string };
 
 export const GUIDE = {
   pill: "AI · answers from site content",
-  placeholder: "Ask about the work, the stack, or how to reach Pulin",
+  placeholder: "Ask about the work, the stack, or how to reach Nolan",
   inputLabel: "Your question",
   send: "Send",
   typing: "guide is typing…",
   greeting:
-    "I'm Pulin's site guide. Tell me what you're hiring for or what you want to see, and I'll take you there.",
+    "I'm Nolan's site guide. Tell me what you're hiring for or what you want to see, and I'll take you there.",
   greetingFine:
-    "Answers are written by an AI model from this site's own content, in the language you ask in. It can get things wrong — the case pages are the source. It never sends anything on Pulin's behalf.",
+    "Answers are written by an AI model from this site's own content, in the language you ask in. It can get things wrong — the case pages are the source. It never sends anything on Nolan's behalf.",
   // "Scoped to <name>. Pick a question…" — split so the name renders bold.
   scopedLead: "Scoped to ",
   scopedTail: ". Pick a question below or type your own.",
   reportLabel: "Report",
-  mail: "Email Pulin",
+  mail: "Email Nolan",
   copy: "Copy email",
   allQuestions: "← All questions",
   pick: "Which project? Pick one and I'll answer for it.",
@@ -52,7 +52,7 @@ export const GUIDE = {
 
   // The home page, where the guide answers in place instead of in the drawer.
   hero: {
-    who: "Pulin's site guide",
+    who: "Nolan's site guide",
     online: "Online",
     off: "Switched off",
     headline: "Tell me what you're hiring for, or what you want to see.",
@@ -66,7 +66,7 @@ export const GUIDE = {
       quota: (n: number) => `${n} questions a day per visitor`,
       language: "answers in the language you ask in",
       wait: (seconds: number) => `usually under ${seconds} s`,
-      behalf: "never acts on Pulin's behalf",
+      behalf: "never acts on Nolan's behalf",
     },
   },
 
@@ -116,7 +116,7 @@ export const GUIDE = {
       },
       {
         lead: "This guide",
-        text: "a model answers from the site's own content in the visitor's language, says so when the site doesn't cover something, and never acts on Pulin's behalf.",
+        text: "a model answers from the site's own content in the visitor's language, says so when the site doesn't cover something, and never acts on Nolan's behalf.",
       },
     ],
   },
@@ -170,7 +170,7 @@ export const GUIDE = {
       { key: "payments", label: "I'm hiring for a payments / fintech backend role" },
       { key: "agents", label: "Show me the AI agent work" },
       { key: "code", label: "Where's the code?" },
-      { key: "looking", label: "What is Pulin looking for?" },
+      { key: "looking", label: "What is Nolan looking for?" },
       { key: "contact", label: "How do I reach him?" },
     ] as Chip[],
   },
