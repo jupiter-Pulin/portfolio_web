@@ -6,11 +6,12 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import index from '../src/generated/ask-index.json' with { type: 'json' };
+import BLOG_POSTS from '../src/generated/ask-blog.json' with { type: 'json' };
 import { EMAIL, GITHUB, LINKEDIN, X } from '../src/content/links.ts';
 import { GUIDE } from '../src/content/guide.ts';
 import { LOOKING, PROJECTS } from '../src/content/projects.ts';
 import { ANSWER_KEYS } from '../src/lib/askContract.ts';
-import { createAskHandler } from '../src/server/ask/handler.ts';
+import { TOP_K, createAskHandler } from '../src/server/ask/handler.ts';
 import { SYSTEM_PROMPT, buildUserPrompt, normalizeQuestion } from '../src/server/ask/prompt.ts';
 import { costUsd, selectProvider } from '../src/server/ask/providers/index.ts';
 import { readConfig } from '../src/server/ask/config.ts';
@@ -151,6 +152,62 @@ test('routing: site-wide keys take a null scope, and the looking / site-wide mat
   const keys = section(user, 'Answer keys');
   for (const k of ['payments', 'agents', 'looking', 'contact', 'all']) assert.match(keys, new RegExp(`- ${k}: site-wide \\(scopeId null\\)`), k);
   for (const k of ['code', 'decision', 'stack', 'status', 'overview']) assert.match(keys, new RegExp(`- ${k}: project key`), k);
+});
+
+test('the blog post list is sent every time, between the site-wide summaries and the answer keys', () => {
+  const input = { question: '他在找什么样的工作？', scopeId: null, candidates: [] };
+  const user = buildUserPrompt(input);
+  assert.equal(buildUserPrompt(input), user, 'deterministic');
+  const titles = [...user.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
+  const at = titles.indexOf('Blog posts');
+  assert.ok(at >= 0, 'has a Blog posts section');
+  assert.equal(titles[at - 1], 'Site-wide summaries');
+  assert.equal(titles[at + 1], 'Answer keys');
+
+  assert.equal(BLOG_POSTS.length, 2);
+  const lines = section(user, 'Blog posts').split('\n');
+  assert.equal(lines.length, BLOG_POSTS.length, 'one line per post');
+  BLOG_POSTS.forEach((post, i) => {
+    assert.ok(lines[i].includes(post.title), post.title);
+    for (const tag of post.tags) assert.ok(lines[i].includes(tag), `${post.slug}: ${tag}`);
+    assert.ok(lines[i].includes(`/blog/${post.slug}`), post.slug);
+  });
+
+  assert.equal(section(buildUserPrompt({ ...input, posts: [] }), 'Blog posts'), 'none');
+  const fixture = [{ slug: 'x-post', title: 'X title', tags: ['a', 'b'], href: '/blog/x-post' }];
+  assert.match(section(buildUserPrompt({ ...input, posts: fixture }), 'Blog posts'), /^- X title\b.*\ba, b\b.*\/blog\/x-post$/);
+});
+
+test('the system prompt lists the blog as material, asks for the post link and keeps blog questions off fallback', () => {
+  const p = SYSTEM_PROMPT;
+  assert.match(p, /blog posts/i);
+  assert.match(p, /candidate passages \(blog passages among them/);
+  assert.match(p, /When the answer uses a blog post.*add that post's link \/blog\/<slug>, copied exactly as the "Blog posts" section writes it/);
+  assert.match(p, /A question a blog post or blog passage answers is never "fallback"/);
+  assert.doesNotMatch(p, /https?:\/\//);
+  assert.doesNotMatch(p, /verified|checked/i);
+});
+
+test('a question about a post retrieves its passages and the answer comes back with its link untouched', async () => {
+  const answer = 'He argues the range matters more than APR: see /blog/lp-range-over-apr';
+  const provider = fakeProvider(() => ({
+    content: JSON.stringify({ key: 'all', scopeId: null, answer }),
+    usage: { inputTokens: 1, outputTokens: 1 },
+  }));
+  const res = await post(handlerWith(provider), { question: 'What does he say about LP range versus APR?', scopeId: null });
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.answer, answer);
+
+  const user = provider.calls[0].user;
+  const passages = section(user, 'Candidate passages').split('\n');
+  assert.ok(passages.some((line) => line.startsWith('[blog:lp-range-over-apr:')), 'a blog passage is a candidate');
+  const posts = section(user, 'Blog posts');
+  for (const href of ['/blog/lp-range-over-apr', '/blog/fewer-nodes-in-the-agent-workflow']) assert.ok(posts.includes(href), href);
+  assert.equal(body.meta.candidates.length, TOP_K);
+  assert.ok(body.meta.candidates.some((id) => id.startsWith('blog:lp-range-over-apr:')));
+  assert.equal(TOP_K, 6);
+  assert.equal(ANSWER_KEYS.length, 11);
 });
 
 test('the language sample travels to the prompt; the question stays the question', async () => {
