@@ -4,7 +4,7 @@
 export type Stat = { v: string; l: string };
 export type Repo = { label: string; url: string };
 export type Hue = 'cyan' | 'amber' | 'blue' | 'green' | 'violet';
-// Shipping state of a record. Absent means shipped — the four approved entries
+// Shipping state of a record. Absent means shipped — the three approved entries
 // predate the field and must not be rewritten to say so. See CONTENT.md.
 export type Status = 'shipped' | 'building' | 'archived';
 export type Project = {
@@ -104,33 +104,6 @@ export const PROJECTS: Project[] = [
       "decision": "Why the original audio is never switched off. Routing the meeting through the translator and playing only the translation is cleaner, and it is wrong: every failure in that chain — a dropped socket, a stalled model, a device that disappears — arrives at the user as silence, and silence is indistinguishable from a quiet room. So the direct path opens at connect time and stays open for the whole session; translation is mixed on top and ducks it while speaking. A total failure of the translation layer degrades to “a meeting you can hear”.",
       "stack": "Chrome MV3 with an offscreen document (the Service Worker only orchestrates; getUserMedia, AudioContext and the WebSocket live in the offscreen page), Web Audio, Native Messaging to a local Node host, and BlackHole virtual audio devices on macOS. One runtime dependency: a WebSocket library. Long-lived keys stay on the local host; the page uses short-lived credentials.",
       "status": "Open source, solo. macOS · Chrome ≥ 116 · Node ≥ 22. Meeting-mute sync covers Google Meet today. 45 automated tests run the whole chain against a mock backend for free; the paid real-link check is one command at about $0.05 a run. The README is in Chinese and the 60-second demo is not recorded yet."
-    }
-  },
-  {
-    "id": "chain",
-    "name": "chain-pulse",
-    "hue": "green",
-    "short": "Nightly, zero-dependency Ethereum data pipeline whose heartbeat lives in git.",
-    "role": "Solo · open source · runs nightly",
-    "stack": "Node ≥ 22 only · raw JSON-RPC · hand-decoded ERC-20 logs · offline fixture tests",
-    "tagline": "An unattended pipeline that collects public Ethereum mainnet data and crypto funding signals every night, computes the metrics, writes a Markdown report and commits it — whether or not the run succeeded.",
-    "thesis": "A pipeline that only commits on success goes quiet exactly when you need to know. The status file is committed on every run, so the heartbeat is visible in git history without a dashboard.",
-    "wrong": "A public RPC endpoint flakes at 3 a.m. and nobody is watching.",
-    "mechanism": "Multi-endpoint failover with backoff; STATUS.md committed on every run, success or failure.",
-    "stats": [],
-    "readmeUrl": "https://github.com/jupiter-Pulin/chain-pulse#readme",
-    "readmeNote": "README is in Chinese today.",
-    "repos": [
-      {
-        "label": "jupiter-Pulin/chain-pulse",
-        "url": "https://github.com/jupiter-Pulin/chain-pulse"
-      }
-    ],
-    "readme": "# chain-pulse\n\n夜间自动运行的数据管道：EVM 链上指标 + 加密融资信号，两个业务模块共享同一套无人值守基础设施（调度 / 落盘 / git 心跳 / 告警）。每晚 cron 触发：采集以太坊主网公开数据与融资 RSS → 聚合指标 → 生成 Markdown 日报 → git 固化。\n\n## 设计要点\n\n- **零依赖**：仅 Node ≥22 内置能力（`fetch`、`node --test`），不装任何 npm 包\n- **裸 JSON-RPC**：不经 ethers/web3 封装，直接走协议层（`eth_blockNumber` / `eth_feeHistory` / `eth_getBlockByNumber` / `eth_getLogs`）\n- **手工解码 ERC-20 Transfer 事件**：从 `topics` 抽 indexed 地址、从 `data` 抽 uint256 金额\n- **多端点故障转移 + 指数退避**：公共 RPC 不稳定是常态，失败换端点重试\n- **测试禁网络**：单测全部离线跑纯函数，fixture 驱动\n- **只读**：只查公开链上数据，不持有私钥、不接任何交易/下单接口\n\n## 每日产出\n\n`reports/YYYY-MM-DD.md`（另有 `reports/latest.md` 副本）…每次运行（无论成败）都会写 `reports/STATUS.md`",
-    "qa": {
-      "decision": "Commit the status every run, success or failure. Public RPC endpoints flake, and a pipeline that only commits on success goes quiet exactly when you need to know. chain-pulse writes <code>reports/STATUS.md</code> on every run and commits it even when collection fails, so the heartbeat — and each failure — is visible in git history without a dashboard.",
-      "stack": "Node ≥ 22 only, no npm packages. Raw JSON-RPC (eth_blockNumber, eth_feeHistory, eth_getBlockByNumber, eth_getLogs), hand-decoded ERC-20 Transfer logs, multi-endpoint failover with exponential backoff, and unit tests that never touch the network.",
-      "status": "Runs nightly, unattended and read-only: public Ethereum mainnet data plus a funding RSS feed, no keys, no trading endpoints. The daily report lands in <code>reports/latest.md</code>. The README is in Chinese."
     }
   },
   {

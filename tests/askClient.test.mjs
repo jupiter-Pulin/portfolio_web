@@ -39,12 +39,12 @@ const replying = (status, body) => {
 };
 
 test('askGuide folds every reply into answer, limited, unavailable or error', async () => {
-  const good = { ok: true, key: 'stack', scopeId: 'chain', answer: 'Node only.' };
+  const good = { ok: true, key: 'stack', scopeId: 'amm', answer: 'Node only.' };
   const f = replying(200, good);
   assert.deepEqual(await askGuide({ question: 'q', scopeId: null }, { fetch: f }), {
     kind: 'answer',
     key: 'stack',
-    scopeId: 'chain',
+    scopeId: 'amm',
     answer: 'Node only.',
   });
   assert.equal(f.calls[0].url, '/api/ask');
@@ -90,14 +90,14 @@ test('the language sample is the last typed question; chips and picks carry it b
   assert.equal(sample, '技术栈是什么');
 
   const chip = { via: 'chip', question: "What's the stack?", intent: 'stack' };
-  assert.deepEqual(askBody(chip, { scopeId: 'chain', langSample: sample }), {
+  assert.deepEqual(askBody(chip, { scopeId: 'amm', langSample: sample }), {
     question: "What's the stack?",
-    scopeId: 'chain',
+    scopeId: 'amm',
     intent: 'stack',
     langSample: '技术栈是什么',
   });
   assert.equal(nextLangSample(sample, chip), '技术栈是什么');
-  assert.equal(nextLangSample(sample, { via: 'pick', question: 'chain-pulse', intent: 'decision' }), '技术栈是什么');
+  assert.equal(nextLangSample(sample, { via: 'pick', question: 'AMM DEX', intent: 'decision' }), '技术栈是什么');
 
   const english = { via: 'typed', question: 'where is the code' };
   const after = nextLangSample(sample, english);
@@ -113,7 +113,7 @@ test('the language sample is the last typed question; chips and picks carry it b
 test('fixed copy picks zh or en from the sample, and has the wording Pulin gave', () => {
   assert.equal(copyLang('what is the stack'), 'en');
   assert.equal(copyLang('技术栈是什么'), 'zh');
-  assert.equal(copyLang('chain-pulse 怎么样'), 'zh');
+  assert.equal(copyLang('AMM DEX 怎么样'), 'zh');
   assert.equal(copyLang(null), 'en');
   assert.equal(copyLang('¿Dónde está el código?'), 'en');
 
@@ -155,8 +155,8 @@ test('entry actions: blog, LinkedIn, X, projects — labels from content', () =>
 });
 
 test('answerActions: only the clickable part of the scripted answer', () => {
-  assert.deepEqual(answerActions('overview', 'chain'), [
-    { kind: 'actions', actions: [{ t: 'open', id: 'chain', label: 'Open chain-pulse ↗' }] },
+  assert.deepEqual(answerActions('overview', 'amm'), [
+    { kind: 'actions', actions: [{ t: 'open', id: 'amm', label: 'Open AMM DEX ↗' }] },
   ]);
 
   const code = answerActions('code', null)[0].actions;
@@ -183,14 +183,14 @@ test('answerActions: only the clickable part of the scripted answer', () => {
   const priv = answerActions('code', secret.id, [...PROJECTS, secret]);
   assert.ok(!JSON.stringify(priv).includes('"t":"link"'), 'a private scope offers no link');
 
-  const answer = 'chain-pulse 每晚运行。\n\n它会提交 STATUS.md。';
-  const blocks = modelAnswerBlocks(answer, 'overview', 'chain');
+  const answer = 'AMM DEX 从零实现。\n\n配对合约只信任自己的余额。';
+  const blocks = modelAnswerBlocks(answer, 'overview', 'amm');
   assert.deepEqual(blocks, [
-    { kind: 'p', runs: [{ t: 'text', v: 'chain-pulse 每晚运行。' }] },
-    { kind: 'p', runs: [{ t: 'text', v: '它会提交 STATUS.md。' }] },
-    ...answerActions('overview', 'chain'),
+    { kind: 'p', runs: [{ t: 'text', v: 'AMM DEX 从零实现。' }] },
+    { kind: 'p', runs: [{ t: 'text', v: '配对合约只信任自己的余额。' }] },
+    ...answerActions('overview', 'amm'),
   ]);
-  const scriptedText = answerBlocks('overview', 'chain').filter((b) => b.kind === 'p').map((b) => JSON.stringify(b));
+  const scriptedText = answerBlocks('overview', 'amm').filter((b) => b.kind === 'p').map((b) => JSON.stringify(b));
   for (const b of blocks) assert.ok(!scriptedText.includes(JSON.stringify(b)), 'no scripted paragraph is shown');
 });
 
@@ -202,9 +202,9 @@ test('the transcript around one request: placeholder, then the outcome in place'
   assert.deepEqual(pending[2], { key: 2, who: 'guide', typing: GUIDE.typing });
   assert.equal(pendingMsgs(pending, 'again'), pending, 'a second submit while in flight adds nothing');
 
-  const answered = settleMsgs(pending, { kind: 'answer', key: 'stack', scopeId: 'chain', answer: 'Node only.' }, { scopeId: null, langSample: '技术栈是什么' });
-  assert.equal(answered.scopeId, 'chain');
-  assert.deepEqual(answered.msgs[2], { key: 2, who: 'guide', blocks: modelAnswerBlocks('Node only.', 'stack', 'chain') });
+  const answered = settleMsgs(pending, { kind: 'answer', key: 'stack', scopeId: 'amm', answer: 'Node only.' }, { scopeId: null, langSample: '技术栈是什么' });
+  assert.equal(answered.scopeId, 'amm');
+  assert.deepEqual(answered.msgs[2], { key: 2, who: 'guide', blocks: modelAnswerBlocks('Node only.', 'stack', 'amm') });
   assert.ok(!answered.msgs.some((m) => m.typing));
   assert.deepEqual(answered.msgs.slice(0, 2), pending.slice(0, 2));
 
@@ -344,32 +344,32 @@ test('no new runtime dependency', () => {
 
 test('an answer carries the server meta, and hudLines spells it out from guide.ts', async () => {
   const meta = {
-    candidates: ['chain:short:0', 'chain:stack:0'],
+    candidates: ['amm:short:0', 'amm:stack:0'],
     model: 'deepseek-flash',
     ms: 2426,
     usage: { inputTokens: 2077, outputTokens: 235 },
     costUsd: 0.000905,
   };
-  const good = { ok: true, key: 'stack', scopeId: 'chain', answer: 'Node only.' };
+  const good = { ok: true, key: 'stack', scopeId: 'amm', answer: 'Node only.' };
   const res = await askGuide({ question: 'q', scopeId: null }, { fetch: replying(200, { ...good, meta }) });
-  assert.deepEqual(res, { kind: 'answer', key: 'stack', scopeId: 'chain', answer: 'Node only.', meta });
+  assert.deepEqual(res, { kind: 'answer', key: 'stack', scopeId: 'amm', answer: 'Node only.', meta });
   // A missing or malformed meta block drops silently; the answer is still an answer.
   for (const bad of [undefined, null, 'x', { model: 1 }, { ...meta, candidates: [1] }, { ...meta, usage: { inputTokens: '1' } }]) {
     const r = await askGuide({ question: 'q', scopeId: null }, { fetch: replying(200, { ...good, meta: bad }) });
-    assert.deepEqual(r, { kind: 'answer', key: 'stack', scopeId: 'chain', answer: 'Node only.' }, JSON.stringify(bad));
+    assert.deepEqual(r, { kind: 'answer', key: 'stack', scopeId: 'amm', answer: 'Node only.' }, JSON.stringify(bad));
   }
 
   const pending = pendingMsgs([], '技术栈是什么');
   const settled = settleMsgs(pending, res, { scopeId: null, langSample: '技术栈是什么' });
-  const hud = { ...meta, key: 'stack', scopeId: 'chain', langSample: '技术栈是什么' };
-  assert.deepEqual(settled.msgs[1], { key: 1, who: 'guide', blocks: modelAnswerBlocks('Node only.', 'stack', 'chain'), meta: hud });
-  const plain = settleMsgs(pending, { kind: 'answer', key: 'stack', scopeId: 'chain', answer: 'Node only.' }, { scopeId: null, langSample: null });
+  const hud = { ...meta, key: 'stack', scopeId: 'amm', langSample: '技术栈是什么' };
+  assert.deepEqual(settled.msgs[1], { key: 1, who: 'guide', blocks: modelAnswerBlocks('Node only.', 'stack', 'amm'), meta: hud });
+  const plain = settleMsgs(pending, { kind: 'answer', key: 'stack', scopeId: 'amm', answer: 'Node only.' }, { scopeId: null, langSample: null });
   assert.ok(!('meta' in plain.msgs[1]), 'no meta, no panel');
 
   const lines = hudLines(hud);
   assert.deepEqual(lines.map((l) => l.label), [GUIDE.hud.route, GUIDE.hud.retrieval, GUIDE.hud.model, GUIDE.hud.language]);
-  assert.equal(lines[0].text, 'key=stack · scopeId=chain');
-  assert.equal(lines[1].text, `${GUIDE.hud.retrievalNote(2)} · chain:short:0 chain:stack:0`);
+  assert.equal(lines[0].text, 'key=stack · scopeId=amm');
+  assert.equal(lines[1].text, `${GUIDE.hud.retrievalNote(2)} · amm:short:0 amm:stack:0`);
   assert.equal(lines[2].text, 'deepseek-flash · 2.4 s · 2,077 in / 235 out tokens · $0.0009');
   assert.equal(lines[3].text, `${GUIDE.hud.languageFrom} “技术栈是什么”`);
   assert.equal(hudLines({ ...hud, scopeId: null, langSample: null })[0].text, 'key=stack · scopeId=null');

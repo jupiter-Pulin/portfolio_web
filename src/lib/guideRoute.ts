@@ -10,7 +10,6 @@ export type Route = { key: AnswerKey; scopeId: string | null; scopeChanged: bool
 const NAMED: [string, RegExp][] = [
   ["loop", /loop|conductor/],
   ["live", /interpret|meeting|zoom|translat/],
-  ["chain", /chain|pulse|ethereum|rpc/],
   ["amm", /amm|dex|swap|uniswap|solidity/],
 ];
 

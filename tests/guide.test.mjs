@@ -67,8 +67,6 @@ test('naming a project switches the scope and answers with its overview', () => 
     ['does the loop thing work?', 'loop'],
     ['the zoom translation one', 'live'],
     ['how does the interpreter handle silence', 'live'],
-    ['tell me about chain-pulse', 'chain'],
-    ['that ethereum rpc pipeline', 'chain'],
     ['the amm', 'amm'],
     ['uniswap-style solidity work', 'amm'],
   ]) {
@@ -105,7 +103,7 @@ test('the eight keyword families each reach their own answer, and keep the scope
     for (const input of inputs) {
       assert.deepEqual(route(input, null), { key, scopeId: null, scopeChanged: false }, input);
       // A keyword never disturbs a scope that is already set.
-      assert.deepEqual(route(input, 'chain'), { key, scopeId: 'chain', scopeChanged: false }, input);
+      assert.deepEqual(route(input, 'amm'), { key, scopeId: 'amm', scopeChanged: false }, input);
     }
   }
 });
@@ -133,7 +131,7 @@ test('chips are the five global questions, or four scoped ones plus a way back',
   );
   assert.equal(scoped[0].label, 'Hardest decision in Loop Conductor?');
   assert.equal(scoped[4].label, GUIDE.allQuestions);
-  assert.equal(scopedChips('chain-pulse')[0].label, 'Hardest decision in chain-pulse?');
+  assert.equal(scopedChips('AMM DEX')[0].label, 'Hardest decision in AMM DEX?');
 
   // The arrow belongs to the chip, not to the line the transcript echoes.
   assert.equal(echoLabel(GUIDE.allQuestions), 'All questions');
@@ -218,7 +216,7 @@ test('the code answer links the repos of every public project', () => {
     rows.map((r) => [r.label, r.right.label ?? r.right.text]),
     expected,
   );
-  assert.equal(rows.filter((r) => r.right.t === 'link').length, 5, 'amm carries two repos');
+  assert.equal(rows.filter((r) => r.right.t === 'link').length, 4, 'amm carries two repos');
   for (const row of rows.filter((r) => r.right.t === 'link')) {
     assert.ok(row.right.href.startsWith('https://github.com/'), row.right.href);
   }
@@ -295,14 +293,14 @@ test('without a scope those three ask which project, and carry the question alon
 });
 
 test('the overview names the project and shows the wrong / mechanism pair', () => {
-  const p = projectById('chain');
+  const p = projectById('amm');
   const blocks = answerBlocks('overview', p.id);
   const text = answerText(blocks);
   assert.ok(text.startsWith(`${p.name} — ${p.tagline}`));
   assert.ok(text.includes(GUIDE.overview.wrong) && text.includes(p.wrong));
   assert.ok(text.includes(GUIDE.overview.mechanism) && text.includes(p.mechanism));
-  assert.deepEqual(opens(blocks), [{ t: 'open', id: 'chain', label: openLabel(p.name) }]);
-  assert.equal(openLabel(p.name), 'Open chain-pulse ↗');
+  assert.deepEqual(opens(blocks), [{ t: 'open', id: 'amm', label: openLabel(p.name) }]);
+  assert.equal(openLabel(p.name), 'Open AMM DEX ↗');
 });
 
 test('"All questions" is a plain line, and the scope is cleared by the caller', () => {

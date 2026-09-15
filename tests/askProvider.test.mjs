@@ -31,14 +31,14 @@ const section = (user, title) => {
 };
 
 const recording = () =>
-  fakeProvider(() => ({ content: '{"key":"stack","scopeId":"chain","answer":"OK"}', usage: { inputTokens: 1, outputTokens: 1 } }));
+  fakeProvider(() => ({ content: '{"key":"stack","scopeId":"amm","answer":"OK"}', usage: { inputTokens: 1, outputTokens: 1 } }));
 
 const handlerWith = (provider, fetch) =>
   createAskHandler({ env: baseEnv(), index, store: createMemoryStore(), provider, clock: fixedClock('2026-09-14T12:00:00Z'), log: captureLog(), fetch: fetch ?? fakeFetch() });
 
 test('openai-compatible: one chat-completions POST with the system prompt, key and signal', async () => {
-  const fetch = fakeFetch({ model: () => completion('{"key":"overview","scopeId":"chain","answer":"OK"}', { prompt_tokens: 1200, completion_tokens: 80 }) });
-  const res = await post(handlerWith(null, fetch), { question: 'chain-pulse?', scopeId: null });
+  const fetch = fakeFetch({ model: () => completion('{"key":"overview","scopeId":"amm","answer":"OK"}', { prompt_tokens: 1200, completion_tokens: 80 }) });
+  const res = await post(handlerWith(null, fetch), { question: 'AMM DEX?', scopeId: null });
   assert.equal(res.status, 200);
   assert.equal(fetch.modelCalls.length, 1);
   const [call] = fetch.modelCalls;
@@ -61,7 +61,7 @@ test('openai-compatible: one chat-completions POST with the system prompt, key a
   const provider = selectProvider(config, fetch);
   const out = await provider.ask({ system: 's', user: 'u', signal: new AbortController().signal });
   assert.deepEqual(out.usage, { inputTokens: 1200, outputTokens: 80 });
-  assert.equal(out.content, '{"key":"overview","scopeId":"chain","answer":"OK"}');
+  assert.equal(out.content, '{"key":"overview","scopeId":"amm","answer":"OK"}');
   assert.equal(out.finishReason, undefined, 'no finish_reason in the response, none is made up');
   assert.equal(costUsd(out.usage, config), (1200 * 1 + 80 * 2) / 1e6);
   const cut = await selectProvider(config, fakeFetch({ model: () => completion('{"key": "looking", "', { prompt_tokens: 2591, completion_tokens: 700 }, 'length') })).ask({ system: 's', user: 'u', signal: new AbortController().signal });
@@ -76,7 +76,7 @@ test('openai-compatible: one chat-completions POST with the system prompt, key a
     store,
     clock: fixedClock('2026-09-14T12:00:00Z'),
     log: captureLog(),
-    fetch: fakeFetch({ model: () => completion('{"key":"overview","scopeId":"chain","answer":"OK"}', null) }),
+    fetch: fakeFetch({ model: () => completion('{"key":"overview","scopeId":"amm","answer":"OK"}', null) }),
   });
   const bad = await post(noUsage, { question: 'hi', scopeId: null });
   assert.equal(bad.status, 502);
@@ -157,7 +157,7 @@ test('the language sample travels to the prompt; the question stays the question
   // The handler normalises only width (NFKC) and whitespace, so the sections keep the visitor's case.
   const provider = recording();
   const handler = handlerWith(provider);
-  const body = { question: "What's the stack?", scopeId: 'chain', intent: 'stack', langSample: 'chain-pulse 用了什么技术' };
+  const body = { question: "What's the stack?", scopeId: 'amm', intent: 'stack', langSample: 'AMM DEX 用了什么技术' };
   assert.equal((await post(handler, body)).status, 200);
   const { langSample, ...withoutSample } = body;
   assert.equal((await post(handler, withoutSample)).status, 200);
@@ -175,10 +175,10 @@ test('questions that differ only in form send the same bytes to the model', asyn
   // Ruling 2026-09-14 (help gate r9): whitespace and full-width forms fold; case does not.
   assert.equal(normalizeQuestion('  Where   is the CODE? '), 'Where is the CODE?');
   assert.notEqual(normalizeQuestion('Where is the CODE?'), normalizeQuestion('where is the code?'));
-  assert.equal(normalizeQuestion('ｃｈａｉｎ－ｐｕｌｓｅ'), 'chain-pulse');
+  assert.equal(normalizeQuestion('ＡＭＭ ＤＥＸ'), 'AMM DEX');
   for (const [a, b] of [
     ['  Where   is the CODE? ', 'Where is the CODE?'],
-    ['ｃｈａｉｎ－ｐｕｌｓｅ', 'chain-pulse'],
+    ['ＡＭＭ ＤＥＸ', 'AMM DEX'],
   ]) {
     const provider = recording();
     const handler = handlerWith(provider);
@@ -221,8 +221,8 @@ test('the paraphrase fixture covers every family, four projects, four kinds of l
 });
 
 test('detectLang and evaluate: inconsistent routing and wrong language are reported separately', async () => {
-  assert.equal(detectLang('chain-pulse 使用 Node.js 与 GitHub Actions。'), 'zh');
-  assert.equal(detectLang('chain-pulse は毎晩実行されます。'), 'ja');
+  assert.equal(detectLang('AMM DEX 使用 Node.js 与 GitHub Actions。'), 'zh');
+  assert.equal(detectLang('AMM DEX は毎晩実行されます。'), 'ja');
   assert.equal(detectLang('El proyecto usa Foundry y los tests están en el repositorio.'), 'es');
   assert.equal(detectLang('It runs every night and commits STATUS.md.'), 'en');
 
@@ -248,7 +248,7 @@ test('detectLang and evaluate: inconsistent routing and wrong language are repor
     return { kind: 'answer', key: off ? 'fallback' : e.key, scopeId: off ? null : e.scopeId, answer: say[e.lang] };
   });
   assert.equal(split.ok, false);
-  assert.deepEqual(split.failures.filter((f) => f.type === 'route-inconsistent').map((f) => f.group), ['stack-chain']);
+  assert.deepEqual(split.failures.filter((f) => f.type === 'route-inconsistent').map((f) => f.group), ['stack-amm']);
   assert.equal(split.failures.find((f) => f.type === 'route-inconsistent').label, '路由不一致');
   assert.equal(split.failures.find((f) => f.type === 'route-wrong').answer, say.zh, 'the misrouted answer is in the report');
   assert.ok(!split.failures.some((f) => f.type === 'lang-mismatch'));
@@ -348,19 +348,21 @@ test('.env.example is tracked and complete; README documents the route, scripts 
   assert.equal(spawnSync('git', ['check-ignore', '-q', '.env.example'], { cwd: ROOT }).status, 1);
   assert.ok(execFileSync('git', ['check-ignore', '.env.local'], { cwd: ROOT, encoding: 'utf8' }).includes('.env.local'));
 
+  // The guide's costs and their bounds are documented between "The guide" and "## Run".
   const readme = read('../README.md');
-  const run = readme.slice(readme.indexOf('## Run'), readme.indexOf('## Branching'));
+  const guide = readme.slice(readme.indexOf('## The guide'), readme.indexOf('## Run'));
   for (const phrase of [
-    '/api/ask',
-    'node scripts/build-ask-index.mjs',
-    'node scripts/eval-ask.mjs',
     'Upstash may incur additional charges',
-    'Production must configure Upstash',
+    'production refuses to call the model without Upstash',
     '`ASK_IP_SALT`',
     'weak per-instance limit',
     'still called for real and still billed',
-    'Model calls are paid by Pulin and are bounded by daily / monthly budget',
+    'Model calls are paid by Nolan',
   ]) {
+    assert.ok(guide.includes(phrase), `README guide section: ${phrase}`);
+  }
+  const run = readme.slice(readme.indexOf('## Run'), readme.indexOf('## Branching'));
+  for (const phrase of ['/api/ask', 'node scripts/build-ask-index.mjs', 'node scripts/eval-ask.mjs']) {
     assert.ok(run.includes(phrase), `README Run section: ${phrase}`);
   }
 });

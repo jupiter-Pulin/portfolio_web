@@ -8,7 +8,7 @@ export const SITE = {
     'Nolan Tang, a product-minded software engineer with experience in fintech, blockchain and AI. Ask the site guide about the work, the stack, or how to reach him.',
   askLabel: 'Any question?',
   workTitle: 'Selected Work',
-  workSubtitle: 'Four systems, one recurring problem: keeping state correct when the environment is not reliable.',
+  workSubtitle: 'Three systems, one recurring problem: keeping state correct when the environment is not reliable.',
   stripTitle: 'Selected work',
   stripOpenAll: 'open all →',
   footNote: "Project images are placeholders · Figures marked self-reported come from Nolan's own run ledger.",

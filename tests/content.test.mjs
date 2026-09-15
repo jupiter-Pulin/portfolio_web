@@ -30,9 +30,9 @@ test('identity card and guide hero copy are verbatim from the approved mock', ()
   assert.ok(SITE.description.startsWith('Nolan Tang'), 'the page description names him');
 });
 
-test('four projects with unique ids, required fields and honest source links', () => {
-  assert.equal(PROJECTS.length, 4);
-  assert.equal(new Set(PROJECTS.map((p) => p.id)).size, 4);
+test('three projects with unique ids, required fields and honest source links', () => {
+  assert.equal(PROJECTS.length, 3);
+  assert.equal(new Set(PROJECTS.map((p) => p.id)).size, 3);
   for (const p of PROJECTS) {
     for (const k of ['name', 'short', 'role', 'stack', 'tagline', 'thesis', 'wrong', 'mechanism']) {
       assert.ok(typeof p[k] === 'string' && p[k].length > 0, `${p.id}.${k} missing`);
@@ -49,7 +49,7 @@ test('four projects with unique ids, required fields and honest source links', (
     for (const s of p.stats) assert.ok(s.v && s.l, `${p.id} stat`);
   }
   assert.ok(projectById('loop').statsNote.includes('Self-reported'));
-  assert.deepEqual(PROJECTS.map((p) => p.id), ['loop', 'live', 'chain', 'amm'], 'registry order; the first is featured');
+  assert.deepEqual(PROJECTS.map((p) => p.id), ['loop', 'live', 'amm'], 'registry order; the first is featured');
   assert.equal(projectById('nope'), undefined);
   assert.ok(LOOKING.startsWith('Backend or full-stack work'));
 });
