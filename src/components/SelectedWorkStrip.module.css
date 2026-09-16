@@ -1,21 +1,23 @@
-/* selected work — a strip that drifts sideways on its own and scrolls by hand */
+/* selected work — a full-width strip that drifts sideways on its own and
+   scrolls by hand. Only the head stays inside the content column. */
 .strip {
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 28px 28px 80px;
+  padding: 28px 0 80px;
 }
 .stripHead {
+  max-width: var(--maxw);
+  margin: 0 auto 14px;
+  padding: 0 28px;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 14px;
 }
 .tiles {
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
-  margin: 0 -28px;
-  padding: 6px 28px 10px;
+  /* The row spans the viewport, so its gutter has to reproduce where the
+     centred head above it starts: half the leftover width plus the 28px. */
+  padding: 6px max(28px, calc(50% - var(--maxw) / 2 + 28px)) 10px;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
 }
@@ -27,7 +29,7 @@
   gap: 12px;
   width: max-content;
 }
-/* the second copy of the tiles, there so the loop never shows an edge */
+/* a repeat of the tiles, there so the loop never shows an edge */
 .clone {
   display: contents;
 }
@@ -115,12 +117,11 @@
 }
 
 @media (max-width: 640px) {
-  .strip {
+  .stripHead {
     padding-left: 18px;
     padding-right: 18px;
   }
   .tiles {
-    margin: 0 -18px;
     padding-left: 18px;
     padding-right: 18px;
   }
