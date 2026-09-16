@@ -84,6 +84,29 @@ test('the copies cover the gutter the drift now travels as well as the viewport'
   assert.equal(copiesFor(1920, 0, 433), 2, 'an unmeasured strip keeps the two it renders');
 });
 
+test('a window dragged wider re-measures the gutter, which its content box would not report', () => {
+  const loop = 1248;
+  const gutter = (width) => Math.max(28, (width - 1180) / 2 + 28); // --maxw being 1180px
+  const contentBox = (width) => width - 2 * gutter(width);
+  // Past the content column the gutter takes up all the leftover width, so the
+  // row's content box is the same 1124px at every one of these: watching it
+  // means never hearing about a window that was opened small and maximised.
+  assert.equal(contentBox(1440), 1124);
+  assert.equal(contentBox(1990), 1124);
+  assert.equal(contentBox(2560), 1124);
+  // And the fit does change out there: both the wrap and the number of copies.
+  assert.equal(gutter(1990), 433);
+  assert.equal(gutter(2560), 718);
+  assert.equal(copiesFor(1990, loop, gutter(1990)), 3);
+  assert.equal(copiesFor(2560, loop, gutter(2560)), 4, 'a wider window needs one more copy');
+  const src = readFileSync(fileURLToPath(new URL('../src/components/WorkMarquee.tsx', import.meta.url)), 'utf8');
+  assert.match(
+    src,
+    /observe\(\s*el\s*,\s*\{\s*box:\s*['"]border-box['"]\s*\}\s*\)/,
+    'so the row watches the box that does follow the viewport',
+  );
+});
+
 test('the marquee measures that gutter and feeds it to the arithmetic', () => {
   const src = readFileSync(fileURLToPath(new URL('../src/components/WorkMarquee.tsx', import.meta.url)), 'utf8');
   assert.match(src, /paddingLeft/, 'the gutter is read off the row itself');

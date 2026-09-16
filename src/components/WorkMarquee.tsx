@@ -65,7 +65,11 @@ export function WorkMarquee({ projects }: { projects: WorkTile[] }) {
     };
     fit();
     const sizes = new ResizeObserver(fit);
-    sizes.observe(el);
+    // Past the content column the row's gutter grows by exactly what the wider
+    // viewport leaves over, so its content box stays the same width and a
+    // content-box observation — the default — never fires. The border box is
+    // the one that follows the viewport, and the gutter with it.
+    sizes.observe(el, { box: "border-box" });
     for (const ev of ["pointerenter", "pointerdown", "focusin"]) el.addEventListener(ev, pause);
     el.addEventListener("touchstart", pause, { passive: true });
     for (const ev of ["pointerleave", "focusout"]) el.addEventListener(ev, resume);
