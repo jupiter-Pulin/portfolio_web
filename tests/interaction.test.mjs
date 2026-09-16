@@ -41,3 +41,52 @@ test('the strip wraps on a measured copy, not on half the scroll width', () => {
   assert.match(src, /copiesFor\(/, 'the number of copies follows the width of the row');
   assert.match(src, /ResizeObserver/, 'and is recomputed when the row is resized');
 });
+
+test('the drift wraps behind the gutter, so a loop looks the same before and after', () => {
+  const loop = 1248; // four 300px tiles and their 12px gaps
+  const lead = 433; // the gutter a 1990px viewport leaves left of the content column
+  // Only the very first pass shows that gutter empty. Wrapping to 0 would put it
+  // back every loop, and the tiles standing in it would blink away.
+  assert.ok(
+    Math.abs(nextOffset(loop - 1, 100, loop, lead) - (loop + 1.8)) < 1e-9,
+    'the first pass carries on through the gutter instead of snapping back',
+  );
+  assert.ok(
+    Math.abs(nextOffset(lead + loop - 1, 100, loop, lead) - (lead + 1.8)) < 1e-9,
+    'afterwards it wraps one copy back, to the same picture',
+  );
+  const stepPx = 16 * DRIFT_PX_PER_MS;
+  let x = 0;
+  let previous = 0;
+  let wraps = 0;
+  for (let i = 0; i < 30000; i += 1) {
+    x = nextOffset(x, 16, loop, lead);
+    if (x < previous) {
+      wraps += 1;
+      assert.ok(Math.abs(previous + stepPx - x - loop) < 1e-6, 'a wrap moves back exactly one copy');
+      assert.ok(x >= lead, `a wrap never lands back in the gutter (${x})`);
+    }
+    previous = x;
+  }
+  assert.ok(wraps > 5, 'the run covers several loops');
+  assert.equal(nextOffset(5, 0, 0, lead), 5, 'an unmeasured strip still never wraps');
+});
+
+test('the copies cover the gutter the drift now travels as well as the viewport', () => {
+  const loop = 1248;
+  for (const width of [320, 1124, 1440, 1920, 2560, 3840]) {
+    const lead = Math.max(28, (width - 1180) / 2 + 28); // the row's gutter, --maxw being 1180px
+    // The drift runs to lead + loop, and the browser stops it at
+    // scrollWidth - clientWidth, so the copies have to cover both.
+    assert.ok((copiesFor(width, loop, lead) - 1) * loop >= width + lead, `room to wrap at ${width}px`);
+    assert.ok(copiesFor(width, loop, lead) >= copiesFor(width, loop), 'the gutter only ever asks for more');
+  }
+  assert.equal(copiesFor(1920, 0, 433), 2, 'an unmeasured strip keeps the two it renders');
+});
+
+test('the marquee measures that gutter and feeds it to the arithmetic', () => {
+  const src = readFileSync(fileURLToPath(new URL('../src/components/WorkMarquee.tsx', import.meta.url)), 'utf8');
+  assert.match(src, /paddingLeft/, 'the gutter is read off the row itself');
+  assert.match(src, /nextOffset\([^)]*lead\)/, 'the drift wraps behind the gutter');
+  assert.match(src, /copiesFor\([^)]*lead\)/, 'and the copies cover it');
+});

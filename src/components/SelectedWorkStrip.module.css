@@ -29,7 +29,7 @@
   gap: 12px;
   width: max-content;
 }
-/* a repeat of the tiles, there so the loop never shows an edge */
+/* one of the repeats of the tiles, there so the loop never shows an edge */
 .clone {
   display: contents;
 }

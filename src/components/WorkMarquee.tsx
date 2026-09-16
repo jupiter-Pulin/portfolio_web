@@ -18,7 +18,9 @@ export type WorkTile = { id: string; name: string; role: string; short: string; 
  * The row is as wide as the viewport, so two copies are not always enough: the
  * drift only has `scrollWidth - clientWidth` to travel, and once that is short
  * of a copy the row stalls at its end and snaps back. It measures one copy off
- * the tiles and renders as many as that width asks for.
+ * the tiles and renders as many of them as that width asks for. It also reads
+ * the gutter that holds the first tile under the head, because the drift wraps
+ * behind it: that gutter stands empty on the first pass only.
  */
 export function WorkMarquee({ projects }: { projects: WorkTile[] }) {
   const { openAsk } = useAsk();
@@ -34,11 +36,14 @@ export function WorkMarquee({ projects }: { projects: WorkTile[] }) {
     let frame = 0;
     // one loop: from a tile to the same tile in the next copy
     let loop = 0;
+    // the row's own gutter, where the first tile lines up with the head
+    let lead = 0;
     const fit = () => {
       const boxes = el.querySelectorAll<HTMLElement>("[data-tile]");
       const next = boxes[projects.length];
       loop = next ? next.offsetLeft - boxes[0].offsetLeft : 0;
-      setCopies(copiesFor(el.clientWidth, loop));
+      lead = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+      setCopies(copiesFor(el.clientWidth, loop, lead));
     };
     const pause = () => {
       paused = true;
@@ -52,7 +57,7 @@ export function WorkMarquee({ projects }: { projects: WorkTile[] }) {
     };
     const step = (ts: number) => {
       if (last !== null && !paused) {
-        x = nextOffset(x, ts - last, loop);
+        x = nextOffset(x, ts - last, loop, lead);
         el.scrollLeft = x;
       }
       last = ts;
