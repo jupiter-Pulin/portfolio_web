@@ -36,6 +36,25 @@ test('the work strip is one scrollable row at every width, narrower tiles on pho
   assert.match(squash(mediaBlock(css, 640)), /\.tile \{[^}]*flex-basis: 262px/);
 });
 
+test('the work strip runs edge to edge while its head keeps the content column', () => {
+  const css = squash(read('../src/components/SelectedWorkStrip.module.css'));
+  const strip = css.match(/\.strip \{[^}]*\}/)[0];
+  assert.doesNotMatch(strip, /max-width/, 'the strip itself is no longer held to the content column');
+  assert.doesNotMatch(strip, /padding:[^;]*28px[^;]*28px/, 'no side padding, so the row can reach both edges');
+  const head = css.match(/\.stripHead \{[^}]*\}/)[0];
+  assert.match(head, /max-width: var\(--maxw\)/, 'the head still sits in the content column');
+  assert.match(head, /margin: 0 auto/, 'centred like the rest of the page');
+  assert.match(head, /padding: 0 28px/, 'and keeps the 28px gutter');
+  // The row is full width, so its own gutter has to reproduce where the centred
+  // column starts: half the leftover viewport plus that same 28px.
+  assert.match(css, /\.tiles \{[^}]*max\(28px, calc\(50% - var\(--maxw\) \/ 2 \+ 28px\)\)/);
+  assert.doesNotMatch(css, /\.tiles \{[^}]*margin: 0 -28px/, 'the negative margin belonged to the boxed strip');
+  const phone = squash(mediaBlock(read('../src/components/SelectedWorkStrip.module.css'), 640));
+  for (const sel of ['\\.stripHead', '\\.tiles']) {
+    assert.match(phone, new RegExp(`${sel} \\{[^}]*padding-left: 18px`), `${sel} narrows its gutter on phones`);
+  }
+});
+
 test('the identity card stacks its facts and shrinks the avatar below 640px', () => {
   const phone = squash(mediaBlock(read('../src/components/IdentityCard.module.css'), 640));
   assert.match(phone, /\.avatar \{[^}]*width: 92px/);
