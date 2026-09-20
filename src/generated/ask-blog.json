@@ -1,4 +1,7 @@
 [
+{"slug":"defi-full-stack-map","title":"For Developers New to DeFi Full-Stack: See the Map Before Entering the Forest","tags":["defi","architecture"],"href":"/blog/defi-full-stack-map"},
+{"slug":"lp-terminal-three-things","title":"An LP terminal should keep three things together","tags":["defi","liquidity","product"],"href":"/blog/lp-terminal-three-things"},
+{"slug":"more-than-a-resume","title":"Don’t Let Years of Work Become Only a Few Lines on a Resume","tags":["career","writing"],"href":"/blog/more-than-a-resume"},
 {"slug":"lp-range-over-apr","title":"When Providing Liquidity, the Most Important Variable May Not Be APR — It’s the Range","tags":["defi","amm","liquidity"],"href":"/blog/lp-range-over-apr"},
 {"slug":"fewer-nodes-in-the-agent-workflow","title":"After LLMs Got Stronger, We Deleted Some Nodes from Our Agent Workflow","tags":["agents","workflow"],"href":"/blog/fewer-nodes-in-the-agent-workflow"}
 ]
