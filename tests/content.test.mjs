@@ -24,8 +24,6 @@ test('identity card and guide hero copy are verbatim from the approved mock', ()
   assert.ok(IDENTITY.facts.every((f) => f.text.length > 0));
   assert.equal(GUIDE.hero.headline, "Tell me what you're hiring for, or what you want to see.");
   assert.equal(GUIDE.hero.headlineAccent, "I'll take you there.");
-  assert.equal(GUIDE.hero.rules.quota(10), '10 questions a day per visitor');
-  assert.equal(GUIDE.hero.rules.wait(6), 'usually under 6 s');
   assert.equal(SITE.title, 'Nolan Tang');
   assert.ok(SITE.description.startsWith('Nolan Tang'), 'the page description names him');
 });

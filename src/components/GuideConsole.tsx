@@ -5,7 +5,6 @@ import type { FormEvent } from "react";
 import { GUIDE } from "@/content/guide";
 import { PROJECTS, projectById } from "@/content/projects";
 import { atThreadEnd, followThread, hasAsked, isPending } from "@/lib/askClient";
-import { ASK_CLIENT_TIMEOUT_MS } from "@/lib/askContract";
 import { Bubble, useAsk } from "./AskDrawer";
 import { Icon } from "./Icon";
 import styles from "./GuideConsole.module.css";
@@ -156,12 +155,6 @@ export function GuideConsole() {
           <span className={styles.sendLabel}>{GUIDE.send}</span>
         </button>
       </form>
-      <ul className={styles.rules}>
-        <li>{GUIDE.hero.rules.quota(GUIDE.limits.visitorDailyQuestions)}</li>
-        <li>{GUIDE.hero.rules.language}</li>
-        <li>{GUIDE.hero.rules.wait(ASK_CLIENT_TIMEOUT_MS / 1000)}</li>
-        <li>{GUIDE.hero.rules.behalf}</li>
-      </ul>
     </div>
   );
 }
