@@ -10,7 +10,6 @@ import { IDENTITY, SITE } from '../src/content/copy.ts';
 import { GUIDE } from '../src/content/guide.ts';
 import { EMAIL, MAILTO, SOCIALS } from '../src/content/links.ts';
 import { PROJECTS } from '../src/content/projects.ts';
-import { ASK_CLIENT_TIMEOUT_MS } from '../src/lib/askContract.ts';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const NEXT = fileURLToPath(new URL('../node_modules/.bin/next', import.meta.url));
@@ -105,9 +104,7 @@ test('the landing page renders the identity card and the guide from src/content'
   assert.ok(body.includes(GUIDE.hero.quickLabel) && body.includes(GUIDE.hero.startLabel), 'chip labels');
   for (const chip of GUIDE.chips.global) assert.ok(body.includes(chip.label), chip.label);
   for (const p of PROJECTS) assert.ok(body.includes(p.name), `${p.name} as a starting point`);
-  assert.ok(body.includes(GUIDE.hero.rules.quota(GUIDE.limits.visitorDailyQuestions)), 'the quota line');
-  assert.ok(body.includes(GUIDE.hero.rules.wait(ASK_CLIENT_TIMEOUT_MS / 1000)), 'the wait line');
-  assert.ok(body.includes(GUIDE.hero.rules.language) && body.includes(GUIDE.hero.rules.behalf), 'the other two lines');
+  assert.ok(!body.includes('questions a day per visitor') && !body.includes('usually under'), 'no rules line under the composer');
   assert.match(pages.home, new RegExp(`maxlength="${GUIDE.limits.maxQuestionChars}"`, 'i'), 'the composer keeps the question limit');
   assert.ok(!body.includes('How I Build'), 'the old card is gone');
 });

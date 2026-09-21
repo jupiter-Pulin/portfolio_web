@@ -61,13 +61,6 @@ export const GUIDE = {
     scopedLabel: "Scoped to",
     startLabel: "Or start from a project",
     askProject: "ask about this project ↑",
-    // Fixed lines under the composer; the two numbers are the ones the server enforces.
-    rules: {
-      quota: (n: number) => `${n} questions a day per visitor`,
-      language: "answers in the language you ask in",
-      wait: (seconds: number) => `usually under ${seconds} s`,
-      behalf: "never acts on Nolan's behalf",
-    },
   },
 
   // "Under the hood": what the server did for one answer, shown beneath it.

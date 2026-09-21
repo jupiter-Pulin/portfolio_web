@@ -87,7 +87,7 @@ test('globals carry the mock tokens, the grid and both glows', () => {
 test('the home guide is a fixed-height window: only its thread scrolls', () => {
   const css = squash(read('../src/components/GuideConsole.module.css'));
   assert.match(css, /\.console \{[^}]*height: clamp\(/, 'the window has a height of its own');
-  assert.match(css, /\.console \{[^}]*grid-template-rows: auto minmax\(0, 1fr\) auto auto/, 'the thread row takes what is left');
+  assert.match(css, /\.console \{[^}]*grid-template-rows: auto minmax\(0, 1fr\) auto;/, 'the thread row takes what is left; the composer is the last row');
   assert.match(css, /\.thread \{[^}]*overflow-y: auto/);
   assert.match(css, /\.thread \{[^}]*overscroll-behavior: contain/, 'reaching the end does not scroll the page');
   assert.match(css, /\.thread \{[^}]*min-height: 0/);
