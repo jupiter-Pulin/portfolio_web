@@ -164,7 +164,7 @@ test('the blog post list is sent every time, between the site-wide summaries and
   assert.equal(titles[at - 1], 'Site-wide summaries');
   assert.equal(titles[at + 1], 'Answer keys');
 
-  assert.equal(BLOG_POSTS.length, 5);
+  assert.equal(BLOG_POSTS.length, 6);
   const lines = section(user, 'Blog posts').split('\n');
   assert.equal(lines.length, BLOG_POSTS.length, 'one line per post');
   BLOG_POSTS.forEach((post, i) => {
