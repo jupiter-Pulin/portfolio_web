@@ -15,7 +15,7 @@ export type Lexicon = {
   names: { id: string; name: string }[];
   /** Stack terms, longest first, matched exactly. */
   terms: string[];
-  /** Public addresses the site lists (links.ts and the projects' repositories). */
+  /** Public addresses the site lists (links.ts, the projects' repositories and live sites). */
   urls: Set<string>;
   /** Pages of this site: the blog and its posts, the work page and its cases. */
   paths: Set<string>;
@@ -44,6 +44,8 @@ export function buildLexicon(projects: readonly Project[] = PROJECTS, posts: rea
   for (const { name } of names) termSet.delete(name);
   const urls = new Set<string>([GITHUB, LINKEDIN, X].map(stripSlash));
   for (const p of projects) {
+    // A live site is the product, not the code: private projects may name theirs.
+    if (p.site) urls.add(stripSlash(p.site.url));
     if (p.private) continue;
     for (const r of p.repos) urls.add(stripSlash(r.url));
     if (p.readmeUrl) urls.add(stripSlash(p.readmeUrl));

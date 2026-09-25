@@ -11,6 +11,7 @@ Everything below is a data edit or a file drop; the table says which file to tou
 | Change a README preview or its caveat | `src/content/projects.ts` — `readme` / `readmeNote` |
 | Change a figure or where it came from | `src/content/projects.ts` — `stats` / `statsNote` |
 | Change a repository or README link | `src/content/projects.ts` — `readmeUrl` / `repos` |
+| Link a live product, add a demo video or a diagram | `src/content/projects.ts` — `site` / `demo` / `architecture` + files in `public/projects/<id>/` (see below) |
 | Publish a blog post | `src/content/blog/YYYY-MM-DD-<slug>.md` + photos in `public/blog/<slug>/` (see below) |
 | Change contact or social links | `src/content/links.ts` |
 | Change page copy (headings, chrome, labels) | `src/content/copy.ts` |
@@ -49,6 +50,24 @@ with `next/image`, `alt` = the project name.
 
 A project with no diagram of its own (`src/components/ProjectArt.tsx` keys them by
 `id`) falls back to a neutral frame until a cover file exists.
+
+## Live site, demo video and architecture
+
+Three optional fields, for any project — the private ones are what they are for, since
+a private record links no repository:
+
+- `site: { label, url }` — the running product. `url` must be `https://` and must not
+  be a repository. The case page shows a "Visit <label> ↗" button in the README panel,
+  and the guide may give the address. The overview card still links nothing out.
+- `demo: { src, poster, caption }` — an `.mp4` and its poster frame, both in
+  `public/projects/<id>/`. The video takes the cover's place on the case page, with
+  `preload="none"`: nothing downloads until the visitor presses play. The overview
+  card keeps using `cover.*`.
+- `architecture: { src, alt, caption, width, height }` — a diagram in
+  `public/projects/<id>/`, shown full width under the case with a link to open it at
+  full size. `width` / `height` are the file's pixel size.
+
+`npm test` checks the shapes and that every file a record names exists.
 
 ## `status` and `updated`
 

@@ -490,6 +490,55 @@
           }
         }
       ]
+    },
+    {
+      "id": "decision-platter",
+      "expect": {
+        "key": "decision",
+        "scopeId": "platter"
+      },
+      "cases": [
+        {
+          "question": "Why does Platter never sign a transaction on the server?",
+          "scopeId": null,
+          "mix": "en",
+          "expect": {
+            "key": "decision",
+            "scopeId": "platter",
+            "lang": "en"
+          }
+        },
+        {
+          "question": "Platter 为什么不在服务器上签名交易？",
+          "scopeId": null,
+          "mix": "mixed",
+          "expect": {
+            "key": "decision",
+            "scopeId": "platter",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "这个项目为什么让钱包签名，而不是后端来签？",
+          "scopeId": "platter",
+          "mix": "zh",
+          "expect": {
+            "key": "decision",
+            "scopeId": "platter",
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "Platter はなぜサーバー側で署名しないのですか？",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "decision",
+            "scopeId": "platter",
+            "lang": "ja"
+          }
+        }
+      ]
     }
   ],
   "chips": [

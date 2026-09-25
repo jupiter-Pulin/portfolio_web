@@ -1,5 +1,5 @@
 // The /work screens, asserted against the build artifacts. `next build` prerenders
-// the overview and the four case pages to HTML, so no server and no browser is needed.
+// the overview and the five case pages to HTML, so no server and no browser is needed.
 // One project's cover is set aside for an extra build so both halves of the image
 // slot — a real image, and the placeholder — are covered by the same test run.
 import test, { after, before } from 'node:test';
@@ -120,7 +120,7 @@ test('the build prerenders the overview and one static page per project', () => 
   }
 });
 
-test('the gallery shows the four projects in registry order, featured first', () => {
+test('the gallery shows the five projects in registry order, featured first', () => {
   const cards = cardsOf(pages.gallery);
   assert.equal(cards.length, PROJECTS.length);
   assert.ok(textOf(pages.gallery).includes(SITE.workTitle), 'work title');
@@ -205,13 +205,42 @@ test('a case page without stats renders no stats block', () => {
 });
 
 test('a private case page shows the scope note and links no repository', () => {
-  // No record is private today; this holds the line for the next one that is.
-  for (const p of PROJECTS.filter((x) => x.private)) {
+  const privates = PROJECTS.filter((x) => x.private);
+  assert.ok(privates.length > 0, 'platter is private');
+  for (const p of privates) {
     const body = textOf(pages[p.id]);
     assert.ok(body.includes(WORK.privateRepo), `${p.id} lock label`);
     assert.ok(body.includes(p.scope), `${p.id} scope note`);
     assert.doesNotMatch(markup(pages[p.id]), /github\.com/, `no github link on the ${p.id} case page`);
   }
+});
+
+test('a demo takes the cover slot, the live site is linked, the architecture spans the page', () => {
+  const p = projectById('platter');
+  const html = markup(pages.platter);
+  const video = openTags(html, 'video');
+  assert.equal(video.length, 1, 'one walkthrough video');
+  assert.ok(video[0].includes(`src="${p.demo.src}"`) && video[0].includes(`poster="${p.demo.poster}"`), 'video src and poster');
+  assert.match(video[0], /preload="none"/, 'nothing downloads before play');
+  assert.match(video[0], /controls/);
+  assert.ok(textOf(pages.platter).includes(p.demo.caption), 'demo caption');
+
+  const site = tagWithHref(pages.platter, p.site.url);
+  assert.ok(site && /target="_blank"/.test(site) && /rel="noopener"/.test(site), 'live site opens safely');
+  assert.ok(textOf(pages.platter).includes(`${WORK.visitSite} ${p.site.label}`), 'live site label');
+
+  const img = openTags(html, 'img').find((t) => t.includes(`src="${p.architecture.src}"`));
+  assert.ok(img, 'architecture image');
+  assert.ok(img.includes(`alt="${p.architecture.alt}"`), 'architecture alt text');
+  assert.ok(textOf(pages.platter).includes(p.architecture.caption), 'architecture caption');
+  assert.ok(tagWithHref(pages.platter, p.architecture.src), 'full-size link');
+
+  // The other cases keep their cover and carry none of it.
+  for (const q of PROJECTS.filter((x) => !x.demo)) {
+    assert.equal(openTags(markup(pages[q.id]), 'video').length, 0, `${q.id} has no video`);
+  }
+  // A private card on the overview still links nothing out: the site lives on the case page.
+  assert.doesNotMatch(cardFor(pages.gallery, 'platter'), /platterfi\.trade"/);
 });
 
 test('README notes: a caveat bar with a preview, plain copy without one', () => {
@@ -263,12 +292,12 @@ test('the case pages walk in a loop and offer both ways out', () => {
     assert.equal(tags.length, 2, `${id} has previous and next`);
     return { prev: tags[0], next: tags[1] };
   };
-  // loop is first: previous wraps to amm (last), next is guide.
-  assert.match(nav('loop').prev, /href="\/work\/amm"/);
+  // loop is first: previous wraps to platter (last), next is guide.
+  assert.match(nav('loop').prev, /href="\/work\/platter"/);
   assert.match(nav('loop').next, /href="\/work\/guide"/);
-  // amm is last: next wraps back to loop.
-  assert.match(nav('amm').next, /href="\/work\/loop"/);
-  assert.ok(textOf(pages.amm).includes(`${total} / ${total}`), 'amm is the last of four');
+  // platter is last: next wraps back to loop.
+  assert.match(nav('platter').next, /href="\/work\/loop"/);
+  assert.ok(textOf(pages.platter).includes(`${total} / ${total}`), 'platter is the last of five');
 
   PROJECTS.forEach((p, i) => {
     assert.ok(textOf(pages[p.id]).includes(`${p.name} · ${i + 1} of ${total}`), `${p.id} subtitle`);

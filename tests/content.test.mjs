@@ -1,6 +1,8 @@
 // Content red lines: links, copy and project data must stay exactly as approved.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { EMAIL, MAILTO, GITHUB, LINKEDIN, X, SOCIALS } from '../src/content/links.ts';
 import { IDENTITY, SITE } from '../src/content/copy.ts';
 import { GUIDE } from '../src/content/guide.ts';
@@ -28,9 +30,9 @@ test('identity card and guide hero copy are verbatim from the approved mock', ()
   assert.ok(SITE.description.startsWith('Nolan Tang'), 'the page description names him');
 });
 
-test('four projects with unique ids, required fields and honest source links', () => {
-  assert.equal(PROJECTS.length, 4);
-  assert.equal(new Set(PROJECTS.map((p) => p.id)).size, 4);
+test('five projects with unique ids, required fields and honest source links', () => {
+  assert.equal(PROJECTS.length, 5);
+  assert.equal(new Set(PROJECTS.map((p) => p.id)).size, 5);
   for (const p of PROJECTS) {
     for (const k of ['name', 'short', 'role', 'stack', 'tagline', 'thesis', 'wrong', 'mechanism']) {
       assert.ok(typeof p[k] === 'string' && p[k].length > 0, `${p.id}.${k} missing`);
@@ -47,7 +49,13 @@ test('four projects with unique ids, required fields and honest source links', (
     for (const s of p.stats) assert.ok(s.v && s.l, `${p.id} stat`);
   }
   assert.ok(projectById('loop').statsNote.includes('Self-reported'));
-  assert.deepEqual(PROJECTS.map((p) => p.id), ['loop', 'guide', 'live', 'amm'], 'registry order; the first is featured');
+  assert.deepEqual(PROJECTS.map((p) => p.id), ['loop', 'guide', 'live', 'amm', 'platter'], 'registry order; the first is featured');
+  // Every demo, poster and diagram a record names is a file the build will serve.
+  for (const p of PROJECTS) {
+    for (const src of [p.demo?.src, p.demo?.poster, p.architecture?.src].filter(Boolean)) {
+      assert.ok(existsSync(fileURLToPath(new URL(`../public${src}`, import.meta.url))), `${p.id}: ${src} exists`);
+    }
+  }
   assert.equal(projectById('nope'), undefined);
   assert.ok(LOOKING.startsWith('Backend or full-stack work'));
 });
