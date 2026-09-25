@@ -7,12 +7,20 @@ export type Hue = 'cyan' | 'amber' | 'blue' | 'green' | 'violet';
 // Shipping state of a record. Absent means shipped — the four approved entries
 // predate the field and must not be rewritten to say so. See CONTENT.md.
 export type Status = 'shipped' | 'building' | 'archived';
+// The running product, when there is one to visit. Allowed on a private project:
+// it is the product, not the code.
+export type Site = { label: string; url: string };
+// A walkthrough video in public/projects/<id>/, shown in place of the cover on the case page.
+export type Demo = { src: string; poster: string; caption: string };
+// A diagram in public/projects/<id>/, shown full width under the case; width/height are the file's.
+export type Diagram = { src: string; alt: string; caption: string; width: number; height: number };
 export type Project = {
   id: string; name: string; hue: Hue; short: string; role: string; stack: string;
   tagline: string; thesis: string; wrong: string; mechanism: string;
   status?: Status; updated?: string;
   stats: Stat[]; statsNote?: string;
   private?: boolean; scope?: string;
+  site?: Site; demo?: Demo; architecture?: Diagram;
   readmeUrl?: string; readmeNote?: string; repos: Repo[]; readme: string | null;
   qa: { decision: string; stack: string; status: string };
 };
@@ -161,6 +169,44 @@ export const PROJECTS: Project[] = [
       "decision": "Why the tokens arrive before <code>swap()</code> is called. The caller transfers the input tokens to the pair first, and only then calls swap. It reads backwards — you hand over the money before asking for anything — and it is what lets the pair trust no one: it measures its own balance change instead of believing a parameter, so one invariant check at the end covers every path into the function at once.",
       "stack": "Solidity contracts (factory, pair, router; pair creation, swaps, add / remove liquidity, LP token mint and burn) following the Uniswap V2 architecture, a Foundry test suite for the swap and liquidity paths, and a Next.js frontend against the deployed contracts.",
       "status": "Student work — a B.Eng. capstone, solo, awarded outstanding undergraduate capstone — and a year older than the rest. It stays because it is where the habit behind the other systems started: the component holding the state validates the state itself, and never trusts a caller’s arithmetic."
+    }
+  },
+  {
+    "id": "platter",
+    "name": "Platter",
+    "hue": "green",
+    "short": "A multi-chain DEX front end, live at platterfi.trade: swap, bridge and LP positions on three chains, with a server that never holds a key.",
+    "role": "Solo · private repository · live",
+    "stack": "TypeScript monorepo (pnpm, Turborepo) · Next.js 16, wagmi, viem · Hono on Node · PostgreSQL + Drizzle · AWS EC2 behind Cloudflare",
+    "tagline": "One interface for liquidity on Ethereum, Base and Robinhood Chain, across Uniswap V3, Uniswap V4 and Aerodrome Slipstream: compare pools, swap or bridge on the best quote from the Uniswap API, Relay or LI.FI, and follow each LP position with its history and PnL. The backend builds every transaction; only the user's wallet signs it.",
+    "thesis": "The server never holds a key. Every write path ends in an unsigned transaction handed to the wallet, so nothing moves until the user has read it there and signed it.",
+    "wrong": "A position's history quietly drifts from the chain: a reorg rewrites blocks that were already indexed, or a price that could not be fetched shows up as zero.",
+    "mechanism": "Each chain keeps a bookmark of block number and block hash, and a hash that no longer matches rolls the scan back. A value that cannot be fetched is null with a stated reason, never 0.",
+    "stats": [],
+    "private": true,
+    "scope": "The repository is private. This page shows the live product at platterfi.trade, a 40-second walkthrough of it and the system architecture as deployed; the code itself is not published.",
+    "site": {
+      "label": "platterfi.trade",
+      "url": "https://platterfi.trade"
+    },
+    "demo": {
+      "src": "/projects/platter/demo.mp4",
+      "poster": "/projects/platter/demo-poster.webp",
+      "caption": "40-second walkthrough: the landing page, a pool on Robinhood Chain, adding liquidity with the wallet's confirmation, and the new position in the portfolio."
+    },
+    "architecture": {
+      "src": "/projects/platter/architecture.webp",
+      "alt": "Platter's system architecture. The browser app and the wallet; Cloudflare; one AWS EC2 host running Caddy, the Next.js web server, the Hono API and PostgreSQL; and outside services: Ethereum, Base and Robinhood Chain, the Uniswap API, Relay, LI.FI and market data. The API returns unsigned transactions; the wallet signs them and sends them straight to the chain.",
+      "caption": "As deployed. The API quotes, builds unsigned transactions and owns the chain sync — one eth_getLogs per chain every 12 seconds, with a block-hash bookmark that rolls back on a reorg. PostgreSQL holds tracked addresses, scan state, position events and the token registry. Signed transactions go from the wallet straight to the chain.",
+      "width": 2000,
+      "height": 1280
+    },
+    "repos": [],
+    "readme": null,
+    "qa": {
+      "decision": "Keep the server out of custody entirely. Swap, bridge, adding and removing liquidity all end in an unsigned transaction returned to the browser; the wallet shows it, signs it and sends it straight to the chain. There is no private key and no signing code in the backend, so the server's mistakes stop at a transaction the user can still refuse.",
+      "stack": "A pnpm + Turborepo monorepo in strict TypeScript. <code>apps/web</code> is Next.js 16 with wagmi and viem; <code>apps/api</code> is Hono on Node and also runs the chain sync — one <code>eth_getLogs</code> per chain every 12 seconds, reorgs caught by a block-hash bookmark. One zod contract package is shared by both ends, protocol adapters for Uniswap V3, Uniswap V4 and Aerodrome Slipstream sit behind one interface, and PostgreSQL is reached through Drizzle (embedded PGlite in development). The whole repository builds and tests with zero secrets and the network cut off.",
+      "status": "Live at platterfi.trade, solo, started on 2026-09-20. It runs on one AWS EC2 instance in Singapore behind Cloudflare; a deploy script builds on the server, switches releases and rolls back when the new one fails its self-check. The repository is private, so this page carries the product link, a 40-second walkthrough and the architecture instead."
     }
   }
 ];

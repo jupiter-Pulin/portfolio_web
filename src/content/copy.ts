@@ -30,6 +30,10 @@ export const WORK = {
   readmeFile: 'README.md',
   askProject: 'Any question about this project?',
   openReadme: 'Open README on GitHub ↗',
+  visitSite: 'Visit',
+  demoLabel: 'walkthrough video',
+  architecture: 'Architecture',
+  openFullSize: 'Open full size ↗',
 } as const;
 
 // The identity card on the home page: short forms of what LOOKING and

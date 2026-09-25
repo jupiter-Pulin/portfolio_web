@@ -22,6 +22,24 @@ export function validateProject(p: Project): string[] {
     fail(`status must be one of ${STATUSES.join(", ")}`);
   }
 
+  // Media files live next to the cover, in public/projects/<id>/.
+  const own = (src: string) => src.startsWith(`/projects/${p.id}/`);
+  if (p.site) {
+    if (!p.site.label) fail("site needs a label");
+    if (!p.site.url.startsWith("https://")) fail("site url must be https://");
+    if (p.site.url.startsWith(GITHUB)) fail("site is the running product, not a repository");
+  }
+  if (p.demo) {
+    if (!own(p.demo.src) || !p.demo.src.endsWith(".mp4")) fail(`demo src must be an .mp4 in /projects/${p.id}/`);
+    if (!own(p.demo.poster)) fail(`demo poster must be in /projects/${p.id}/`);
+    if (!p.demo.caption) fail("demo needs a caption");
+  }
+  if (p.architecture) {
+    if (!own(p.architecture.src)) fail(`architecture src must be in /projects/${p.id}/`);
+    if (!p.architecture.alt) fail("architecture needs alt text");
+    if (!(p.architecture.width > 0 && p.architecture.height > 0)) fail("architecture needs its width and height");
+  }
+
   if (p.private) {
     if (p.repos.length > 0) fail("a private project must not link a repository");
     if (!p.scope) fail("a private project needs a scope note");
