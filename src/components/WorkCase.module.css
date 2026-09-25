@@ -159,6 +159,14 @@
 .plain p {
   margin: 0;
 }
+/* A private project's notes have no full text elsewhere: scroll them in place, unmasked. */
+.notes {
+  max-height: 460px;
+  overflow: auto;
+  -webkit-mask-image: none;
+  mask-image: none;
+  border-top: 1px solid var(--line);
+}
 .rmFoot {
   display: flex;
   gap: 8px;

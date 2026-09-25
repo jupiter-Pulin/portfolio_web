@@ -69,6 +69,14 @@ a private record links no repository:
 
 `npm test` checks the shapes and that every file a record names exists.
 
+A **private** record may also carry `readme`: design notes written for this site, since
+the real README is not published. The case page shows them under the scope note,
+scrollable and in full, and the guide indexes them like any README (addresses stripped).
+
+The guide's LP / DeFi summary lines are `GUIDE.lp` in `src/content/guide.ts`: sent with
+every question and indexed, with no answer card of their own. Run
+`node scripts/build-ask-index.mjs` after editing any of this.
+
 ## `status` and `updated`
 
 Both optional, both on the project record:

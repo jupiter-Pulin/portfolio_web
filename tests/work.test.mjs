@@ -212,6 +212,14 @@ test('a private case page shows the scope note and links no repository', () => {
     assert.ok(body.includes(WORK.privateRepo), `${p.id} lock label`);
     assert.ok(body.includes(p.scope), `${p.id} scope note`);
     assert.doesNotMatch(markup(pages[p.id]), /github\.com/, `no github link on the ${p.id} case page`);
+    if (p.readme) {
+      // Design notes stand in for the private README: shown in full, scrollable, not a clipped preview.
+      assert.ok(body.includes(WORK.privateNotes), `${p.id} notes label`);
+      const pre = markup(pages[p.id]).match(/<pre\b[^>]*class="([^"]*)"[^>]*>([\s\S]*?)<\/pre>/);
+      assert.ok(pre, `${p.id} notes are a <pre>`);
+      assert.match(pre[1], /notes/, `${p.id} notes scroll in place`);
+      assert.equal(pre[2].split('\n')[0], p.readme.split('\n')[0]);
+    }
   }
 });
 
@@ -281,8 +289,8 @@ test('the ask button is live on every case page and carries its own scope', () =
 
 test('the case pages walk in a loop and offer both ways out', () => {
   const total = PROJECTS.length;
-  assert.ok(textOf(pages.loop).includes(`Loop Conductor · 1 of ${total}`), 'subtitle counts the position');
-  assert.ok(textOf(pages.loop).includes(`1 / ${total}`), 'footer counter');
+  assert.ok(textOf(pages.platter).includes(`Platter · 1 of ${total}`), 'subtitle counts the position');
+  assert.ok(textOf(pages.platter).includes(`1 / ${total}`), 'footer counter');
   assert.ok(tagWithHref(pages.loop, '/work'), '← All work');
   assert.ok(tagWithHref(pages.loop, '/'), 'close goes home');
 
@@ -292,12 +300,12 @@ test('the case pages walk in a loop and offer both ways out', () => {
     assert.equal(tags.length, 2, `${id} has previous and next`);
     return { prev: tags[0], next: tags[1] };
   };
-  // loop is first: previous wraps to platter (last), next is guide.
-  assert.match(nav('loop').prev, /href="\/work\/platter"/);
-  assert.match(nav('loop').next, /href="\/work\/guide"/);
-  // platter is last: next wraps back to loop.
+  // platter is first: previous wraps to amm (last), next is loop.
+  assert.match(nav('platter').prev, /href="\/work\/amm"/);
   assert.match(nav('platter').next, /href="\/work\/loop"/);
-  assert.ok(textOf(pages.platter).includes(`${total} / ${total}`), 'platter is the last of five');
+  // amm is last: next wraps back to platter.
+  assert.match(nav('amm').next, /href="\/work\/platter"/);
+  assert.ok(textOf(pages.amm).includes(`${total} / ${total}`), 'amm is the last of five');
 
   PROJECTS.forEach((p, i) => {
     assert.ok(textOf(pages[p.id]).includes(`${p.name} · ${i + 1} of ${total}`), `${p.id} subtitle`);

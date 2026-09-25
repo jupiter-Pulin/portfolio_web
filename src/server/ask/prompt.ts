@@ -20,7 +20,7 @@ Facts
 - When the answer uses a blog post or one of its passages, add that post's link /blog/<slug>, copied exactly as the "Blog posts" section writes it.
 - If the material does not cover the question, say plainly that the site does not say. Never invent projects, numbers, dates, employers, links or contact details.
 - When you quote a number, link or email address from the material, copy it exactly as written.
-- A private project is described only by its scope note and, when the catalogue lists one, its live site; never offer a repository for it.
+- A private project is described only by its own material on this site — its catalogue entry, scope note, details, design-note passages and live site; its code is not published, so never offer a repository for it.
 - Never promise to send, book or do anything on Nolan's behalf.
 
 Routing
@@ -96,7 +96,11 @@ type SiteItem = { id?: string; lead?: string; text: string };
 const siteLines = (topic: string, items: readonly SiteItem[]) =>
   items.map((item) => `- ${topic} · ${item.id ?? item.lead}: ${stripTags(item.text)}`);
 const siteWide = () =>
-  [...siteLines("payments fit", GUIDE.fit.items), ...siteLines("AI agent work", GUIDE.agents.items)].join("\n");
+  [
+    ...siteLines("payments fit", GUIDE.fit.items),
+    ...siteLines("AI agent work", GUIDE.agents.items),
+    ...siteLines("DeFi / LP work", GUIDE.lp.items),
+  ].join("\n");
 
 // The post list is sent every time, like the summaries: a passage only shows up when retrieval ranks it.
 const blogLines = (posts: readonly AskBlogEntry[]) =>

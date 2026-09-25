@@ -101,7 +101,8 @@ test('the system prompt states the language, facts and output rules — and clai
   assert.match(p, /"key"/);
   assert.match(p, /"scopeId"/);
   assert.match(p, /"answer" is plain text/);
-  assert.match(p, /private project is described only by its scope note/);
+  assert.match(p, /private project is described only by its own material on this site/);
+  assert.match(p, /never offer a repository for it/);
   assert.doesNotMatch(p, /https?:\/\//);
   assert.doesNotMatch(p, /verified|checked/i);
   for (const value of Object.values(baseEnv())) if (value.length > 4) assert.ok(!p.includes(value));
@@ -147,7 +148,7 @@ test('routing: site-wide keys take a null scope, and the looking / site-wide mat
   const user = buildUserPrompt({ question: '他在找什么样的工作？', scopeId: 'loop', candidates: [] });
   assert.equal(section(user, 'What Nolan is looking for'), LOOKING);
   const summaries = section(user, 'Site-wide summaries');
-  for (const item of [...GUIDE.fit.items, ...GUIDE.agents.items]) assert.ok(summaries.includes(item.text), item.text);
+  for (const item of [...GUIDE.fit.items, ...GUIDE.agents.items, ...GUIDE.lp.items]) assert.ok(summaries.includes(item.text), item.text);
   assert.doesNotMatch(summaries, /https?:\/\//);
   const keys = section(user, 'Answer keys');
   for (const k of ['payments', 'agents', 'looking', 'contact', 'all']) assert.match(keys, new RegExp(`- ${k}: site-wide \\(scopeId null\\)`), k);
