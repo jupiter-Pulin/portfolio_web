@@ -144,6 +144,12 @@ function Readme({ project: p }: { project: Project }) {
         <div className={`${styles.rmBody} ${styles.plain}`}>
           <p>{p.scope}</p>
         </div>
+        {p.readme ? (
+          <>
+            <p className={styles.rmNote}>{WORK.privateNotes}</p>
+            <pre className={`${styles.rmBody} ${styles.notes}`}>{p.readme}</pre>
+          </>
+        ) : null}
         <div className={styles.rmFoot}>
           <SiteLink project={p} />
         </div>

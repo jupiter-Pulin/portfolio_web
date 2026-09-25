@@ -49,7 +49,7 @@ test('five projects with unique ids, required fields and honest source links', (
     for (const s of p.stats) assert.ok(s.v && s.l, `${p.id} stat`);
   }
   assert.ok(projectById('loop').statsNote.includes('Self-reported'));
-  assert.deepEqual(PROJECTS.map((p) => p.id), ['loop', 'guide', 'live', 'amm', 'platter'], 'registry order; the first is featured');
+  assert.deepEqual(PROJECTS.map((p) => p.id), ['platter', 'loop', 'guide', 'live', 'amm'], 'registry order; the first is featured');
   // Every demo, poster and diagram a record names is a file the build will serve.
   for (const p of PROJECTS) {
     for (const src of [p.demo?.src, p.demo?.poster, p.architecture?.src].filter(Boolean)) {

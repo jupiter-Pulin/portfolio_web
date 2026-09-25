@@ -31,6 +31,7 @@ export const WORK = {
   askProject: 'Any question about this project?',
   openReadme: 'Open README on GitHub ↗',
   visitSite: 'Visit',
+  privateNotes: 'Design notes written for this page — the repository and its README stay private.',
   demoLabel: 'walkthrough video',
   architecture: 'Architecture',
   openFullSize: 'Open full size ↗',

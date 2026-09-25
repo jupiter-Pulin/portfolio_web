@@ -114,9 +114,24 @@ export const GUIDE = {
     ],
   },
 
+  // Sent with every question and indexed, like fit / agents, but with no answer card of
+  // its own: an LP or DeFi question is answered from these lines and the passages.
+  lp: {
+    items: [
+      {
+        id: "platter",
+        text: "multi-chain LP positions on Uniswap V3, Uniswap V4 and Aerodrome Slipstream, live at platterfi.trade: collectable fees from the fee-growth math, withdrawn principal settled before anything counts as fees, PnL against holding with impermanent loss and gas reported apart, ranges symmetric in tick space, and a chain sync that rolls back on a reorg.",
+      },
+      {
+        lead: "Writing",
+        text: "blog posts on why the price range matters more than APR for a concentrated-liquidity position, what an LP terminal should keep together, and how Uniswap DualPool lets LP inventory earn vault yield.",
+      },
+    ],
+  },
+
   code: {
     all: "All public code lives under one GitHub account.",
-    private: "private · team-built",
+    private: "private repository",
     // Derived from links.ts so the label can never drift from the URL it opens.
     home: GITHUB.replace(/^https?:\/\//, ""),
   },

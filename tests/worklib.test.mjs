@@ -15,11 +15,11 @@ test('previous and next wrap at both ends', () => {
   assert.equal(total, 5);
   assert.equal(nextIndex(0, 1, total), 1);
   assert.equal(nextIndex(2, 1, total), 3);
-  // loop (first) goes back to platter (last); platter goes forward to loop.
+  // platter (first) goes back to amm (last); amm goes forward to platter.
   assert.equal(nextIndex(0, -1, total), 4);
   assert.equal(nextIndex(4, 1, total), 0);
-  assert.equal(PROJECTS[nextIndex(0, -1, total)].id, 'platter');
-  assert.equal(PROJECTS[nextIndex(total - 1, 1, total)].id, 'loop');
+  assert.equal(PROJECTS[nextIndex(0, -1, total)].id, 'amm');
+  assert.equal(PROJECTS[nextIndex(total - 1, 1, total)].id, 'platter');
   assert.equal(nextIndex(0, -1, 1), 0);
   assert.equal(nextIndex(0, 1, 0), 0);
 });

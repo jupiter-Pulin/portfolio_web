@@ -21,7 +21,11 @@ export type AskBlogEntry = { slug: string; title: string; tags: string[]; href: 
 export type Corpus = {
   projects: readonly Project[];
   looking: string;
-  guide: { fit: { items: readonly GuideItem[] }; agents: { items: readonly GuideItem[] } };
+  guide: {
+    fit: { items: readonly GuideItem[] };
+    agents: { items: readonly GuideItem[] };
+    lp: { items: readonly GuideItem[] };
+  };
   /** Published posts in list order; their chunks come after everything else. */
   posts?: readonly AskBlogPost[];
 };
@@ -195,6 +199,7 @@ export function chunkCorpus(corpus: Corpus): Chunk[] {
   push(null, "looking", 0, corpus.looking);
   corpus.guide.fit.items.forEach((item, i) => push(item.id ?? null, "fit", i, guideText(item)));
   corpus.guide.agents.items.forEach((item, i) => push(item.id ?? null, "agents", i, guideText(item)));
+  corpus.guide.lp.items.forEach((item, i) => push(item.id ?? null, "lp", i, guideText(item)));
   // Posts are the author's own words: no tag stripping, so every character survives.
   for (const post of corpus.posts ?? []) {
     blogExcerpts(markdownText(post.body)).forEach((excerpt, n) => {

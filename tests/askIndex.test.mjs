@@ -45,6 +45,7 @@ test('the index has a chunk for every project field, readme, LOOKING and guide i
   for (const [field, items] of [
     ['fit', GUIDE.fit.items],
     ['agents', GUIDE.agents.items],
+    ['lp', GUIDE.lp.items],
   ]) {
     const chunks = index.filter((c) => c.field === field);
     assert.equal(chunks.length, items.length, `${field}: one chunk per item`);
@@ -78,7 +79,7 @@ test('the committed index and post list are exactly what the script builds, byte
 
 const REAL_SLUGS = ['fewer-nodes-in-the-agent-workflow', 'lp-range-over-apr'];
 const blogChunks = (index, slug) => index.filter((c) => c.id.startsWith(`blog:${slug}:`));
-const EMPTY_GUIDE = { fit: { items: [] }, agents: { items: [] } };
+const EMPTY_GUIDE = { fit: { items: [] }, agents: { items: [] }, lp: { items: [] } };
 const fixtureChunks = (post) =>
   chunkCorpus({ projects: [], looking: '', guide: EMPTY_GUIDE, posts: [post] }).filter((c) => c.field === 'blog');
 const withoutPrefix = (title, c) => {
@@ -195,7 +196,7 @@ test('drafts and non-post files stay out of the post list and the index; duplica
 });
 
 test('a private project contributes its scope note and never an address', () => {
-  const chunks = chunkCorpus({ projects: [privateFixture()], looking: LOOKING, guide: { fit: { items: [] }, agents: { items: [] } } });
+  const chunks = chunkCorpus({ projects: [privateFixture()], looking: LOOKING, guide: { fit: { items: [] }, agents: { items: [] }, lp: { items: [] } } });
   const mine = chunks.filter((c) => c.projectId === 'secret');
   assert.ok(mine.some((c) => c.field === 'scope' && c.text.includes('Team-built; code is private.')));
   assert.ok(mine.some((c) => c.field === 'readme'), 'the readme is still chunked');
