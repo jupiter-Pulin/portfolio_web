@@ -182,7 +182,8 @@
 .body figure {
   margin: 24px 0;
 }
-.body figure img {
+.body figure img,
+.body figure video {
   width: 100%;
   border-radius: 12px;
   border: 1px solid var(--line);
