@@ -1,8 +1,9 @@
 import Image from "next/image";
 import { SITE } from "@/content/copy";
-import type { Hue, Project } from "@/content/projects";
+import type { Project } from "@/content/projects";
 import type { Cover } from "@/lib/projectMedia";
-import { ProjectArt } from "./ProjectArt";
+import { Drawing } from "./sketch/Drawing";
+import { Sketch } from "./sketch/Sketch";
 import styles from "./ProjectCover.module.css";
 
 // Suggested source size is 1600×1200 (4:3) — see CONTENT.md. `unoptimized` keeps
@@ -10,17 +11,9 @@ import styles from "./ProjectCover.module.css";
 const COVER_W = 1600;
 const COVER_H = 1200;
 
-const HUE: Record<Hue, string> = {
-  cyan: styles.hueCyan,
-  amber: styles.hueAmber,
-  blue: styles.hueBlue,
-  green: styles.hueGreen,
-  violet: styles.hueViolet,
-};
-
 /**
- * The 4:3 slot in front of a project. A file at public/projects/<id>/cover.<ext>
- * wins; with no file the placeholder diagram stands in, labelled as a slot.
+ * A project's picture, taped onto the page. A file at public/projects/<id>/cover.<ext>
+ * wins; with no file the project's own little diagram stands in, labelled as a slot.
  */
 export function ProjectCover({
   project,
@@ -32,19 +25,14 @@ export function ProjectCover({
   className?: string;
 }) {
   return (
-    <figure className={`${styles.frame} ${HUE[project.hue]} ${className ?? ""}`}>
+    <figure className={`sk ${styles.frame} ${className ?? ""}`}>
+      <Sketch fill="var(--white)" r={8} w={2.4} />
+      <Drawing kind="tape" className={styles.tape} />
       {cover ? (
-        <Image
-          className={styles.img}
-          src={cover.src}
-          alt={project.name}
-          width={COVER_W}
-          height={COVER_H}
-          unoptimized
-        />
+        <Image className={styles.img} src={cover.src} alt={project.name} width={COVER_W} height={COVER_H} unoptimized />
       ) : (
         <>
-          <ProjectArt id={project.id} />
+          <Drawing kind="project" id={project.id} className={styles.art} draw={200} dur={1100} />
           <figcaption className={styles.caption}>{SITE.imageSlot}</figcaption>
         </>
       )}

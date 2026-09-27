@@ -1,0 +1,95 @@
+/* The home page's sections below the hero, and the /work gallery. */
+.block {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 56px 28px 24px;
+}
+.head {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+.title {
+  font-weight: 400;
+  font-size: 46px;
+  line-height: 1;
+  margin: 0;
+}
+.sub {
+  color: var(--grey);
+  font-size: 19px;
+  max-width: 52ch;
+  margin: 0;
+}
+.more {
+  margin-left: auto;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 30px 28px;
+}
+.notes {
+  display: grid;
+}
+.note {
+  display: grid;
+  grid-template-columns: 110px 1fr auto;
+  gap: 18px;
+  align-items: baseline;
+  padding: 16px 4px;
+  text-decoration: none;
+  border-bottom: 2px dashed var(--grid);
+}
+.date {
+  color: var(--grey);
+  font-size: 17px;
+}
+.noteTitle {
+  font-size: 23px;
+  line-height: 1.25;
+}
+.note:hover .noteTitle {
+  color: var(--pink);
+}
+.sum {
+  display: block;
+  font-size: 16.5px;
+  color: var(--grey);
+  margin-top: 3px;
+}
+.noteTags {
+  display: flex;
+  gap: 6px;
+}
+.noteTag {
+  font-size: 14.5px;
+  padding: 4px 12px;
+  color: var(--ink-2);
+}
+
+@media (max-width: 1060px) {
+  .cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 680px) {
+  .block {
+    padding: 44px 16px 16px;
+  }
+  .title {
+    font-size: 36px;
+  }
+  .cards {
+    grid-template-columns: 1fr;
+  }
+  .note {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .noteTags {
+    display: none;
+  }
+}

@@ -2,8 +2,9 @@
 
 Nolan Tang's portfolio site, live at [nolan-tang.vercel.app](https://nolan-tang.vercel.app).
 A static Next.js 16 site (App Router, TypeScript, no Tailwind) with one paid Node route:
-a site guide that answers visitors' questions about the work, in the visitor's language,
-from the site's own content — and stops the moment its budget is spent.
+Nolan's assistant, which answers visitors' questions about the work, in the visitor's language,
+from the site's own content — and stops the moment its budget is spent. The whole site is drawn
+in the hand-drawn style of Nolan's explainer videos, on light or night paper.
 
 ![How one question gets answered](docs/assets/architecture.png)
 
@@ -13,14 +14,22 @@ from the site's own content — and stops the moment its budget is spent.
 
 Three things live in this repository, in order of how much of the code they take:
 
-1. **A site guide backed by a paid model** — `POST /api/ask`. On the home page it answers in
-   place beside the identity card; on every other page it is the "Any question?" drawer.
+1. **An assistant backed by a paid model** — `POST /api/ask`. On the home page it walks in,
+   waves and waits beside the identity card, and opens a chat only when clicked; on every
+   other page it is the "Ask my assistant" drawer.
    The model reads the site's content, answers in whatever language the visitor typed,
    says plainly when the site does not cover something, and never acts on Nolan's behalf.
 2. **The work pages** — `/work` and one case page per project, prerendered from a single
    data file. Every figure shown carries a provenance note; a private project shows a
    scope note and never a repository link.
 3. **A blog** — one Markdown file per post, rendered at build time. Publishing is adding a file.
+
+The hand-drawn look is code, not images: `src/lib/sketch.ts` is the pen (seeded wobble,
+hatching), `src/lib/sketchArt.ts` the drawings (the robot, one diagram per project), and
+`<Sketch/>` draws a box's outline behind it, redrawn when the box resizes. Colours are CSS
+variables, so the theme toggle repaints nothing; the pick is kept in `localStorage` and
+applied before the first paint. Chinese answers are set in LXGW WenKai, fetched from
+jsDelivr the first time the assistant opens (no package is added).
 
 The site runs on Vercel (Tokyo, `hnd1`), with Upstash Redis beside it for the guide's counters.
 

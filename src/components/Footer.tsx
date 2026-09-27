@@ -1,6 +1,7 @@
-import { SITE } from "@/content/copy";
+import { HOME, SITE } from "@/content/copy";
 import { EMAIL, GITHUB, LINKEDIN, MAILTO, X } from "@/content/links";
 import { CopyEmailButton } from "./CopyEmailButton";
+import { Rule } from "./sketch/Rule";
 import styles from "./Footer.module.css";
 
 const LINKS = [
@@ -12,26 +13,28 @@ const LINKS = [
 export function Footer() {
   return (
     <footer className={styles.foot}>
-      <div className="wrap">
-        <div className={styles.footGrid}>
-          <div>
-            <b className={styles.brandSm}>{SITE.name}</b>
-            <p>{SITE.location}</p>
-          </div>
-          <div className={styles.footLinks}>
-            <a href={MAILTO}>{EMAIL}</a>
-            <CopyEmailButton label="copy" />
-            {LINKS.map((l) => (
-              <span key={l.label} className={styles.footLink}>
-                <span className={styles.sep}>·</span>
-                <a href={l.href} target="_blank" rel="noopener">
-                  {l.label}
-                </a>
-              </span>
-            ))}
-          </div>
-        </div>
-        <p className={styles.footNote}>{SITE.footNote}</p>
+      <Rule className={styles.rule} seed={34} />
+      <div className={styles.in}>
+        <p className={styles.bye}>{HOME.bye}</p>
+        <p className={styles.line}>
+          {HOME.byeLead}{" "}
+          <a className="link-btn" href={MAILTO}>
+            {EMAIL}
+          </a>{" "}
+          <CopyEmailButton label="copy" />
+          {LINKS.map((l) => (
+            <span key={l.label}>
+              <span className={styles.sep}>·</span>
+              <a className="link-btn" href={l.href} target="_blank" rel="noopener">
+                {l.label}
+              </a>
+            </span>
+          ))}
+        </p>
+        <p className={`fine ${styles.where}`}>
+          <b>{SITE.name}</b> · {SITE.location}
+        </p>
+        <p className={`fine ${styles.note}`}>{SITE.footNote}</p>
       </div>
     </footer>
   );

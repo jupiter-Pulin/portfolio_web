@@ -1,139 +1,142 @@
+/* One post. Headings and chrome in the hand, the body in a plain sans for long reading. */
 .article {
-  max-width: 760px;
+  max-width: 780px;
   margin: 0 auto;
-  padding: 44px 0 80px;
+  padding: 26px 0 10px;
 }
 .crumbs {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  margin-bottom: 26px;
 }
 .h1 {
-  font: 900 clamp(32px, 4.4vw, 46px) / 1.1 var(--font-display);
-  letter-spacing: -0.02em;
-  margin: 18px 0 16px;
+  font-weight: 400;
+  font-size: clamp(36px, 4.6vw, 52px);
+  line-height: 1.1;
+  margin: 0 0 12px;
   text-wrap: balance;
 }
 .meta {
   display: flex;
-  gap: 10px;
-  align-items: center;
   flex-wrap: wrap;
-  font: 500 12.5px var(--font-mono);
-  color: var(--dim);
+  align-items: center;
+  gap: 6px 8px;
+  color: var(--grey);
+  font-size: 17px;
 }
 .sep {
-  opacity: 0.6;
+  color: var(--lgrey);
 }
 .tag {
-  font: 500 10.5px var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 3px 9px;
+  font-size: 15px;
+  color: var(--ink-2);
+  border: 1.5px solid var(--lgrey);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  padding: 0 10px;
 }
 .lede {
-  font-size: 18px;
-  line-height: 1.6;
-  color: var(--muted);
+  font-size: 22px;
+  line-height: 1.4;
+  color: var(--ink-2);
   margin: 18px 0 0;
 }
 .cover {
-  margin: 28px 0 0;
+  margin: 30px 0 0;
+  padding: 12px;
+  rotate: -0.6deg;
 }
 .coverFrame {
   position: relative;
   display: block;
   aspect-ratio: 16 / 9;
-  border-radius: var(--r);
+  border-radius: 4px;
   overflow: hidden;
-  border: 1px solid var(--line);
-  background: var(--surface-2);
 }
 .coverImg {
   object-fit: cover;
 }
+.tape {
+  position: absolute;
+  width: 96px;
+  height: 28px;
+  left: 50%;
+  top: -14px;
+  translate: -50% 0;
+  rotate: 3deg;
+  overflow: visible;
+  z-index: 2;
+}
 .caption,
 .body figcaption {
-  font: 500 12px var(--font-mono);
-  color: var(--dim);
-  margin-top: 9px;
-  letter-spacing: 0.02em;
+  font: 400 16px/1.4 var(--hand);
+  color: var(--grey);
+  margin-top: 10px;
+  text-align: center;
 }
 .rule {
-  height: 1px;
-  background: var(--line);
-  margin: 30px 0 6px;
+  display: block;
+  width: 100%;
+  height: 8px;
+  margin: 34px 0 30px;
+  overflow: visible;
 }
-
-/* ---------- rendered Markdown ---------- */
 .body {
-  font-size: 16.5px;
-  line-height: 1.75;
-  color: #d5deec;
+  font: 400 17.5px/1.75 var(--font-body);
+  color: var(--ink);
 }
 .body > :first-child {
   margin-top: 0;
 }
-/* A post that opens on a photo (no cover) keeps air between the rule and the image. */
 .body > figure:first-child,
 .body > :global(.gallery):first-child {
-  margin-top: 24px;
+  margin-top: 0;
 }
 .body h2 {
-  font: 800 24px/1.25 var(--font-display);
-  color: var(--text);
-  margin: 40px 0 12px;
-  letter-spacing: -0.01em;
+  font: 400 32px/1.2 var(--hand);
+  margin: 44px 0 12px;
 }
 .body h3 {
-  font: 800 18px/1.3 var(--font-display);
-  color: var(--text);
-  margin: 30px 0 8px;
+  font: 400 25px/1.25 var(--hand);
+  margin: 34px 0 10px;
 }
 .body h4 {
-  font: 700 16px/1.4 var(--font-body);
-  color: var(--text);
-  margin: 24px 0 6px;
+  font: 400 21px/1.3 var(--hand);
+  margin: 28px 0 8px;
 }
 .body p {
-  margin: 14px 0;
+  margin: 0 0 18px;
 }
 .body a {
-  color: var(--cyan);
+  color: var(--ink);
   text-decoration: underline;
+  text-decoration-color: var(--pink);
+  text-decoration-thickness: 2px;
   text-underline-offset: 3px;
-  text-decoration-color: rgba(125, 227, 245, 0.4);
+}
+.body a:hover {
+  color: var(--pink);
 }
 .body strong {
-  color: var(--text);
   font-weight: 600;
+  background: linear-gradient(transparent 62%, color-mix(in srgb, var(--yellow) 38%, transparent) 62%);
 }
 .body hr {
   border: 0;
-  height: 1px;
-  background: var(--line);
-  margin: 32px 0;
+  border-top: 2px dashed var(--lgrey);
+  margin: 36px 0;
 }
 .body pre {
-  min-width: 0;
-  max-width: 100%;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px 18px;
-  overflow-x: auto;
   font: 400 13.5px/1.6 var(--font-mono);
-  margin: 18px 0;
+  background: var(--white);
+  border: 1.5px solid var(--ink);
+  border-radius: 12px 8px 14px 9px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 0 0 20px;
 }
 .body code {
-  font: 500 0.92em var(--font-mono);
-  background: rgba(148, 163, 184, 0.12);
-  padding: 1px 6px;
-  border-radius: 6px;
+  font: 400 0.88em var(--font-mono);
+  background: var(--paper-2);
+  border-radius: 5px;
+  padding: 1px 5px;
 }
 .body pre code {
   background: none;
@@ -141,123 +144,124 @@
   font-size: inherit;
 }
 .body blockquote {
-  margin: 24px 0;
-  padding: 4px 0 4px 18px;
-  border-left: 3px solid var(--cyan);
-  color: var(--muted);
+  margin: 0 0 20px;
+  padding: 6px 0 6px 18px;
+  border-left: 3px solid var(--pink);
+  font: 400 20px/1.5 var(--hand);
+  color: var(--ink-2);
 }
 .body blockquote p {
   margin: 0;
 }
 .body ul,
 .body ol {
-  padding-left: 22px;
-  margin: 14px 0;
+  padding-left: 24px;
+  margin: 0 0 18px;
 }
 .body li {
-  margin: 6px 0;
+  margin: 4px 0;
+}
+.body li::marker {
+  color: var(--pink);
 }
 .body table {
-  border-collapse: collapse;
   width: 100%;
-  margin: 18px 0;
-  font-size: 14.5px;
+  border-collapse: collapse;
+  margin: 0 0 20px;
+  font-size: 15.5px;
 }
 .body th,
 .body td {
+  border-bottom: 1.5px dashed var(--lgrey);
+  padding: 8px 10px;
   text-align: left;
-  padding: 9px 12px;
-  border-bottom: 1px solid var(--line);
 }
 .body th {
-  color: var(--muted);
-  font: 600 12px var(--font-mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font: 400 17px var(--hand);
+  color: var(--grey);
 }
+/* photos and charts sit in a hand-drawn frame */
 .body img {
   max-width: 100%;
   height: auto;
 }
 .body figure {
-  margin: 24px 0;
+  margin: 26px 0;
 }
 .body figure img,
 .body figure video {
-  width: 100%;
-  border-radius: 12px;
-  border: 1px solid var(--line);
   display: block;
+  width: 100%;
+  height: auto;
+  border: 2px solid var(--ink);
+  border-radius: 255px 12px 225px 12px / 12px 225px 12px 255px;
+  padding: 6px;
+  background: var(--white);
 }
 .body :global(.gallery) {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin: 24px 0;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 26px 0;
 }
 .body :global(.gallery.cols-3) {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1fr 1fr;
 }
 .body :global(.gallery) img {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  display: block;
+  border: 2px solid var(--ink);
+  border-radius: 255px 12px 225px 12px / 12px 225px 12px 255px;
+  padding: 5px;
+  background: var(--white);
 }
-
 .foot {
-  margin-top: 44px;
+  margin: 36px 0 0;
 }
 .pager {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 28px;
+  gap: 18px;
+  margin: 30px 0 0;
 }
 .pagerLink {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: block;
   padding: 16px 18px;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  background: rgba(17, 26, 46, 0.55);
   text-decoration: none;
-  transition: border-color 0.15s, background 0.15s;
+  transition: transform 0.25s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
 .pagerLink:hover {
-  border-color: rgba(125, 227, 245, 0.45);
-  background: rgba(17, 26, 46, 0.9);
+  transform: translateY(-3px);
 }
 .next {
   text-align: right;
-  align-items: flex-end;
 }
 .dir {
-  font: 500 10.5px var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--dim);
+  display: block;
+  color: var(--grey);
+  font-size: 16px;
 }
 .pagerLink b {
-  font: 800 15px/1.3 var(--font-display);
+  display: block;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.25;
+  margin-top: 4px;
+}
+.pagerLink:hover b {
+  color: var(--pink);
 }
 
 @media (max-width: 640px) {
   .article {
-    padding-top: 28px;
+    padding-top: 16px;
   }
   .body :global(.gallery),
   .body :global(.gallery.cols-3) {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
   .pager {
     grid-template-columns: 1fr;
-  }
-  .next {
-    text-align: left;
-    align-items: flex-start;
   }
 }

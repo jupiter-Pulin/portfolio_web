@@ -68,32 +68,14 @@ export const PROJECTS: Project[] = [
     "id": "loop",
     "name": "Loop Conductor",
     "hue": "amber",
-    "short": "An AI coding pipeline you can walk away from: two human gates, review bound to a commit hash.",
+    "short": "An agent-led coding workflow: a router agent decides every next step with real autonomy, the harness only runs the checks that can’t be left to an agent, and a human signs off before anything merges.",
     "role": "Solo · open source",
     "stack": "Node ≥ 22, zero runtime dependencies · Claude CLI subprocesses · git worktrees",
-    "tagline": "A minimal kernel that takes a one-line brief to a reviewed, tested, locally merged commit. A router agent picks the next action from a closed set; the kernel executes and records it. A human decides twice.",
+    "tagline": "A workflow led by agents rather than a fixed graph. A router agent reads the recorded facts and picks the next action from a closed set, so the path is its call. The harness stays out of the way except for the checks that can’t be left to an agent — tests, the budget, review bound to a commit hash — and a human approves the spec and the merge.",
     "thesis": "Review is only binding if it is bound to a commit hash. That single rule is what the rest of the kernel protects.",
     "wrong": "Code gets reviewed at one commit and merged at another.",
     "mechanism": "Approval is bound to the branch head and re-checked at the merge gate.",
-    "stats": [
-      {
-        "v": "17",
-        "l": "Tasks run"
-      },
-      {
-        "v": "10",
-        "l": "Merged to main"
-      },
-      {
-        "v": "16/17",
-        "l": "One-shot maker pass"
-      },
-      {
-        "v": "$248.67",
-        "l": "Total API spend"
-      }
-    ],
-    "statsNote": "Self-reported from Nolan’s own run ledger; the repository documents the method and the refresh command.",
+    "stats": [],
     "readmeUrl": "https://github.com/jupiter-Pulin/loop-conductor#readme",
     "repos": [
       {
@@ -105,14 +87,14 @@ export const PROJECTS: Project[] = [
     "qa": {
       "decision": "One model call decides, and it decides only <em>which action</em>. The router sees the recorded facts — never the spec, the diff or the code — and returns one of eight action names. Everything with a side effect (spawning an agent, committing, opening a gate, writing state) is plain deterministic Node. A bad run is therefore either a wrong action name, which is one line in a log, or a kernel bug, which is a failing test — never both at once.",
       "stack": "Node ≥ 22 with zero runtime dependencies. Every agent spawn is a fresh <code>claude -p</code> session with fixed tools; the target repository only ever sees git worktrees and a throwaway merge candidate. <code>state/</code> and <code>dossier/</code> on disk are the source of truth, so the run can be killed at any moment and restarted.",
-      "status": "Open source, solo. 17 tasks run, 10 merged to main, 16/17 one-shot maker pass, $248.67 total API spend — self-reported from Nolan’s own run ledger; the README documents the method. $148.60 of that spend bought zero shipped code, and the current architecture is the response to those failures. Work packages and the plan action are not implemented yet."
+      "status": "Open source and solo, and in use on Nolan’s own projects — this site’s tasks among them. Work packages and the plan action are not implemented yet."
     }
   },
   {
     "id": "guide",
     "name": "Portfolio Guide",
     "hue": "cyan",
-    "short": "This site and the guide you are talking to: a model that answers from the site's own content and stops when the budget is spent.",
+    "short": "This site and the assistant you are talking to: a model that answers from the site's own content and stops when the budget is spent.",
     "role": "Solo · open source · live",
     "stack": "Next.js 16 · TypeScript · one Node route · OpenAI-compatible model (DeepSeek) · Upstash Redis · Vercel",
     "tagline": "A static portfolio with one paid route. A visitor asks in any language; the route retrieves from a locally hashed index of the site's content, hands the model the material, and returns a structured answer — or a named, counted failure. Every dollar is metered and capped.",
@@ -211,6 +193,6 @@ export const PROJECTS: Project[] = [
   }
 ];
 
-export const LOOKING = "Backend or full-stack work on systems where being wrong has a cost — payments and settlement, trading, or the infrastructure underneath an AI product. TypeScript and Node day to day, plus a year of production experience in a team and four systems taken end to end solo. Open to relocation, and to remote.";
+export const LOOKING = "Product-minded full-stack work on systems where being wrong has a cost — payments, trading, DeFi, or the infrastructure underneath an AI product. TypeScript and Node day to day, plus a year of production experience in a team and four systems taken end to end solo. Open to relocation, and to remote.";
 
 export const projectById = (id: string): Project | undefined => PROJECTS.find((p) => p.id === id);

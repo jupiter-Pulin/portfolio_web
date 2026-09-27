@@ -11,6 +11,7 @@ import {
   fallbackFine,
   openLabel,
   scopedChips,
+  followUps,
   scopedHeading,
   scopedNotice,
 } from '../src/content/guide.ts';
@@ -22,6 +23,7 @@ import { TYPING_MS, answerActions, answerBlocks, modelAnswerBlocks, openIntro, t
 import { chipsFor, echoLabel, route } from '../src/lib/guideRoute.ts';
 import { inlineNodes, tokenizeInline } from '../src/lib/inlineMarkup.ts';
 import { keyAction } from '../src/lib/workNav.ts';
+import { ANSWER_KEYS } from '../src/lib/askContract.ts';
 
 const read = (rel) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8');
 
@@ -119,25 +121,38 @@ test('an unknown question falls back, and the fallback names every project', () 
   assert.equal(fallbackFine.includes(PROJECTS[0].name), true);
 });
 
-test('chips are the five global questions, or four scoped ones plus a way back', () => {
+test('chips are three global starters, or three scoped questions plus a way back', () => {
   assert.deepEqual(
     chipsFor(null).map((c) => c.key),
-    ['payments', 'agents', 'code', 'looking', 'contact'],
+    ['looking', 'work', 'contact'],
   );
   assert.equal(chipsFor(null), GUIDE.chips.global);
 
   const scoped = chipsFor('Loop Conductor');
   assert.deepEqual(
     scoped.map((c) => c.key),
-    ['decision', 'stack', 'status', 'code', 'all'],
+    ['decision', 'stack', 'status', 'all'],
   );
   assert.equal(scoped[0].label, 'Hardest decision in Loop Conductor?');
-  assert.equal(scoped[4].label, GUIDE.allQuestions);
+  assert.equal(scoped[3].label, GUIDE.allQuestions);
   assert.equal(scopedChips('AMM DEX')[0].label, 'Hardest decision in AMM DEX?');
 
   // The arrow belongs to the chip, not to the line the transcript echoes.
   assert.equal(echoLabel(GUIDE.allQuestions), 'All questions');
   assert.equal(echoLabel(scoped[1].label), 'What is the stack?');
+});
+
+test('an answer is followed by two questions at most, never the one just answered', () => {
+  for (const key of ANSWER_KEYS) {
+    const site = followUps(key, null);
+    assert.ok(site.length >= 1 && site.length <= 2, `${key}: one or two`);
+    assert.ok(!site.some((c) => c.key === key && key !== 'all' && key !== 'fallback'), `${key}: not itself`);
+    const inProject = followUps(key, 'Platter');
+    assert.ok(inProject.length <= 2, `${key} in a project`);
+    if (key !== 'all') for (const c of inProject) assert.ok(c.key !== key && c.key !== 'all', `${key} in a project offers its other questions`);
+  }
+  assert.deepEqual(followUps('work', null).map((c) => c.key), ['agents', 'code']);
+  assert.deepEqual(followUps('decision', 'Platter').map((c) => c.key), ['stack', 'status']);
 });
 
 test('the drawer greets once a page, and only announces a scope that changed', () => {
@@ -196,17 +211,21 @@ test('the agents answer lists two shipped systems and the guide itself', () => {
   assert.equal(card.items[2].action, undefined, 'the guide is not a case page');
   assert.deepEqual(card.actions, [{ t: 'mail', href: MAILTO, label: GUIDE.mail, amber: true }]);
 
-  // Every figure quoted here is one of Loop Conductor's own stats, with provenance.
+  // Loop Conductor is described by how it works, with no run figures.
   const line = runText(card.items[0].runs);
-  for (const stat of projectById('loop').stats) {
-    if (/^[\d$]/.test(stat.v)) continue;
-  }
-  for (const v of ['17', '10', '$248.67']) assert.ok(line.includes(v), `quotes ${v}`);
-  assert.ok(
-    projectById('loop').stats.some((s) => s.v === '$248.67'),
-    'the spend figure comes from projects.ts',
-  );
-  assert.ok(line.includes('self-reported'), 'the provenance word travels with the figures');
+  assert.match(line, /router agent/);
+  assert.match(line, /human signs off/);
+  assert.doesNotMatch(line, /\$|\d/);
+});
+
+test('the work answer points at the first two projects and the whole list', () => {
+  const blocks = answerBlocks('work', null);
+  assert.equal(blocks[0].runs[0].v, GUIDE.work.intro);
+  assert.deepEqual(blocks[1].actions, [
+    { t: 'open', id: PROJECTS[0].id, label: openLabel(PROJECTS[0].name) },
+    { t: 'open', id: PROJECTS[1].id, label: openLabel(PROJECTS[1].name) },
+    { t: 'nav', href: '/work', label: GUIDE.work.all },
+  ]);
 });
 
 test('the code answer links the repos of every public project', () => {
@@ -314,7 +333,7 @@ test('"All questions" is a plain line, and the scope is cleared by the caller', 
 test('reduced motion answers with no "typing" state; otherwise it waits a beat', () => {
   assert.equal(typingPlaceholder(true), null);
   assert.equal(typingPlaceholder(false), GUIDE.typing);
-  assert.equal(GUIDE.typing, 'guide is typing…');
+  assert.equal(GUIDE.typing, 'assistant is typing…');
   assert.equal(TYPING_MS, 420);
 });
 
@@ -451,7 +470,7 @@ test('the guide copy lives in src/content, never in a component', () => {
   }
 });
 
-test('the drawer keeps the mock class names and the 450px slide', () => {
+test('the drawer is a sheet of paper that slides in, and keeps its class names', () => {
   const css = read('../src/components/AskDrawer.module.css').replace(/\s+/g, ' ');
   for (const name of [
     'scrim',
@@ -460,23 +479,24 @@ test('the drawer keeps the mock class names and the 450px slide', () => {
     'pill',
     'msgs',
     'msg',
-    'chips',
+    'starters',
+    'follow',
+    'minis',
     'askForm',
     'report',
     'rpHead',
     'rpList',
     'rpNote',
-    'rpActions',
     'linklist',
   ]) {
     assert.match(css, new RegExp(`\\.${name}[\\s.:,{]`), `.${name} is styled`);
   }
-  assert.match(css, /\.drawer \{[^}]*width: min\(450px, 100vw\)/);
-  assert.match(css, /\.drawer \{[^}]*transform: translateX\(100%\)/);
-  assert.match(css, /\.drawer \{[^}]*transition: transform 0\.32s/, 'the slide is a transition');
+  assert.match(css, /\.drawer \{[^}]*width: min\(460px, calc\(100vw - 24px\)\)/);
+  assert.match(css, /\.drawer \{[^}]*transform: translateX\(calc\(100% \+ 40px\)\) rotate\(2deg\)/);
+  assert.match(css, /\.drawer \{[^}]*transition: transform 0\.45s/, 'the slide is a transition');
   assert.match(css, /\.drawer\.open \{[^}]*transform: none/);
-  assert.match(css, /\.msg\.guide \{/);
-  assert.match(css, /\.msg\.you \{/);
+  assert.match(css, /\.guide \{/);
+  assert.match(css, /\.you \{/);
 
   // Reduced motion: the site-wide reset is what removes the slide,
   // so the drawer must not carry a rule that outranks it.
@@ -486,7 +506,7 @@ test('the drawer keeps the mock class names and the 450px slide', () => {
     /@media \(prefers-reduced-motion: reduce\) \{ \*, \*::before, \*::after \{[^}]*transition: none !important/,
     'the reduced-motion reset still kills every transition',
   );
-  assert.doesNotMatch(css, /!important/, 'nothing in the drawer outranks that reset');
+  assert.doesNotMatch(css.replace(/\.miniShort \{[^}]*\}|\.hudNote \{[^}]*\}/g, ''), /!important/, 'nothing in the drawer outranks that reset');
 });
 
 test('the drawer is wired to the page: dialog semantics, focus, navigation', () => {
@@ -496,7 +516,7 @@ test('the drawer is wired to the page: dialog semantics, focus, navigation', () 
   assert.match(drawer, /aria-modal="true"/);
   assert.match(drawer, /aria-labelledby="ask-title"/);
   assert.match(drawer, /aria-live="polite"/);
-  assert.match(drawer, /if \(isOpen\) input\.current\?\.focus\(\);/, 'focus enters the field');
+  assert.match(drawer.replace(/\s+/g, ' '), /if \(!isOpen\) return; input\.current\?\.focus\(\);/, 'focus enters the field');
   assert.match(drawer, /trigger\.current\?\.focus\(\)/, 'focus goes back to the trigger');
   assert.match(drawer, /e\.key === "Escape"/, 'Esc closes');
   assert.match(drawer, /onClick=\{onClose\}/, 'the scrim closes');
@@ -507,7 +527,7 @@ test('the drawer is wired to the page: dialog semantics, focus, navigation', () 
   );
   // What the visitor typed goes back out as text. It never reaches inlineNodes,
   // which is the only place in the drawer that can turn a string into an element.
-  assert.match(drawer, /styles\.you\}`\}>\{msg\.text\}</, 'the echo is a text child');
+  assert.match(drawer.replace(/\s+/g, ' '), /styles\.you\}`\}> <Sketch [^>]*\/> \{msg\.text\} </, 'the echo is a text child');
   assert.doesNotMatch(drawer, /inlineNodes\(msg\.text\)/);
   assert.doesNotMatch(drawer, /dangerouslySetInnerHTML/, 'no string is ever injected');
   assert.match(drawer, /target="_blank" rel="noopener"/, 'outbound links are safe');

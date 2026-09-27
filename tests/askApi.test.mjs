@@ -449,6 +449,8 @@ test('model output is unwrapped losslessly before the structure check; refusals 
     ['scope as name', JSON.stringify({ key: 'decision', scopeId: 'Loop Conductor', answer }), 'loop'],
     ['scope as id in caps', JSON.stringify({ key: 'decision', scopeId: ' LOOP ', answer }), 'loop'],
     ['name in lower case', JSON.stringify({ key: 'stack', scopeId: 'amm dex', answer }), 'amm'],
+    // Paid eval, 2026-09-27: "What has he built?" came back 2 times in 6 as `…", }`.
+    ['stray comma', JSON.stringify({ key: 'decision', scopeId: 'loop', answer }).replace(/\}$/, ', }'), 'loop'],
   ];
   for (const [name, content, scopeId] of replies) {
     const { handler, store } = setup({ provider: fakeProvider(() => ({ content, usage })) });

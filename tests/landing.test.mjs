@@ -6,7 +6,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { createServer } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
-import { IDENTITY, SITE } from '../src/content/copy.ts';
+import { HOME, IDENTITY, SITE } from '../src/content/copy.ts';
 import { GUIDE } from '../src/content/guide.ts';
 import { EMAIL, MAILTO, SOCIALS } from '../src/content/links.ts';
 import { PROJECTS } from '../src/content/projects.ts';
@@ -88,7 +88,6 @@ after(() => server?.kill());
 test('the landing page renders the identity card and the guide from src/content', () => {
   const body = textOf(pages.home);
   assert.match(pages.home, new RegExp(`<title>${SITE.title}</title>`));
-  assert.ok(body.includes(IDENTITY.eyebrow), 'card eyebrow');
   assert.ok(body.includes(IDENTITY.status), 'open to work');
   assert.ok(body.includes(SITE.name) && body.includes(IDENTITY.role), 'name and role');
   for (const f of IDENTITY.facts) assert.ok(body.includes(`${f.label} ${f.text}`), f.label);
@@ -97,15 +96,16 @@ test('the landing page renders the identity card and the guide from src/content'
   assert.ok(avatar, 'the avatar is a plain image from public/');
   assert.ok(avatar[0].includes(`alt="${IDENTITY.avatarAlt}"`), 'the avatar carries its alt text');
 
-  // The guide answers in place: its greeting is the headline, the chips are on the page.
-  assert.ok(body.includes(GUIDE.hero.who), 'who is speaking');
-  assert.ok(body.includes(`${GUIDE.hero.headline} ${GUIDE.hero.headlineAccent}`), 'headline, accent span included');
-  assert.ok(body.includes(GUIDE.greetingFine), 'the fine print');
-  assert.ok(body.includes(GUIDE.hero.quickLabel) && body.includes(GUIDE.hero.startLabel), 'chip labels');
-  for (const chip of GUIDE.chips.global) assert.ok(body.includes(chip.label), chip.label);
-  for (const p of PROJECTS) assert.ok(body.includes(p.name), `${p.name} as a starting point`);
-  assert.ok(!body.includes('questions a day per visitor') && !body.includes('usually under'), 'no rules line under the composer');
-  assert.match(pages.home, new RegExp(`maxlength="${GUIDE.limits.maxQuestionChars}"`, 'i'), 'the composer keeps the question limit');
+  // The assistant arrives with a hello and nothing else: no chat box until it is asked for.
+  const { hi, q, cta } = GUIDE.hero.welcome;
+  assert.ok(body.includes(`${hi} ${q} ${cta}`) || body.includes(`${hi}${q}${cta}`), 'the welcome bubble is in the page');
+  assert.ok(body.includes(GUIDE.hero.stageCaption), 'it says what it is');
+  assert.match(decode(pages.home), new RegExp(`aria-label="${GUIDE.hero.robotLabel}"`), 'the robot is a button');
+  assert.match(pages.home, /data-state="idle"/, 'the page opens on the stage, not the chat');
+  assert.ok(!body.includes(GUIDE.hero.greetLead), 'the chat greeting waits for a click');
+  assert.ok(!body.includes(GUIDE.hero.hideChat), 'no chat to hide yet');
+  assert.ok(!body.includes('questions a day per visitor') && !body.includes('usually under'), 'no rules line');
+  assert.match(pages.home, new RegExp(`maxlength="${GUIDE.limits.maxQuestionChars}"`, 'i'), 'the drawer keeps the question limit');
   assert.ok(!body.includes('How I Build'), 'the old card is gone');
 });
 
@@ -129,7 +129,7 @@ test('header socials use the links.ts urls and open in a new tab', () => {
   }
 });
 
-test('"Any question?" opens the scripted guide drawer', () => {
+test('"Ask my assistant" opens the assistant', () => {
   const home = decode(pages.home);
   // The placeholder shipped disabled; the drawer it was waiting for is here now.
   assert.equal(
@@ -148,7 +148,7 @@ test('"Any question?" opens the scripted guide drawer', () => {
   assert.match(home, /aria-modal="true"/);
   assert.match(home, /aria-labelledby="ask-title"/);
   const text = textOf(pages.home);
-  assert.ok(text.includes(GUIDE.pill), 'the guide is labelled as a scripted mock');
+  assert.ok(text.includes(GUIDE.pill), 'the assistant says it answers from site content');
   assert.ok(text.includes(GUIDE.send), 'the question form is there');
 });
 
@@ -160,20 +160,28 @@ test('Hire Me points at the prefilled mailto from links.ts', () => {
   assert.ok(textOf(pages.home).includes(EMAIL), 'footer shows the address');
 });
 
-test('selected work tiles link to /work/<id>, show role, name, short and stack, and repeat once for the loop', () => {
+test('the project cards link to /work/<id> and show what each project is', () => {
   const body = textOf(pages.home);
-  assert.ok(body.includes(SITE.stripTitle), 'strip eyebrow');
+  assert.ok(body.includes(`${HOME.workTitle} ${HOME.workAccent}`), 'section title');
   assert.ok(body.includes(SITE.stripOpenAll), 'open all');
+  assert.ok(tagWithHref(pages.home, '/work'), 'open all links to /work');
   for (const p of PROJECTS) {
     const tag = tagWithHref(pages.home, `/work/${p.id}`);
     assert.ok(tag, `no link to /work/${p.id}`);
     assert.match(tag, /^<a\b/);
-    assert.ok(body.includes(`${p.role} ${p.name} ${p.short} ${p.stack} ${GUIDE.hero.askProject}`), `tile content for ${p.id}`);
-    // The strip carries every tile twice so it can drift without an edge; the copy is hidden from readers.
-    assert.equal((decode(pages.home).match(new RegExp(`href="/work/${p.id}"`, 'g')) ?? []).length, 2, `${p.id} appears twice`);
+    assert.match(pages.home, new RegExp(`id="card-${p.id}"`), `${p.id} has a card the assistant can point at`);
+    assert.ok(body.includes(p.name) && body.includes(p.role) && body.includes(p.short), `card content for ${p.id}`);
+    assert.match(pages.home, new RegExp(`data-scope="${p.id}"`), `${p.id} can be asked about`);
   }
-  assert.match(pages.home, /aria-hidden="true"[^>]*>\s*<div[^>]*class="[^"]*tile/, 'the second copy is aria-hidden');
-  assert.ok(tagWithHref(pages.home, '/work'), 'open all links to /work');
+  assert.ok(body.includes(HOME.readCase) && body.includes(HOME.askAbout));
+});
+
+test('the newest posts are listed under the work, each linking to its page', () => {
+  const body = textOf(pages.home);
+  assert.ok(body.includes(`${HOME.notesTitle} ${HOME.notesAccent}`), 'section title');
+  assert.ok(tagWithHref(pages.home, '/blog'), 'all posts');
+  const links = [...decode(pages.home).matchAll(/href="\/blog\/([a-z0-9-]+)"/g)].map((m) => m[1]);
+  assert.equal(new Set(links).size, 4, 'four posts');
 });
 
 test('footer carries the identity block and the three text links', () => {

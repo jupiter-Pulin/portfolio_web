@@ -1,0 +1,12 @@
+.uw {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+.uw > svg {
+  position: absolute;
+  left: 0;
+  bottom: -10px;
+  overflow: visible;
+  pointer-events: none;
+}

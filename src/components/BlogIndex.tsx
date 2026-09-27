@@ -7,9 +7,11 @@ import { BLOG } from "@/content/copy";
 import type { PostMeta } from "@/lib/blog";
 import { allTags, filterPosts, groupByYear } from "@/lib/blogText";
 import { Icon } from "./Icon";
+import { Sketch } from "./sketch/Sketch";
+import { Wavy } from "./sketch/Wavy";
 import styles from "./BlogIndex.module.css";
 
-// The title ends with the gradient-rendered accent; both halves come from BLOG.
+// The title ends with the underlined accent; both halves come from BLOG.
 const titleLead = BLOG.title.slice(0, BLOG.title.length - BLOG.titleAccent.length);
 
 /**
@@ -35,7 +37,7 @@ export function BlogIndex({ posts }: { posts: PostMeta[] }) {
           <p className="eyebrow">{BLOG.eyebrow}</p>
           <h1 className={styles.title}>
             {titleLead}
-            <span className={styles.grad}>{BLOG.titleAccent}</span>
+            <Wavy>{BLOG.titleAccent}</Wavy>
           </h1>
           <p className={styles.lede}>{BLOG.lede}</p>
         </div>
@@ -44,7 +46,8 @@ export function BlogIndex({ posts }: { posts: PostMeta[] }) {
 
       {posts.length > 0 ? (
         <div className={styles.toolbar}>
-          <label className={styles.search}>
+          <label className={`sk ${styles.search}`}>
+            <Sketch fill="var(--white)" r={16} w={2.2} draw={false} />
             <Icon name="search" />
             <input
               type="search"
@@ -57,20 +60,22 @@ export function BlogIndex({ posts }: { posts: PostMeta[] }) {
           <div className={styles.tags}>
             <button
               type="button"
-              className={`chip ${styles.filterChip}`}
+              className={`chip sk ${styles.filterChip}`}
               aria-pressed={tag === null}
               onClick={() => setTag(null)}
             >
+              <Sketch r={16} w={1.8} hatch="var(--yellow)" gap={7} draw={false} />
               {BLOG.allTag}
             </button>
             {tags.map((t) => (
               <button
                 key={t}
                 type="button"
-                className={`chip ${styles.filterChip}`}
+                className={`chip sk ${styles.filterChip}`}
                 aria-pressed={tag === t}
                 onClick={() => setTag(tag === t ? null : t)}
               >
+                <Sketch r={16} w={1.8} hatch="var(--yellow)" gap={7} draw={false} />
                 {t}
               </button>
             ))}
@@ -107,7 +112,8 @@ export function BlogIndex({ posts }: { posts: PostMeta[] }) {
 
 function Card({ post: p }: { post: PostMeta }) {
   return (
-    <Link className={`${styles.post} ${p.thumb ? "" : styles.noThumb}`} href={`/blog/${p.slug}`}>
+    <Link className={`sk ${styles.post} ${p.thumb ? "" : styles.noThumb}`} href={`/blog/${p.slug}`}>
+      <Sketch fill="var(--white)" r={14} w={2.2} />
       {p.thumb ? (
         <span className={styles.thumb}>
           <Image

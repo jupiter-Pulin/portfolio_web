@@ -1,141 +1,114 @@
+/* /blog: a notebook of posts. .chip is a global primitive. */
 .pageHead {
-  padding: 64px 0 8px;
+  padding: 48px 0 8px;
   display: flex;
   justify-content: space-between;
-  gap: 24px;
   align-items: flex-end;
-  flex-wrap: wrap;
+  gap: 24px;
 }
 .title {
-  font: 900 clamp(38px, 5vw, 56px) / 1.05 var(--font-display);
-  letter-spacing: -0.02em;
-  margin: 10px 0 14px;
-  text-wrap: balance;
-}
-.grad {
-  background: linear-gradient(92deg, var(--blue) 0%, var(--cyan) 70%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  font-weight: 400;
+  font-size: clamp(38px, 5vw, 56px);
+  line-height: 1.05;
+  margin: 6px 0 12px;
 }
 .lede {
-  color: var(--muted);
-  font-size: 17px;
-  max-width: 620px;
+  color: var(--ink-2);
+  font-size: 20px;
+  max-width: 56ch;
   margin: 0;
 }
 .count {
-  font: 500 12px var(--font-mono);
-  color: var(--dim);
-  letter-spacing: 0.04em;
-  padding-bottom: 8px;
+  color: var(--grey);
+  font-size: 17px;
+  white-space: nowrap;
 }
-
 .toolbar {
   display: flex;
-  gap: 12px;
-  align-items: center;
   flex-wrap: wrap;
-  margin: 30px 0 6px;
+  align-items: center;
+  gap: 14px 18px;
+  margin: 28px 0 8px;
 }
 .search {
-  flex: 1 1 260px;
-  max-width: 380px;
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(17, 26, 46, 0.6);
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  padding: 0 14px;
-  height: 42px;
+  padding: 8px 16px;
+  min-width: 260px;
 }
-.search:focus-within {
-  border-color: var(--cyan);
-}
-.search svg {
-  width: 16px;
-  height: 16px;
-  color: var(--dim);
-  flex: none;
+.search svg:not(:global(.sk-svg)) {
+  width: 18px;
+  height: 18px;
+  color: var(--grey);
 }
 .search input {
   flex: 1;
   min-width: 0;
-  background: none;
   border: 0;
-  color: var(--text);
-  font: 500 14px var(--font-body);
-  outline: none;
+  outline: 0;
+  background: transparent;
+  font: 400 19px var(--hand);
 }
 .search input::placeholder {
-  color: var(--dim);
+  color: var(--lgrey);
 }
 .tags {
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
+  gap: 8px;
 }
 .filterChip[aria-pressed="true"] {
-  border-color: var(--cyan);
-  color: var(--cyan);
-  background: rgba(125, 227, 245, 0.08);
+  color: var(--pink);
 }
-
+.filterChip[aria-pressed="true"] :global(.sk-hatch) {
+  opacity: 0.55;
+}
 .years {
-  display: grid;
-  gap: 44px;
-  padding: 34px 0 80px;
+  margin-top: 26px;
 }
 .year {
   display: grid;
-  grid-template-columns: 120px 1fr;
+  grid-template-columns: 110px 1fr;
   gap: 24px;
+  padding: 18px 0;
 }
 .yearLabel {
-  font: 900 34px/1 var(--font-display);
-  color: var(--dim);
   position: sticky;
-  top: 92px;
+  top: calc(var(--head) + 20px);
   align-self: start;
-  letter-spacing: -0.02em;
+  font-size: 34px;
+  line-height: 1;
 }
 .yearLabel small {
   display: block;
-  font: 500 11px var(--font-mono);
-  letter-spacing: 0.08em;
-  margin-top: 8px;
-  opacity: 0.8;
+  font-size: 15px;
+  color: var(--grey);
+  margin-top: 6px;
 }
 .posts {
   display: grid;
-  gap: 14px;
+  gap: 22px;
 }
 .post {
   display: grid;
   grid-template-columns: 200px 1fr;
   gap: 20px;
   align-items: start;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  background: rgba(17, 26, 46, 0.55);
+  padding: 16px;
   text-decoration: none;
-  transition: border-color 0.15s, transform 0.15s, background 0.15s;
+  transition: transform 0.25s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
 .post:hover {
-  border-color: rgba(125, 227, 245, 0.45);
-  transform: translateY(-2px);
-  background: rgba(17, 26, 46, 0.9);
+  transform: translateY(-3px) rotate(-0.3deg);
 }
 .thumb {
   position: relative;
   display: block;
   aspect-ratio: 3 / 2;
-  border-radius: 10px;
+  border-radius: 6px;
   overflow: hidden;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--lgrey);
 }
 .thumbImg {
   object-fit: cover;
@@ -149,67 +122,66 @@
 }
 .txt {
   display: block;
-  padding: 4px 6px 2px 0;
+  padding: 2px 6px 2px 0;
   min-width: 0;
 }
 .when {
   display: block;
-  font: 500 11.5px var(--font-mono);
-  color: var(--dim);
-  letter-spacing: 0.04em;
+  font-size: 16px;
+  color: var(--grey);
 }
 .postTitle {
   display: block;
-  font: 800 19px/1.3 var(--font-display);
-  margin-top: 6px;
+  font-weight: 400;
+  font-size: 25px;
+  line-height: 1.2;
+  margin-top: 2px;
 }
 .post:hover .postTitle {
-  color: var(--cyan);
+  color: var(--pink);
 }
 .summary {
   display: -webkit-box;
   margin-top: 6px;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.55;
+  color: var(--ink-2);
+  font-size: 17px;
+  line-height: 1.4;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 .meta {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
   align-items: center;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 .tag {
-  font: 500 10.5px var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--dim);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 3px 9px;
+  font-size: 14.5px;
+  color: var(--ink-2);
+  border: 1.5px solid var(--lgrey);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  padding: 1px 10px;
 }
 .mins {
-  font: 500 11px var(--font-mono);
-  color: var(--dim);
+  font-size: 15px;
+  color: var(--grey);
 }
 .mins::before {
   content: "·";
   margin-right: 6px;
-  opacity: 0.6;
 }
 .empty {
   padding: 70px 0;
-  color: var(--dim);
+  color: var(--grey);
   text-align: center;
 }
 .empty b {
   display: block;
-  font: 800 18px var(--font-display);
-  color: var(--muted);
+  font-weight: 400;
+  font-size: 26px;
+  color: var(--ink);
   margin-bottom: 6px;
 }
 
@@ -220,7 +192,7 @@
   }
   .yearLabel {
     position: static;
-    font-size: 26px;
+    font-size: 28px;
   }
   .yearLabel small {
     display: inline;
@@ -232,7 +204,9 @@
 }
 @media (max-width: 640px) {
   .pageHead {
-    padding-top: 40px;
+    padding-top: 30px;
+    flex-direction: column;
+    align-items: flex-start;
   }
   .post {
     grid-template-columns: 1fr;
@@ -242,8 +216,9 @@
   .thumb {
     aspect-ratio: 16 / 9;
   }
-  .txt {
-    padding: 0 4px 6px;
+  .search {
+    min-width: 0;
+    width: 100%;
   }
 }
 
