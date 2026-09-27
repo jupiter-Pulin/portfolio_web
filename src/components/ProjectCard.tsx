@@ -14,8 +14,8 @@ const TILT = [-0.7, 0.6, -0.4, 0.8, -0.6];
 
 /**
  * One project on a card: its little diagram, name and stamps, the short line and
- * the first stack parts. The name opens the case page; "ask about it" opens the
- * assistant already scoped to the project.
+ * the first stack parts. The whole card opens the case page ("Read the case" is
+ * stretched over it); "ask about it" opens the assistant already scoped to the project.
  */
 export function ProjectCard({
   project: p,
@@ -59,7 +59,7 @@ export function ProjectCard({
         ))}
       </div>
       <div className={styles.foot}>
-        <Link className="link-btn" href={`/work/${p.id}`}>
+        <Link className={`link-btn ${styles.open}`} href={`/work/${p.id}`}>
           {HOME.readCase}
         </Link>
         <AskAbout id={p.id} className={styles.ask} />

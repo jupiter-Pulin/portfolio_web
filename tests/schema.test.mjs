@@ -68,6 +68,12 @@ test('site, demo and architecture: the product, not the code, and files of its o
   assert.match(errs({ demo: { ...platter.demo, src: '/projects/loop/demo.mp4' } }), /demo src must be an \.mp4 in \/projects\/platter\//);
   assert.match(errs({ demo: { ...platter.demo, src: '/projects/platter/demo.webm' } }), /demo src/);
   assert.match(errs({ demo: { ...platter.demo, caption: '' } }), /demo needs a caption/);
+  const loop = byId('loop');
+  assert.deepEqual(validateProject(loop), [], 'loop carries an explainer');
+  const lerrs = (patch) => validateProject({ ...loop, ...patch }).join('\n');
+  assert.match(lerrs({ explainer: { ...loop.explainer, src: '/projects/platter/explainer.mp4' } }), /explainer src must be an \.mp4 in \/projects\/loop\//);
+  assert.match(lerrs({ explainer: { ...loop.explainer, poster: '/projects/platter/x.webp' } }), /explainer poster/);
+  assert.match(lerrs({ explainer: { ...loop.explainer, caption: '' } }), /explainer needs a caption/);
   assert.match(errs({ architecture: { ...platter.architecture, src: 'https://example.com/a.png' } }), /architecture src/);
   assert.match(errs({ architecture: { ...platter.architecture, alt: '' } }), /needs alt text/);
   assert.match(errs({ architecture: { ...platter.architecture, width: 0 } }), /width and height/);

@@ -12,6 +12,8 @@ export type Status = 'shipped' | 'building' | 'archived';
 export type Site = { label: string; url: string };
 // A walkthrough video in public/projects/<id>/, shown in place of the cover on the case page.
 export type Demo = { src: string; poster: string; caption: string };
+// A hand-drawn explainer video in public/projects/<id>/, shown in place of the README preview.
+export type Explainer = { src: string; poster: string; caption: string };
 // A diagram in public/projects/<id>/, shown full width under the case; width/height are the file's.
 export type Diagram = { src: string; alt: string; caption: string; width: number; height: number };
 export type Project = {
@@ -20,7 +22,7 @@ export type Project = {
   status?: Status; updated?: string;
   stats: Stat[]; statsNote?: string;
   private?: boolean; scope?: string;
-  site?: Site; demo?: Demo; architecture?: Diagram;
+  site?: Site; demo?: Demo; explainer?: Explainer; architecture?: Diagram;
   readmeUrl?: string; readmeNote?: string; repos: Repo[]; readme: string | null;
   qa: { decision: string; stack: string; status: string };
 };
@@ -76,6 +78,11 @@ export const PROJECTS: Project[] = [
     "wrong": "Code gets reviewed at one commit and merged at another.",
     "mechanism": "Approval is bound to the branch head and re-checked at the merge gate.",
     "stats": [],
+    "explainer": {
+      "src": "/projects/loop/explainer.mp4",
+      "poster": "/projects/loop/explainer-poster.webp",
+      "caption": "A narrated, hand-drawn walkthrough, under three minutes: the router agent that picks each step, the kernel that runs it and records the facts, the two gates where you sign off, and why a review only counts for the commit it read."
+    },
     "readmeUrl": "https://github.com/jupiter-Pulin/loop-conductor#readme",
     "repos": [
       {
@@ -127,6 +134,11 @@ export const PROJECTS: Project[] = [
     "thesis": "The product decision and the security decision are the same shape: put the thing that must not leak — the meeting bot, the API key — outside the surface that is exposed.",
     "wrong": "The audio device disappears mid-stream and the call goes silent.",
     "mechanism": "The original path stays open underneath; translation ducks it, never replaces it.",
+    "explainer": {
+      "src": "/projects/live/explainer.mp4",
+      "poster": "/projects/live/explainer-poster.webp",
+      "caption": "A hand-drawn walkthrough, under two minutes: why nothing joins the call, the two audio paths, the original audio that never switches off, and the API key that never enters the browser."
+    },
     "stats": [
       {
         "v": "13",
@@ -146,7 +158,7 @@ export const PROJECTS: Project[] = [
       }
     ],
     "readmeUrl": "https://github.com/jupiter-Pulin/live-interpreter#readme",
-    "readmeNote": "README is in Chinese today; an English version and a 60-second demo are on the to-do list.",
+    "readmeNote": "The README is in Chinese; the video below walks through the project in English.",
     "repos": [
       {
         "label": "jupiter-Pulin/live-interpreter",
@@ -157,7 +169,7 @@ export const PROJECTS: Project[] = [
     "qa": {
       "decision": "Why the original audio is never switched off. Routing the meeting through the translator and playing only the translation is cleaner, and it is wrong: every failure in that chain — a dropped socket, a stalled model, a device that disappears — arrives at the user as silence, and silence is indistinguishable from a quiet room. So the direct path opens at connect time and stays open for the whole session; translation is mixed on top and ducks it while speaking. A total failure of the translation layer degrades to “a meeting you can hear”.",
       "stack": "Chrome MV3 with an offscreen document (the Service Worker only orchestrates; getUserMedia, AudioContext and the WebSocket live in the offscreen page), Web Audio, Native Messaging to a local Node host, and BlackHole virtual audio devices on macOS. One runtime dependency: a WebSocket library. Long-lived keys stay on the local host; the page uses short-lived credentials.",
-      "status": "Open source, solo. macOS · Chrome ≥ 116 · Node ≥ 22. Meeting-mute sync covers Google Meet today. 45 automated tests run the whole chain against a mock backend for free; the paid real-link check is one command at about $0.05 a run. The README is in Chinese and the 60-second demo is not recorded yet."
+      "status": "Open source, solo. macOS · Chrome ≥ 116 · Node ≥ 22. Meeting-mute sync covers Google Meet today. 45 automated tests run the whole chain against a mock backend for free; the paid real-link check is one command at about $0.05 a run. The README is in Chinese; the case page carries a hand-drawn explainer video in English."
     }
   },
   {

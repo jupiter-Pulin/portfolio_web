@@ -190,6 +190,17 @@
   font: 400 16px/1.6 var(--font-body);
   margin: 0 0 8px;
 }
+.explainer {
+  margin: 4px 0 0;
+}
+.exVideo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1.5px dashed var(--lgrey);
+  border-radius: 10px;
+  background: #fbf9f3;
+}
 .rmFoot {
   display: flex;
   flex-wrap: wrap;

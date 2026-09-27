@@ -34,6 +34,11 @@ export function validateProject(p: Project): string[] {
     if (!own(p.demo.poster)) fail(`demo poster must be in /projects/${p.id}/`);
     if (!p.demo.caption) fail("demo needs a caption");
   }
+  if (p.explainer) {
+    if (!own(p.explainer.src) || !p.explainer.src.endsWith(".mp4")) fail(`explainer src must be an .mp4 in /projects/${p.id}/`);
+    if (!own(p.explainer.poster)) fail(`explainer poster must be in /projects/${p.id}/`);
+    if (!p.explainer.caption) fail("explainer needs a caption");
+  }
   if (p.architecture) {
     if (!own(p.architecture.src)) fail(`architecture src must be in /projects/${p.id}/`);
     if (!p.architecture.alt) fail("architecture needs alt text");
