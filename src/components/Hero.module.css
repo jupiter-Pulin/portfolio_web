@@ -1,24 +1,25 @@
-/* The home hero: the identity card on the left, the guide on the right. */
+/* The home hero: the identity column on the left, the assistant on the right. */
 .hero {
   max-width: var(--maxw);
   margin: 0 auto;
+  padding: 40px 28px 40px;
   display: grid;
-  grid-template-columns: 372px minmax(0, 1fr);
-  gap: 40px;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 56px;
   align-items: start;
-  padding: 44px 28px 30px;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1060px) {
   .hero {
     grid-template-columns: 1fr;
-    gap: 26px;
-    padding-top: 28px;
+    gap: 30px;
+    padding-top: 24px;
   }
 }
-@media (max-width: 640px) {
+@media (max-width: 680px) {
   .hero {
-    padding-left: 18px;
-    padding-right: 18px;
+    grid-template-columns: 104px minmax(0, 1fr);
+    gap: 0 16px;
+    padding: 20px 16px 24px;
   }
 }

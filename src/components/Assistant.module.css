@@ -1,0 +1,325 @@
+/* Nolan's assistant on the home page: a stage the robot walks onto, and the chat
+   it opens on request. The conversation's bubbles are styled in AskDrawer.module.css. */
+.assistant {
+  align-self: center;
+  min-width: 0;
+}
+.assistant[data-state="chat"] {
+  align-self: start;
+}
+
+/* ---------- idle: the robot, a hello, nothing else ---------- */
+.stage {
+  position: relative;
+  min-height: 540px;
+}
+.welcome {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: min(430px, 100%);
+  padding: 18px 24px 16px;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.3);
+  pointer-events: none;
+  /* the tail's tip, so the bubble pops out of it; --ox is set once the bubble is placed */
+  transform-origin: var(--ox, 80%) calc(100% + 38px);
+  transition: transform 0.2s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.welcome.shown {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  animation: bub 0.55s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.welcome.shown:hover {
+  transform: translateY(-3px) rotate(-0.6deg);
+}
+.wHi {
+  font-size: 25px;
+  line-height: 1.15;
+}
+.wQ {
+  font-size: 19px;
+  color: var(--ink-2);
+}
+.ghost {
+  opacity: 0;
+}
+.wCta {
+  justify-self: start;
+  margin-top: 8px;
+  font-size: 17px;
+  color: var(--pink);
+  border-bottom: 2px dashed var(--pink);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.typed .wCta {
+  opacity: 1;
+}
+.spot {
+  position: absolute;
+  left: 60%;
+  bottom: 58px;
+  translate: -50% 0;
+  cursor: pointer;
+}
+.spot:focus-visible {
+  border-radius: 20px;
+}
+.stage .spot svg {
+  width: 176px;
+  height: auto;
+  display: block;
+  overflow: visible;
+  transform-origin: 50% 100%;
+}
+.spot:hover svg :global(.rb-upper) {
+  animation: perk 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes perk {
+  40% {
+    transform: translateY(-8px) rotate(3deg);
+  }
+}
+.ground {
+  position: absolute;
+  left: 0;
+  bottom: 56px;
+  width: 100%;
+  height: 12px;
+  overflow: visible;
+  pointer-events: none;
+}
+.cap {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--grey);
+}
+.puff {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--lgrey);
+  pointer-events: none;
+  animation: puff 0.7s ease-out forwards;
+}
+@keyframes puff {
+  from {
+    opacity: 0.9;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: translate(14px, -10px) scale(1.5);
+  }
+}
+
+/* ---------- open: the chat ---------- */
+.chat {
+  animation: rise 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+.deskHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 4px 0 14px 136px;
+}
+.deskHead b {
+  font-weight: 400;
+  font-size: 21px;
+}
+.pill {
+  font-size: 14.5px;
+  padding: 3px 12px 2px;
+  color: var(--ink-2);
+}
+.online {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 15px;
+  color: var(--grey);
+}
+.hide {
+  margin-left: auto;
+  font-size: 15px;
+  color: var(--grey);
+}
+.desk {
+  display: flex;
+  gap: 18px;
+  align-items: stretch;
+}
+.gutter {
+  flex: none;
+  width: 118px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.chatting .gutter {
+  justify-content: flex-end;
+}
+.gutter svg {
+  width: 118px;
+  height: auto;
+  display: block;
+  overflow: visible;
+  position: sticky;
+  top: calc(var(--head) + 30px);
+  bottom: 112px;
+  cursor: pointer;
+  transform-origin: 50% 100%;
+}
+.chatting .gutter svg {
+  top: auto;
+}
+.flow {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 8px;
+}
+.greet {
+  padding: 18px 22px 16px;
+}
+.hi {
+  font-size: 21px;
+  line-height: 1.35;
+  margin: 0 0 8px;
+}
+.fine {
+  margin: 0;
+  max-width: 62ch;
+  transition: opacity 0.3s, max-height 0.4s;
+  max-height: 120px;
+  overflow: hidden;
+}
+.chatting .fine {
+  opacity: 0;
+  max-height: 0;
+}
+.composerWrap {
+  position: sticky;
+  bottom: 14px;
+  z-index: 6;
+  margin-top: 18px;
+}
+.chatting + .composerWrap::before {
+  content: "";
+  position: absolute;
+  left: -20px;
+  right: -20px;
+  top: -18px;
+  bottom: -14px;
+  background: linear-gradient(transparent, var(--paper) 38%);
+  z-index: -2;
+  pointer-events: none;
+}
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 18px;
+  transition: transform 0.25s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.composer:focus-within {
+  transform: translateY(-3px);
+}
+.composer input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: 400 21px var(--hand);
+  padding: 8px 0;
+}
+.composer input::placeholder {
+  color: var(--lgrey);
+}
+.count {
+  font-size: 14px;
+  color: var(--lgrey);
+}
+.pencil {
+  width: 26px;
+  height: 26px;
+  overflow: visible;
+  flex: none;
+}
+
+@media (max-width: 1060px) {
+  .stage {
+    min-height: 440px;
+  }
+}
+@media (max-width: 680px) {
+  .assistant {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+  .stage {
+    min-height: 380px;
+  }
+  .spot {
+    left: 64%;
+  }
+  .stage .spot svg {
+    width: 132px;
+  }
+  .welcome {
+    padding: 14px 18px 12px;
+  }
+  .wHi {
+    font-size: 21px;
+  }
+  .wQ {
+    font-size: 17px;
+  }
+  .deskHead {
+    margin-left: 0;
+  }
+  .hide {
+    margin-left: 0;
+  }
+  .gutter {
+    width: 64px;
+  }
+  .gutter svg {
+    width: 64px;
+    bottom: 96px;
+  }
+  .desk {
+    gap: 10px;
+  }
+  .composer input {
+    font-size: 18px;
+  }
+  .count {
+    display: none;
+  }
+}
+
+/* the pill's hatching is a tint, not a strike-through */
+.pill :global(.sk-hatch) {
+  opacity: 0.3;
+}

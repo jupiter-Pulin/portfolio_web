@@ -1,5 +1,6 @@
 // Reading the model's reply before the structure check. Only lossless repairs:
-// a JSON object wrapped in a code fence or stray prose is unwrapped, and a
+// a JSON object wrapped in a code fence or stray prose is unwrapped, a stray comma
+// before the closing brace is dropped, and a
 // scopeId written as a project's name (or an id in another case) becomes that
 // project's id. The answer text is never touched; nothing is made up.
 import { modelOutputProblem, type ModelOutput, type ModelOutputProblem } from "../../lib/askContract.ts";
@@ -16,8 +17,11 @@ function parseObject(content: string): unknown {
     const start = text.indexOf("{");
     const end = text.lastIndexOf("}");
     if (start === -1 || end <= start) return null;
+    // DeepSeek sometimes ends the object with a stray comma: `"answer": "…", }`.
+    // Only the one right before the final brace goes; nothing inside a string can match.
+    const object = text.slice(start, end + 1).replace(/,\s*\}$/, "}");
     try {
-      return JSON.parse(text.slice(start, end + 1));
+      return JSON.parse(object);
     } catch {
       return null;
     }

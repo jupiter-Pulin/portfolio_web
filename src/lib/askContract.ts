@@ -7,6 +7,7 @@ import { PROJECTS } from "../content/projects.ts";
 export const ANSWER_KEYS: readonly AnswerKey[] = [
   "payments",
   "agents",
+  "work",
   "code",
   "looking",
   "contact",

@@ -2,6 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { BLOG } from "@/content/copy";
 import type { Post, PostMeta } from "@/lib/blog";
+import { Drawing } from "./sketch/Drawing";
+import { Rule } from "./sketch/Rule";
+import { Sketch } from "./sketch/Sketch";
 import styles from "./BlogPost.module.css";
 
 /**
@@ -42,7 +45,9 @@ export function BlogPost({
         </div>
         {post.summary ? <p className={styles.lede}>{post.summary}</p> : null}
         {post.cover ? (
-          <figure className={styles.cover}>
+          <figure className={`sk ${styles.cover}`}>
+            <Sketch fill="var(--white)" r={8} w={2.4} />
+            <Drawing kind="tape" className={styles.tape} />
             <span className={styles.coverFrame}>
               <Image
                 className={styles.coverImg}
@@ -59,7 +64,7 @@ export function BlogPost({
         ) : null}
       </header>
 
-      <div className={styles.rule} />
+      <Rule className={styles.rule} seed={27} />
       <div className={styles.body} dangerouslySetInnerHTML={{ __html: post.html }} />
 
       <div className={styles.foot}>
@@ -80,7 +85,8 @@ export function BlogPost({
 
 function PagerLink({ post, dir, className }: { post: PostMeta; dir: string; className: string }) {
   return (
-    <Link className={`${styles.pagerLink} ${className}`} href={`/blog/${post.slug}`}>
+    <Link className={`sk ${styles.pagerLink} ${className}`} href={`/blog/${post.slug}`}>
+      <Sketch fill="var(--white)" r={14} w={2} draw={false} />
       <span className={styles.dir}>{dir}</span>
       <b>{post.title}</b>
     </Link>

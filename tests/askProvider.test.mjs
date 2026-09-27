@@ -9,10 +9,11 @@ import index from '../src/generated/ask-index.json' with { type: 'json' };
 import BLOG_POSTS from '../src/generated/ask-blog.json' with { type: 'json' };
 import { EMAIL, GITHUB, LINKEDIN, X } from '../src/content/links.ts';
 import { GUIDE } from '../src/content/guide.ts';
+import { IDENTITY } from '../src/content/copy.ts';
 import { LOOKING, PROJECTS } from '../src/content/projects.ts';
 import { ANSWER_KEYS } from '../src/lib/askContract.ts';
 import { TOP_K, createAskHandler } from '../src/server/ask/handler.ts';
-import { SYSTEM_PROMPT, buildUserPrompt, normalizeQuestion } from '../src/server/ask/prompt.ts';
+import { SYSTEM_PROMPT, buildUserPrompt, languageHint, normalizeQuestion } from '../src/server/ask/prompt.ts';
 import { costUsd, selectProvider } from '../src/server/ask/providers/index.ts';
 import { readConfig } from '../src/server/ask/config.ts';
 import { createMemoryStore } from '../src/server/ask/store.ts';
@@ -93,7 +94,7 @@ test('the system prompt states the language, facts and output rules — and clai
   // Thinking off, "他的 email 和 LinkedIn 是什么？" came back as "Email: …\nLinkedIn: …" with no Chinese at all.
   assert.match(p, /even when the answer is mostly addresses or links: introduce them in a sentence in the target language/);
   assert.match(p, /only from the site material/);
-  assert.match(p, /does not cover the question, say plainly that the site does not say/);
+  assert.match(p, /does not cover the question, say plainly that you don't have that information/);
   assert.match(p, /Never invent/);
   assert.match(p, /copy it exactly as written/);
   assert.match(p, /number, link or email address/);
@@ -122,7 +123,7 @@ test('buildUserPrompt carries the catalogue, keys, scope, intent, candidates, li
   }
   const keys = section(user, 'Answer keys');
   for (const k of ANSWER_KEYS) assert.match(keys, new RegExp(`- ${k}: \\S`), `${k} has a meaning`);
-  assert.equal(ANSWER_KEYS.length, 11);
+  assert.equal(ANSWER_KEYS.length, 12);
   assert.equal(section(user, 'Current scope'), 'loop');
   assert.equal(section(user, 'Intent'), 'code');
   for (const c of candidates) assert.ok(section(user, 'Candidate passages').includes(c.text));
@@ -142,16 +143,19 @@ test('routing: site-wide keys take a null scope, and the looking / site-wide mat
   // Paid eval at 35976b6: "AI agent work" came back agents/loop, and "what role is he looking for"
   // in zh/ja drifted to fallback because retrieval missed LOOKING.
   const p = SYSTEM_PROMPT;
-  assert.match(p, /Site-wide keys — "payments", "agents", "looking", "contact" and "all"/);
+  assert.match(p, /Site-wide keys — "payments", "agents", "work", "looking", "contact" and "all"/);
   assert.match(p, /"agents" with scopeId null/);
   assert.match(p, /that is "looking", never "fallback"/);
   const user = buildUserPrompt({ question: '他在找什么样的工作？', scopeId: 'loop', candidates: [] });
   assert.equal(section(user, 'What Nolan is looking for'), LOOKING);
+  // The identity card's lines, in his words, go along with it.
+  const words = section(user, "In Nolan's words");
+  for (const f of IDENTITY.facts) assert.ok(words.includes(`- ${f.label}: ${f.text}`), f.label);
   const summaries = section(user, 'Site-wide summaries');
   for (const item of [...GUIDE.fit.items, ...GUIDE.agents.items, ...GUIDE.lp.items]) assert.ok(summaries.includes(item.text), item.text);
   assert.doesNotMatch(summaries, /https?:\/\//);
   const keys = section(user, 'Answer keys');
-  for (const k of ['payments', 'agents', 'looking', 'contact', 'all']) assert.match(keys, new RegExp(`- ${k}: site-wide \\(scopeId null\\)`), k);
+  for (const k of ['payments', 'agents', 'work', 'looking', 'contact', 'all']) assert.match(keys, new RegExp(`- ${k}: site-wide \\(scopeId null\\)`), k);
   for (const k of ['code', 'decision', 'stack', 'status', 'overview']) assert.match(keys, new RegExp(`- ${k}: project key`), k);
 });
 
@@ -165,7 +169,7 @@ test('the blog post list is sent every time, between the site-wide summaries and
   assert.equal(titles[at - 1], 'Site-wide summaries');
   assert.equal(titles[at + 1], 'Answer keys');
 
-  assert.equal(BLOG_POSTS.length, 7);
+  assert.equal(BLOG_POSTS.length, 8);
   const lines = section(user, 'Blog posts').split('\n');
   assert.equal(lines.length, BLOG_POSTS.length, 'one line per post');
   BLOG_POSTS.forEach((post, i) => {
@@ -208,7 +212,7 @@ test('a question about a post retrieves its passages and the answer comes back w
   assert.equal(body.meta.candidates.length, TOP_K);
   assert.ok(body.meta.candidates.some((id) => id.startsWith('blog:lp-range-over-apr:')));
   assert.equal(TOP_K, 6);
-  assert.equal(ANSWER_KEYS.length, 11);
+  assert.equal(ANSWER_KEYS.length, 12);
 });
 
 test('the language sample travels to the prompt; the question stays the question', async () => {
@@ -424,3 +428,19 @@ test('.env.example is tracked and complete; README documents the route, scripts 
     assert.ok(run.includes(phrase), `README Run section: ${phrase}`);
   }
 });
+
+test('the language hint says only what the script settles: kana is Japanese, no CJK is not Chinese', () => {
+  assert.match(languageHint('彼はどんな仕事を探していますか'), /Japanese/);
+  assert.match(languageHint('Is Live Interpreter in production?'), /never in Chinese/);
+  assert.match(languageHint('¿Qué ha construido Nolan?'), /never in Chinese/);
+  // Han without kana could be Chinese or English around a Chinese term: no hint.
+  assert.equal(languageHint('AMM DEX 怎么样'), null);
+  assert.equal(languageHint('what does 链上监控 do'), null);
+  const withHint = buildUserPrompt({ question: 'Is he a fit for my role?', scopeId: null, langSample: '彼はどんな仕事を探していますか', candidates: [] });
+  const titles = [...withHint.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
+  assert.deepEqual(titles.slice(-3), ['Target language sample', 'Language hint', 'Question']);
+  const none = buildUserPrompt({ question: '他在找什么样的工作？', scopeId: null, candidates: [] });
+  assert.ok(!none.includes('## Language hint'), 'no hint when the model has to judge');
+  assert.match(SYSTEM_PROMPT, /"Language hint" section, when there is one, is certain/);
+});
+

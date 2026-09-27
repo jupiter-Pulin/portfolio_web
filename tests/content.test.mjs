@@ -10,7 +10,7 @@ import { PROJECTS, LOOKING, projectById } from '../src/content/projects.ts';
 
 test('links are the ones Pulin provided', () => {
   assert.equal(LINKEDIN, 'https://www.linkedin.com/in/nolan-tang-52b559367/');
-  assert.equal(X, 'https://x.com/home');
+  assert.equal(X, 'https://x.com/will_pu7490');
   assert.equal(GITHUB, 'https://github.com/jupiter-Pulin');
   assert.ok(MAILTO.startsWith(`mailto:${EMAIL}?subject=`));
   assert.equal(SOCIALS.length, 3);
@@ -18,14 +18,18 @@ test('links are the ones Pulin provided', () => {
 
 test('identity card and guide hero copy are verbatim from the approved mock', () => {
   assert.equal(IDENTITY.status, 'Open to work');
-  assert.equal(IDENTITY.role, 'Product-minded software engineer · fintech × AI');
+  assert.equal(IDENTITY.role, 'Product-minded software engineer · fintech × web3 × AI');
   assert.deepEqual(
     IDENTITY.facts.map((f) => f.label),
-    ['Based', 'Looking for', 'Experience', 'Open to'],
+    ['Looking for', 'Betting on', 'Strength', 'Open to'],
   );
   assert.ok(IDENTITY.facts.every((f) => f.text.length > 0));
-  assert.equal(GUIDE.hero.headline, "Tell me what you're hiring for, or what you want to see.");
-  assert.equal(GUIDE.hero.headlineAccent, "I'll take you there.");
+  // No city on the card or anywhere the site shows where he is.
+  for (const text of [SITE.location, ...IDENTITY.facts.map((f) => f.text)]) assert.doesNotMatch(text, /Shenzhen|UTC/);
+  // The assistant says hello in English; only the chat follows the visitor's language.
+  assert.deepEqual(GUIDE.hero.welcome, { hi: "Hi! Welcome to Nolan's site.", q: 'Got a question about him? Just ask me.', cta: 'Ask me →' });
+  assert.equal(GUIDE.hero.greetLead, "Hi! I'm Nolan's assistant. Tell me what you're hiring for, or what you want to see —");
+  assert.equal(GUIDE.hero.greetAccent, "I'll take you there.");
   assert.equal(SITE.title, 'Nolan Tang');
   assert.ok(SITE.description.startsWith('Nolan Tang'), 'the page description names him');
 });
@@ -48,7 +52,14 @@ test('five projects with unique ids, required fields and honest source links', (
     }
     for (const s of p.stats) assert.ok(s.v && s.l, `${p.id} stat`);
   }
-  assert.ok(projectById('loop').statsNote.includes('Self-reported'));
+  // Loop Conductor is shown by what it does, not by run figures.
+  const loop = projectById('loop');
+  assert.deepEqual(loop.stats, []);
+  assert.equal(loop.statsNote, undefined);
+  for (const text of [loop.short, loop.tagline, loop.qa.status]) assert.doesNotMatch(text, /\$|\d/, 'no amounts or counts');
+  assert.match(loop.short, /router agent/);
+  assert.match(loop.short, /harness only runs the checks/);
+  assert.match(loop.short, /human signs off/);
   assert.deepEqual(PROJECTS.map((p) => p.id), ['platter', 'loop', 'guide', 'live', 'amm'], 'registry order; the first is featured');
   // Every demo, poster and diagram a record names is a file the build will serve.
   for (const p of PROJECTS) {
@@ -57,5 +68,5 @@ test('five projects with unique ids, required fields and honest source links', (
     }
   }
   assert.equal(projectById('nope'), undefined);
-  assert.ok(LOOKING.startsWith('Backend or full-stack work'));
+  assert.ok(LOOKING.startsWith('Product-minded full-stack work'));
 });

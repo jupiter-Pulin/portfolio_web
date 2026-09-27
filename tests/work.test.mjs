@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { SITE, WORK } from '../src/content/copy.ts';
+import { HOME, SITE, WORK } from '../src/content/copy.ts';
 import { GUIDE } from '../src/content/guide.ts';
 import { PROJECTS, projectById } from '../src/content/projects.ts';
 
@@ -134,26 +134,22 @@ test('the gallery shows the five projects in registry order, featured first', ()
     assert.ok(tagWithHref(cards[i], `/work/${p.id}`), `${p.id} card links to its case page`);
   });
 
-  assert.match(cards[0], /<article class="[^"]*featured/, 'the first card is the featured one');
-  assert.ok(textOf(cards[0]).includes(PROJECTS[0].tagline), 'the featured card carries the tagline');
+  assert.match(cards[0], /<article [^>]*class="[^"]*feature/, 'the first card is the wide one');
   for (let i = 1; i < cards.length; i++) {
-    assert.doesNotMatch(cards[i], /<article class="[^"]*featured/, `card ${i} is not featured`);
+    assert.doesNotMatch(cards[i], /<article [^>]*class="[^"]*feature/, `card ${i} is not wide`);
   }
 });
 
-test('a private project shows a chip, a public one a README link', () => {
+test('a card links only inside the site; a private one says so and names no repository', () => {
   const cards = cardsOf(pages.gallery);
   PROJECTS.forEach((p, i) => {
     const external = openTags(cards[i], 'a').filter((a) => a.includes('target="_blank"'));
+    assert.equal(external.length, 0, `${p.id}: the case page is where links go out`);
+    assert.ok(textOf(cards[i]).includes(HOME.readCase), `${p.id} read the case`);
+    assert.match(cards[i], new RegExp(`data-scope="${p.id}"`), `${p.id} can be asked about`);
     if (p.private) {
-      assert.ok(textOf(cards[i]).includes(WORK.privateRepo), `${p.id} says the repository is private`);
-      assert.equal(external.length, 0, 'a private project links nothing out');
+      assert.ok(textOf(cards[i]).includes(HOME.stamps.private), `${p.id} says the repository is private`);
       assert.doesNotMatch(cards[i], /github\.com/, `no repository link anywhere on the ${p.id} card`);
-    } else {
-      assert.equal(external.length, 1, `${p.id} has exactly one outbound link`);
-      assert.ok(external[0].includes(`href="${p.readmeUrl}"`), `${p.id} links its readmeUrl`);
-      assert.match(external[0], /rel="noopener"/, `${p.id} README link is safe`);
-      assert.ok(textOf(cards[i]).includes(WORK.readmeLink), `${p.id} README label`);
     }
   });
 });
@@ -172,14 +168,18 @@ test('no anchor on either screen is nested inside another', () => {
 test('a case page renders every field of its record', () => {
   const p = projectById('loop');
   const body = textOf(pages.loop);
-  for (const key of ['role', 'name', 'tagline', 'thesis', 'wrong', 'mechanism', 'stack', 'statsNote']) {
+  for (const key of ['role', 'name', 'tagline', 'thesis', 'wrong', 'mechanism']) {
     assert.ok(body.includes(p[key]), `loop ${key}`);
   }
+  for (const part of p.stack.split(' · ')) assert.ok(body.includes(part), `loop stack: ${part}`);
   assert.ok(body.includes(WORK.wrong) && body.includes(WORK.mechanism), 'the two pair labels');
-  assert.equal(p.stats.length, 4);
-  for (const s of p.stats) {
-    assert.ok(body.includes(s.v), `stat ${s.v}`);
-    assert.ok(body.includes(s.l), `stat ${s.l}`);
+  // Loop Conductor shows no run figures; a project that has figures shows each one.
+  assert.equal(p.stats.length, 0);
+  const live = projectById('live');
+  assert.equal(live.stats.length, 4);
+  for (const s of live.stats) {
+    assert.ok(textOf(pages.live).includes(s.v), `stat ${s.v}`);
+    assert.ok(textOf(pages.live).includes(s.l), `stat ${s.l}`);
   }
   assert.match(pages.loop, /<title>Loop Conductor · Nolan Tang<\/title>/);
 
@@ -211,7 +211,10 @@ test('a private case page shows the scope note and links no repository', () => {
     const body = textOf(pages[p.id]);
     assert.ok(body.includes(WORK.privateRepo), `${p.id} lock label`);
     assert.ok(body.includes(p.scope), `${p.id} scope note`);
-    assert.doesNotMatch(markup(pages[p.id]), /github\.com/, `no github link on the ${p.id} case page`);
+    // The header and footer link the GitHub account; the case itself links no repository.
+    const html = markup(pages[p.id]);
+    const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'));
+    assert.doesNotMatch(main, /github\.com/, `no github link in the ${p.id} case`);
     if (p.readme) {
       // Design notes stand in for the private README: shown in full, scrollable, not a clipped preview.
       assert.ok(body.includes(WORK.privateNotes), `${p.id} notes label`);
@@ -315,57 +318,45 @@ test('the case pages walk in a loop and offer both ways out', () => {
 
 const cardFor = (galleryHtml, id) => cardsOf(galleryHtml)[PROJECTS.findIndex((p) => p.id === id)];
 
-test('a cover file replaces the placeholder, on both screens, with no code change', () => {
-  const views = [
-    ['card', cardFor(pages.gallery, COVER_ID)],
-    ['case', markup(pages[COVER_ID])],
-  ];
-  for (const [where, html] of views) {
-    assert.match(html, new RegExp(`<img[^>]+src="${COVER_SRC}"`), `${where} renders the cover`);
-    assert.ok(html.includes('alt="AMM DEX"'), `${where} cover is labelled`);
-    assert.ok(!html.includes(SITE.imageSlot), `${where} drops the slot caption once a file exists`);
-  }
+test('a cover file replaces the placeholder on the case page, with no code change', () => {
+  const html = markup(pages[COVER_ID]);
+  assert.match(html, new RegExp(`<img[^>]+src="${COVER_SRC}"`), 'the case renders the cover');
+  assert.ok(html.includes('alt="AMM DEX"'), 'the cover is labelled');
+  assert.ok(!html.includes(SITE.imageSlot), 'no slot caption once a file exists');
+  // The cards draw the mechanism instead of showing a picture.
+  assert.doesNotMatch(cardFor(pages.gallery, COVER_ID), /<img[^>]+src="\/projects\//);
 });
 
-test('without a cover file the ported diagram stands in, captioned as a slot', () => {
-  const views = [
-    ['amm card', cardFor(noCover.gallery, COVER_ID)],
-    ['amm case', markup(noCover[COVER_ID])],
-  ];
-  for (const [where, html] of views) {
-    assert.match(html, /<figure[^>]*>[\s\S]*?<svg/, `${where} renders ProjectArt`);
-    assert.ok(html.includes(SITE.imageSlot), `${where} says the image is a slot`);
-    assert.doesNotMatch(html, /<img[^>]+src="\/projects\//, `${where} has no cover to show`);
-  }
+test('without a cover file the project drawing stands in, captioned as a slot', () => {
+  const html = markup(noCover[COVER_ID]);
+  assert.match(html, /<figure[^>]*>[\s\S]*?<svg/, 'the case draws the project');
+  assert.ok(html.includes(SITE.imageSlot), 'and says the image is a slot');
+  assert.doesNotMatch(html, /<img[^>]+src="\/projects\//, 'no cover to show');
 });
 
-test('the overview goes single column below 1000px and stacks the card below 560px', () => {
-  const css = read('../src/components/WorkGallery.module.css');
-  assert.match(squash(css), /\.gallery \{[^}]*grid-template-columns: 1fr 1fr/);
-  assert.match(squash(css), /\.featured \{[^}]*grid-column: 1 \/ -1/);
-  const narrow = squash(mediaBlock(css, 1000));
-  assert.match(narrow, /\.gallery \{[^}]*grid-template-columns: 1fr/);
-  assert.match(narrow, /\.gtag \{[^}]*display: none/, 'the featured card degrades to a normal one');
-  const phone = squash(mediaBlock(css, 560));
-  assert.match(phone, /\.gcard,\s*\.featured \{[^}]*grid-template-columns: 1fr/, 'image over text');
+test('the overview shares the home page cards: three across, then two, then one', () => {
+  const css = read('../src/components/Sections.module.css');
+  assert.match(squash(css), /\.cards \{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(squash(mediaBlock(css, 1060)), /\.cards \{[^}]*grid-template-columns: 1fr 1fr/);
+  assert.match(squash(mediaBlock(css, 680)), /\.cards \{[^}]*grid-template-columns: 1fr/);
+  assert.match(read('../src/components/WorkGallery.tsx'), /<ProjectCard /);
 });
 
-test('the case page goes single column below 900px and unsticks the figure', () => {
+test('the case page goes single column below 1060px and unsticks the figure', () => {
   const css = read('../src/components/WorkCase.module.css');
   assert.match(squash(css), /\.case \{[^}]*grid-template-columns: 1\.05fr 1fr/);
-  assert.match(squash(css), /\.fig \{[^}]*position: sticky/);
-  const narrow = squash(mediaBlock(css, 900));
+  assert.match(squash(css), /\.figCol \{[^}]*position: sticky/);
+  const narrow = squash(mediaBlock(css, 1060));
   assert.match(narrow, /\.case \{[^}]*grid-template-columns: 1fr/);
-  assert.match(narrow, /\.fig \{[^}]*position: static/);
+  assert.match(narrow, /\.figCol \{[^}]*position: static/);
 });
 
 test('nothing on either screen can push the page wider than a 375px viewport', () => {
   // No browser here: assert the rules that keep the layout inside the viewport.
-  const gallery = squash(read('../src/components/WorkGallery.module.css'));
+  const cards = squash(read('../src/components/Sections.module.css') + read('../src/components/ProjectCard.module.css'));
   const cover = squash(read('../src/components/ProjectCover.module.css'));
-  const shell = squash(read('../src/components/WorkShell.module.css'));
   assert.match(cover, /\.frame \{[^}]*max-width: 100%/);
-  assert.match(shell, /\.ovBody \{[^}]*overflow: auto/);
-  assert.doesNotMatch(gallery, /min-width:\s*(?:[4-9]\d\d|\d{4,})px/, 'no card wider than a phone');
-  assert.match(squash(mediaBlock(read('../src/components/WorkShell.module.css'), 560)), /padding-left: 16px/);
+  assert.doesNotMatch(cards, /min-width:\s*(?:[4-9]\d\d|\d{4,})px/, 'no card wider than a phone');
+  assert.match(squash(mediaBlock(read('../src/components/WorkCase.module.css'), 680)), /\.page \{[^}]*padding: 18px 16px/);
+  assert.match(squash(read('../src/components/WorkCase.module.css')), /\.rmBody \{[^}]*overflow: auto/, 'a README scrolls inside its box');
 });

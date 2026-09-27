@@ -22,51 +22,42 @@ function mediaBlock(css, px) {
 
 const squash = (s) => s.replace(/\s+/g, ' ');
 
-test('hero is card + guide by default and one column below 1024px', () => {
+test('hero is card + assistant by default, one column below 1060px, and woven together on phones', () => {
   const css = read('../src/components/Hero.module.css');
-  assert.match(squash(css), /\.hero \{[^}]*grid-template-columns: 372px minmax\(0, 1fr\)/);
-  assert.match(squash(mediaBlock(css, 1024)), /\.hero \{[^}]*grid-template-columns: 1fr/);
+  assert.match(squash(css), /\.hero \{[^}]*grid-template-columns: 360px minmax\(0, 1fr\)/);
+  assert.match(squash(mediaBlock(css, 1060)), /\.hero \{[^}]*grid-template-columns: 1fr/);
+  // On a phone the identity column dissolves so the robot sits right under the name.
+  assert.match(squash(mediaBlock(css, 680)), /\.hero \{[^}]*grid-template-columns: 104px minmax\(0, 1fr\)/);
+  const card = squash(mediaBlock(read('../src/components/IdentityCard.module.css'), 680));
+  assert.match(card, /\.me \{ display: contents; \}/);
+  assert.match(card, /\.facts \{[^}]*grid-row: 4/);
+  assert.match(squash(mediaBlock(read('../src/components/Assistant.module.css'), 680)), /\.assistant \{[^}]*grid-row: 3/);
 });
 
-test('the work strip is one scrollable row at every width, narrower tiles on phones', () => {
-  const css = read('../src/components/SelectedWorkStrip.module.css');
-  assert.match(squash(css), /\.tiles \{[^}]*overflow-x: auto/);
-  assert.match(squash(css), /\.track \{[^}]*width: max-content/);
-  assert.match(squash(css), /\.tile \{[^}]*flex: 0 0 300px/);
-  assert.match(squash(mediaBlock(css, 640)), /\.tile \{[^}]*flex-basis: 262px/);
-});
-
-test('the work strip runs edge to edge while its head keeps the content column', () => {
-  const css = squash(read('../src/components/SelectedWorkStrip.module.css'));
-  const strip = css.match(/\.strip \{[^}]*\}/)[0];
-  assert.doesNotMatch(strip, /max-width/, 'the strip itself is no longer held to the content column');
-  assert.doesNotMatch(strip, /padding:[^;]*28px[^;]*28px/, 'no side padding, so the row can reach both edges');
-  const head = css.match(/\.stripHead \{[^}]*\}/)[0];
-  assert.match(head, /max-width: var\(--maxw\)/, 'the head still sits in the content column');
-  assert.match(head, /margin: 0 auto/, 'centred like the rest of the page');
-  assert.match(head, /padding: 0 28px/, 'and keeps the 28px gutter');
-  // The row is full width, so its own gutter has to reproduce where the centred
-  // column starts: half the leftover viewport plus that same 28px.
-  assert.match(css, /\.tiles \{[^}]*max\(28px, calc\(50% - var\(--maxw\) \/ 2 \+ 28px\)\)/);
-  assert.doesNotMatch(css, /\.tiles \{[^}]*margin: 0 -28px/, 'the negative margin belonged to the boxed strip');
-  const phone = squash(mediaBlock(read('../src/components/SelectedWorkStrip.module.css'), 640));
-  for (const sel of ['\\.stripHead', '\\.tiles']) {
-    assert.match(phone, new RegExp(`${sel} \\{[^}]*padding-left: 18px`), `${sel} narrows its gutter on phones`);
-  }
-});
-
-test('the identity card stacks its facts and shrinks the avatar below 640px', () => {
-  const phone = squash(mediaBlock(read('../src/components/IdentityCard.module.css'), 640));
-  assert.match(phone, /\.avatar \{[^}]*width: 92px/);
+test('the identity card sticks only where it fits, and stacks its facts on phones', () => {
+  const css = squash(read('../src/components/IdentityCard.module.css'));
+  assert.match(css, /@media \(min-width: 1061px\) and \(min-height: 860px\) \{ \.me \{ position: sticky;/, 'never sticky taller than the screen');
+  const phone = squash(mediaBlock(read('../src/components/IdentityCard.module.css'), 680));
+  assert.match(phone, /\.polaroid \{[^}]*width: 104px/);
   assert.match(phone, /\.fact \{[^}]*grid-template-columns: 1fr/);
 });
 
-test('the header ask button keeps only its icon below 640px', () => {
-  const phone = squash(mediaBlock(read('../src/app/globals.css'), 640));
-  assert.match(phone, /\.btn-ask \.label \{[^}]*display: none/);
+test('project cards: three across, two below 1060px, one on phones, the first one wide', () => {
+  const css = read('../src/components/Sections.module.css');
+  assert.match(squash(css), /\.cards \{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(squash(mediaBlock(css, 1060)), /\.cards \{[^}]*grid-template-columns: 1fr 1fr/);
+  assert.match(squash(mediaBlock(css, 680)), /\.cards \{[^}]*grid-template-columns: 1fr/);
+  const card = read('../src/components/ProjectCard.module.css');
+  assert.match(squash(card), /\.feature \{[^}]*grid-column: span 2/);
+  assert.match(squash(mediaBlock(card, 680)), /\.feature \{[^}]*grid-column: auto/);
 });
 
-test('reduced motion stills the pulse and the shipping spinner', () => {
+test('the header ask button keeps only its icon below 680px', () => {
+  const phone = squash(mediaBlock(read('../src/components/Header.module.css'), 680));
+  assert.match(phone, /\.askLabel \{[^}]*display: none/);
+});
+
+test('reduced motion stills every animation and transition', () => {
   const css = squash(read('../src/app/globals.css'));
   const at = css.indexOf('@media (prefers-reduced-motion: reduce)');
   assert.notEqual(at, -1, 'no reduced-motion block');
@@ -75,24 +66,20 @@ test('reduced motion stills the pulse and the shipping spinner', () => {
   assert.match(block, /transition: none !important/);
 });
 
-test('globals carry the mock tokens, the grid and both glows', () => {
+test('globals carry both papers, the grid and the vignette', () => {
   const css = squash(read('../src/app/globals.css'));
   assert.match(css, /\[hidden\] \{ display: none !important; \}/);
-  assert.match(css, /--cyan: #7de3f5;/);
-  assert.match(css, /body \{[^}]*background: var\(--bg\)/);
-  assert.equal((css.match(/radial-gradient\(\d+px \d+px at/g) ?? []).length, 2, 'two glows');
+  assert.match(css, /:root \{ --paper: #fbf9f3;/, 'light paper by default');
+  assert.match(css, /@media \(prefers-color-scheme: dark\) \{ :root:not\(\[data-theme="light"\]\) \{ --paper: #171614;/, 'night paper when the system asks');
+  assert.match(css, /:root\[data-theme="dark"\] \{ --paper: #171614;/, 'or when the reader picks it');
+  assert.match(css, /body \{[^}]*background: var\(--paper\)/);
   assert.equal((css.match(/1px, transparent 1px\)/g) ?? []).length, 2, 'grid lines');
+  assert.match(css, /radial-gradient\(ellipse at center, transparent 58%, var\(--vignette\) 100%\)/);
 });
 
-test('the home guide is a fixed-height window: only its thread scrolls', () => {
-  const css = squash(read('../src/components/GuideConsole.module.css'));
-  assert.match(css, /\.console \{[^}]*height: clamp\(/, 'the window has a height of its own');
-  assert.match(css, /\.console \{[^}]*grid-template-rows: auto minmax\(0, 1fr\) auto;/, 'the thread row takes what is left; the composer is the last row');
-  assert.match(css, /\.thread \{[^}]*overflow-y: auto/);
-  assert.match(css, /\.thread \{[^}]*overscroll-behavior: contain/, 'reaching the end does not scroll the page');
-  assert.match(css, /\.thread \{[^}]*min-height: 0/);
-  const home = read('../src/components/GuideConsole.tsx');
-  const thread = home.indexOf('className={styles.thread}');
-  const composer = home.indexOf('<form className={styles.composer}');
-  assert.ok(thread > 0 && thread < home.indexOf('{lines > 0 ?') && home.indexOf('{ask.starters ? (') < composer, 'lines and starting points share the scrolling row');
+test('the chat is not a fixed window: the page grows with it and the composer floats at the bottom', () => {
+  const css = squash(read('../src/components/Assistant.module.css'));
+  assert.doesNotMatch(css, /\.chat \{[^}]*height:/, 'no fixed height');
+  assert.match(css, /\.composerWrap \{[^}]*position: sticky;[^}]*bottom: 14px/);
+  assert.match(css, /\.gutter svg \{[^}]*position: sticky;/, 'the robot keeps to the newest line');
 });

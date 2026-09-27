@@ -3,15 +3,15 @@ export const SITE = {
   name: 'Nolan Tang',
   wordmark: 'Nolan',
   title: 'Nolan Tang',
-  location: 'Shenzhen, China · UTC+8 · Open to relocation and to remote',
+  location: 'Open to relocation and to remote',
   description:
-    'Nolan Tang, a product-minded software engineer with experience in fintech, blockchain and AI. Ask the site guide about the work, the stack, or how to reach him.',
-  askLabel: 'Any question?',
+    'Nolan Tang, a product-minded software engineer with experience in fintech, blockchain and AI. Ask his assistant about the work, the stack, or how to reach him.',
+  askLabel: 'Ask my assistant',
+  workNav: 'Work',
   workTitle: 'Selected Work',
   workSubtitle: 'Four systems, one recurring problem: keeping state correct when the environment is not reliable.',
-  stripTitle: 'Selected work',
   stripOpenAll: 'open all →',
-  footNote: "Project images are placeholders · Figures marked self-reported come from Nolan's own run ledger.",
+  footNote: "Drawn by hand, built with Next.js · answers from Nolan's assistant are written by an AI model.",
   imageSlot: 'image slot · replace with a product screenshot',
 } as const;
 
@@ -37,27 +37,55 @@ export const WORK = {
   openFullSize: 'Open full size ↗',
 } as const;
 
-// The identity card on the home page: short forms of what LOOKING and
-// SITE.location already say, plus the avatar's alt text.
+// The identity card on the home page, in Nolan's words: what he is after, what he
+// is betting on, what he is strongest at. The assistant is given these too (prompt.ts).
 export const IDENTITY = {
-  eyebrow: 'Nolan Tang · identity',
   status: 'Open to work',
-  role: 'Product-minded software engineer · fintech × AI',
-  avatarAlt: 'Nolan, drawn as a small horned creature resting its chin on its hands',
+  role: 'Product-minded software engineer · fintech × web3 × AI',
+  avatarAlt: 'Nolan Tang',
   facts: [
-    { label: 'Based', text: 'Shenzhen, China · UTC+8' },
     {
       label: 'Looking for',
-      text: 'Backend or full-stack work where being wrong has a cost: payments & settlement, trading, AI infrastructure',
+      text: 'Product-minded full-stack work where being wrong has a cost: payments, trading, DeFi, AI infra.',
     },
     {
-      label: 'Experience',
-      text: 'TypeScript · Node day to day · a year of production work in a team · four systems taken end to end solo',
+      label: 'Betting on',
+      text: 'Blockchain ending up inside mainstream finance. I want to be building the rails when it does.',
+    },
+    {
+      label: 'Strength',
+      text: 'Keeping money systems correct: idempotent payouts · consistent concurrent writes · event-driven settlement · on-chain and off-chain state in sync.',
     },
     { label: 'Open to', text: 'Relocation · remote' },
   ],
   ctaHire: 'Hire me',
   ctaCopy: 'copy email',
+} as const;
+
+// The home page around the identity card and the assistant.
+export const HOME = {
+  thatsMe: "that's me!",
+  polaroidCaption: 'Nolan Tang',
+  workTitle: "Things I've",
+  workAccent: 'built',
+  readCase: 'Read the case →',
+  askAbout: '✎ ask about it',
+  notesTitle: 'Notes from',
+  notesAccent: 'building things.',
+  allPosts: 'all posts →',
+  stamps: { live: 'LIVE', private: 'private repo', open: 'open source', capstone: 'capstone' },
+  theme: { toDark: 'Switch to dark theme', toLight: 'Switch to light theme' },
+  bye: 'Thanks for stopping by.',
+  byeLead: 'Email is the fastest way:',
+} as const;
+
+// Words written inside each project's little drawing on its card.
+export const ART = {
+  platter: { chains: ['Eth', 'Base', 'RH'], api: 'API builds the tx', unsigned: '(unsigned)', sign: 'you sign', note: ['no keys on', 'the server!'] },
+  loop: { router: 'router', steps: ['spec', 'make', 'review', 'fix'], note: ['checks', 'only here'], human: 'human signs off' },
+  guide: { note: 'answers from the site only' },
+  live: { from: 'EN', to: '中', note: 'original audio never off' },
+  amm: { formula: 'x · y = k', note: 'or revert', x: 'x', y: 'y' },
 } as const;
 
 // Chrome for the /blog screens. Posts themselves are Markdown files in src/content/blog/.

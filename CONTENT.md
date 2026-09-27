@@ -34,8 +34,10 @@ Then:
 - **Private project** → set `private: true`, write a `scope` note, and leave `repos` empty.
   The case page shows a lock and the scope note; no repository link is rendered anywhere.
 
-Nothing else is needed. `/work`, `/work/<id>`, `generateStaticParams`, the landing
-strip and the previous/next loop all read the same array.
+Nothing else is needed. `/work`, `/work/<id>`, `generateStaticParams`, the home page
+cards and the previous/next loop all read the same array. A new project also wants a small
+diagram for its card: add an entry to `PROJECT_ART` in `src/lib/sketchArt.ts` (the words in
+it go in `ART` in `src/content/copy.ts`); until then its card shows no drawing.
 
 ## Covers: the image slot
 

@@ -13,6 +13,7 @@ import { PROJECTS } from "./projects.ts";
 export type AnswerKey =
   | "payments"
   | "agents"
+  | "work"
   | "code"
   | "looking"
   | "contact"
@@ -28,13 +29,20 @@ export type Chip = { key: AnswerKey; label: string };
 export const GUIDE = {
   pill: "AI · answers from site content",
   placeholder: "Ask about the work, the stack, or how to reach Nolan",
+  // The composer's placeholder types these in turn while it waits.
+  examples: [
+    "e.g. Is he a fit for a payments backend role?",
+    "e.g. What's the hardest decision in Platter?",
+    "e.g. Does he work with AI agents?",
+    "e.g. Is he open to remote work?",
+  ],
   inputLabel: "Your question",
   send: "Send",
-  typing: "guide is typing…",
+  typing: "assistant is typing…",
   greeting:
-    "I'm Nolan's site guide. Tell me what you're hiring for or what you want to see, and I'll take you there.",
+    "I'm Nolan's assistant. Tell me what you're hiring for or what you want to see, and I'll take you there.",
   greetingFine:
-    "Answers are written by an AI model from this site's own content, in the language you ask in. It can get things wrong — the case pages are the source. It never sends anything on Nolan's behalf.",
+    "I answer from Nolan's own site, in the language you ask in, and I can get things wrong — the case pages are the source. I never send anything on his behalf.",
   // "Scoped to <name>. Pick a question…" — split so the name renders bold.
   scopedLead: "Scoped to ",
   scopedTail: ". Pick a question below or type your own.",
@@ -50,17 +58,21 @@ export const GUIDE = {
   // The location line is the same fact the footer states; it stays in one place.
   location: SITE.location,
 
-  // The home page, where the guide answers in place instead of in the drawer.
+  // The home page: the assistant walks in and says hello; the chat opens only when asked.
   hero: {
-    who: "Nolan's site guide",
+    who: "Nolan's assistant",
     online: "Online",
     off: "Switched off",
-    headline: "Tell me what you're hiring for, or what you want to see.",
-    headlineAccent: "I'll take you there.",
-    quickLabel: "Quick questions",
-    scopedLabel: "Scoped to",
-    startLabel: "Or start from a project",
-    askProject: "ask about this project ↑",
+    welcome: { hi: "Hi! Welcome to Nolan's site.", q: "Got a question about him? Just ask me.", cta: "Ask me →" },
+    back: { hi: "I'll be right here.", q: "Anything else, just click me.", cta: "Back to the chat →" },
+    stageCaption: "Nolan's assistant · AI · answers from his own site",
+    robotLabel: "Nolan's assistant, drawn as a small robot. Click to chat.",
+    greetLead: "Hi! I'm Nolan's assistant. Tell me what you're hiring for, or what you want to see —",
+    greetAccent: "I'll take you there.",
+    hideChat: "hide chat ↘",
+    scopedLabel: "About",
+    showMe: "show me ↓",
+    here: "here!",
   },
 
   // "Under the hood": what the server did for one answer, shown beneath it.
@@ -100,8 +112,7 @@ export const GUIDE = {
     items: [
       {
         id: "loop",
-        // The four figures are Loop Conductor's own stats; "self-reported" is their provenance.
-        text: "one model call decides only which action; everything with a side effect is deterministic Node. 17 tasks run, 10 merged, $248.67 total spend (self-reported).",
+        text: "an agent-led workflow: a router agent picks each next step with real autonomy, the harness only runs the checks that can’t be left to an agent, and a human signs off before anything merges.",
       },
       {
         id: "live",
@@ -129,6 +140,11 @@ export const GUIDE = {
     ],
   },
 
+  work: {
+    intro: "Two to look at first; the rest are one click away.",
+    all: "All work →",
+  },
+
   code: {
     all: "All public code lives under one GitHub account.",
     private: "private repository",
@@ -139,12 +155,11 @@ export const GUIDE = {
   contact: {
     intro: "Email is the fastest route; the subject line is pre-filled.",
     email: "Email",
-    // Handles read off the links.ts URLs; X has no public handle yet, so the row
-    // shows the address links.ts holds.
+    // Handles read off the links.ts URLs.
     rows: [
       { label: "LinkedIn", href: LINKEDIN, text: "nolan-tang" },
       { label: "GitHub", href: GITHUB, text: "jupiter-Pulin" },
-      { label: "X", href: X, text: X.replace(/^https?:\/\//, "") },
+      { label: "X", href: X, text: "will_pu7490" },
     ],
   },
 
@@ -164,7 +179,7 @@ export const GUIDE = {
   // copyLang() in src/lib/askClient.ts picks the language.
   systemError: { zh: "系统出现了问题，请稍后重试。", en: "Something went wrong. Please try again later." },
   limited: { zh: "今日额度已用完", en: "Today's quota is used up." },
-  unavailable: { zh: "问答暂时关闭。", en: "The guide is switched off for now." },
+  unavailable: { zh: "问答暂时关闭。", en: "Nolan's assistant is off for now." },
   entries: {
     zh: { lead: "你可以先看看这些：", blog: "博客", linkedin: "领英", x: "推特", work: "项目简介" },
     en: { lead: "In the meantime:", blog: "Blog", linkedin: "LinkedIn", x: "X", work: "Projects" },
@@ -173,14 +188,19 @@ export const GUIDE = {
   // the daily quota the home page states is the server's default visitor limit.
   limits: { maxQuestionChars: 100, visitorDailyQuestions: 10 },
 
+  // Three starters, one per visitor intent: fit, evidence, contact. Everything
+  // else is offered as a follow-up under an answer, two at most.
   chips: {
     global: [
-      { key: "payments", label: "I'm hiring for a payments / fintech backend role" },
-      { key: "agents", label: "Show me the AI agent work" },
-      { key: "code", label: "Where's the code?" },
-      { key: "looking", label: "What is Nolan looking for?" },
+      { key: "looking", label: "Is he a fit for my role?" },
+      { key: "work", label: "What has he built?" },
       { key: "contact", label: "How do I reach him?" },
     ] as Chip[],
+  },
+  follow: {
+    payments: "Show me the fintech-relevant work",
+    agents: "Show me the AI agent work",
+    code: "Where's the code?",
   },
 } as const;
 
@@ -194,9 +214,35 @@ export const scopedChips = (name: string): Chip[] => [
   { key: "decision", label: `Hardest decision in ${name}?` },
   { key: "stack", label: "What is the stack?" },
   { key: "status", label: "Is it in production?" },
-  { key: "code", label: "Where is the code?" },
   { key: "all", label: GUIDE.allQuestions },
 ];
+
+const [FIT, WORK_CHIP, CONTACT] = GUIDE.chips.global;
+const followChip = (key: keyof typeof GUIDE.follow): Chip => ({ key, label: GUIDE.follow[key] });
+
+/**
+ * At most two follow-ups under an answer, picked by what it was about. Inside a
+ * project they are that project's other questions; elsewhere, the next thing a
+ * visitor on that topic usually wants.
+ */
+export function followUps(key: AnswerKey, scopeName: string | null): Chip[] {
+  if (scopeName && key !== "all") return scopedChips(scopeName).filter((c) => c.key !== key && c.key !== "all").slice(0, 2);
+  switch (key) {
+    case "looking":
+      return [followChip("payments"), WORK_CHIP];
+    case "work":
+      return [followChip("agents"), followChip("code")];
+    case "contact":
+      return [FIT, WORK_CHIP];
+    case "payments":
+      return [CONTACT, followChip("code")];
+    case "agents":
+    case "code":
+      return [WORK_CHIP, CONTACT];
+    default:
+      return [WORK_CHIP, CONTACT];
+  }
+}
 
 export const openLabel = (name: string) => `Open ${name} ↗`;
 export const linkLabel = (label: string) => `${label} ↗`;

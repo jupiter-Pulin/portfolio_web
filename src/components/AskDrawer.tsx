@@ -10,10 +10,10 @@ import {
   useRef,
   useState,
 } from "react";
-import type { FormEvent, ReactNode } from "react";
+import type { CSSProperties, FormEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { SITE, WORK } from "@/content/copy";
-import { GUIDE, type AnswerKey, type Chip } from "@/content/guide";
+import { HOME, WORK } from "@/content/copy";
+import { GUIDE, followUps, type AnswerKey, type Chip } from "@/content/guide";
 import { PROJECTS, projectById } from "@/content/projects";
 import {
   askBody,
@@ -33,8 +33,11 @@ import { openIntro, type Action, type Block, type Run } from "@/lib/guideAnswer"
 import { chipsFor, echoLabel } from "@/lib/guideRoute";
 import { shortAddress } from "@/lib/answerMarkup";
 import { inlineNodes } from "@/lib/inlineMarkup";
+import { HUE_VAR } from "@/lib/sketchArt";
 import { CopyEmailButton } from "./CopyEmailButton";
 import { Icon } from "./Icon";
+import { Drawing } from "./sketch/Drawing";
+import { Sketch } from "./sketch/Sketch";
 import styles from "./AskDrawer.module.css";
 
 /** The home page console announces itself so openAsk can focus it instead of the drawer. */
@@ -267,6 +270,8 @@ export function AskProvider({ children }: { children: ReactNode }) {
         isOpen={isOpen}
         msgs={msgs}
         chips={chips}
+        starters={starters}
+        scopeId={scopeId}
         onChip={onChip}
         onPick={onPick}
         onAsk={onAsk}
@@ -282,6 +287,8 @@ function AskDrawer({
   isOpen,
   msgs,
   chips,
+  starters,
+  scopeId,
   onChip,
   onPick,
   onAsk,
@@ -292,6 +299,8 @@ function AskDrawer({
   isOpen: boolean;
   msgs: ChatMsg[];
   chips: Chip[];
+  starters: boolean;
+  scopeId: string | null;
   onChip: (chip: Chip) => void;
   onPick: (id: string, then: AnswerKey) => void;
   onAsk: (typed: string) => void;
@@ -305,7 +314,9 @@ function AskDrawer({
 
   // The panel is in the DOM either way, so it is focusable the moment it opens.
   useEffect(() => {
-    if (isOpen) input.current?.focus();
+    if (!isOpen) return;
+    input.current?.focus();
+    loadHandFontCJK();
   }, [isOpen]);
 
   useEffect(() => {
@@ -329,11 +340,13 @@ function AskDrawer({
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const typed = draft.trim();
-    // One question at a time: while the guide is answering, the draft stays put.
+    // One question at a time: while the assistant is answering, the draft stays put.
     if (!typed || isPending(msgs)) return;
     setDraft("");
     onAsk(typed);
   };
+
+  const scope = scopeId ? projectById(scopeId) : undefined;
 
   return (
     <>
@@ -347,34 +360,28 @@ function AskDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby="ask-title"
+        inert={!isOpen}
       >
         <div className={styles.askHead}>
+          <Drawing kind="robot-head" className={styles.head} />
           <div>
-            <h2 id="ask-title">{SITE.askLabel}</h2>
-            <span className={styles.pill}>{GUIDE.pill}</span>
+            <h2 id="ask-title">{GUIDE.hero.who}</h2>
+            <span className={`sk ${styles.pill}`}>
+              <Sketch r={20} w={1.6} hatch="var(--yellow)" gap={7} hw={1.4} draw={false} />
+              {GUIDE.pill}
+            </span>
           </div>
-          <button className="icon-btn" type="button" onClick={onClose} aria-label={WORK.close}>
+          <button className="icon-btn sk" type="button" onClick={onClose} aria-label={WORK.close}>
+            <Sketch shape="circle" w={2} draw={false} />
             <Icon name="close" />
           </button>
         </div>
         <div className={styles.msgs} ref={transcript} aria-live="polite">
-          {msgs.map((m) => (
-            <Bubble key={m.key} msg={m} go={{ open: onOpenProject, nav: onNavigate }} onPick={onPick} />
-          ))}
+          <Thread msgs={msgs} go={{ open: onOpenProject, nav: onNavigate }} onPick={onPick} onChip={onChip} scopeName={scope?.name ?? null} />
+          {starters ? <Starters chips={chips} onChip={onChip} scopeName={scope?.name ?? null} /> : null}
         </div>
-        <div className={styles.chips}>
-          {chips.map((chip) => (
-            <button
-              className="chip"
-              type="button"
-              key={chip.key + chip.label}
-              onClick={() => onChip(chip)}
-            >
-              {chip.label}
-            </button>
-          ))}
-        </div>
-        <form className={styles.askForm} onSubmit={submit}>
+        <form className={`sk ${styles.askForm}`} onSubmit={submit}>
+          <Sketch fill="var(--white)" r={16} w={2.4} draw={false} />
           <input
             ref={input}
             type="text"
@@ -385,7 +392,8 @@ function AskDrawer({
             maxLength={GUIDE.limits.maxQuestionChars}
             aria-label={GUIDE.inputLabel}
           />
-          <button className="btn btn-primary sm" type="submit">
+          <button className="btn btn-ink sk sm" type="submit">
+            <Sketch fill="var(--ink)" r={16} draw={false} />
             {GUIDE.send}
           </button>
         </form>
@@ -394,10 +402,77 @@ function AskDrawer({
   );
 }
 
-/** Where an action chip can take the visitor: a case page, or another page of the site. */
-export type Go = { open: (id: string) => void; nav: (href: string) => void };
+/** Chinese answers are written in LXGW WenKai, fetched the first time the assistant is opened. */
+const CJK_FONT = "https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css";
+export function loadHandFontCJK() {
+  if (typeof document === "undefined" || document.getElementById("cjk-hand")) return;
+  const link = document.createElement("link");
+  link.id = "cjk-hand";
+  link.rel = "stylesheet";
+  link.href = CJK_FONT;
+  document.head.appendChild(link);
+}
 
-/** One transcript line, shared by the drawer and the home page console. */
+/** Where an action can take the visitor: a case page, another page of the site, or (on the home page) a card to circle. */
+export type Go = { open: (id: string) => void; nav: (href: string) => void; show?: (id: string) => void };
+
+// Chips lean a little, alternately, like sticky notes.
+const lean = (i: number) => ({ "--rot": `${[-1, 0.8, -0.6, 1.1][i % 4]}deg`, "--d": `${120 + i * 90}ms` }) as CSSProperties;
+
+/** The starting questions: three for the whole site, or the questions about the project in scope. */
+export function Starters({ chips, onChip, scopeName }: { chips: Chip[]; onChip: (chip: Chip) => void; scopeName: string | null }) {
+  return (
+    <div className={styles.starters}>
+      {scopeName ? <span className={styles.label}>{`${GUIDE.hero.scopedLabel} ${scopeName}`}</span> : null}
+      {chips.map((chip, i) => (
+        <button className="chip sk pop" type="button" key={chip.key + chip.label} style={lean(i)} onClick={() => onChip(chip)}>
+          <Sketch r={16} w={2} fill="var(--white)" hatch="var(--yellow)" gap={7} draw={false} />
+          {chip.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The conversation, shared by the drawer and the home page: every line, then at
+ * most two follow-up questions under the newest answer.
+ */
+export function Thread({
+  msgs,
+  go,
+  onPick,
+  onChip,
+  scopeName,
+}: {
+  msgs: ChatMsg[];
+  go: Go;
+  onPick: (id: string, then: AnswerKey) => void;
+  onChip: (chip: Chip) => void;
+  scopeName: string | null;
+}) {
+  const last = msgs[msgs.length - 1];
+  const follow = last?.answer && !isPending(msgs) ? followUps(last.answer.key, scopeName) : [];
+  return (
+    <>
+      {msgs.map((m) => (
+        <Bubble key={m.key} msg={m} go={go} onPick={onPick} />
+      ))}
+      {follow.length ? (
+        <div className={styles.follow} key={`follow-${last.key}`}>
+          {follow.map((chip, i) => (
+            <button className="chip sk pop" type="button" key={chip.key + chip.label} style={lean(i + 2)} onClick={() => onChip(chip)}>
+              <Sketch r={16} w={1.8} hatch="var(--yellow)" gap={7} draw={false} />
+              {chip.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+/** One transcript line, shared by the drawer and the home page. */
 export function Bubble({
   msg,
   go,
@@ -408,18 +483,37 @@ export function Bubble({
   onPick: (id: string, then: AnswerKey) => void;
 }) {
   if (msg.typing) {
-    return <div className={`${styles.msg} ${styles.guide} ${styles.typing}`}>{msg.typing}</div>;
+    return (
+      <div className={`${styles.row} ${styles.guideRow}`} data-msg="">
+        <div className={`sk ${styles.msg} ${styles.typing}`} aria-label={msg.typing}>
+          <Sketch shape="left" fill="var(--white)" c="var(--bubble)" w={2.2} draw={false} />
+          <i />
+          <i />
+          <i />
+        </div>
+      </div>
+    );
   }
   if (msg.who === "you") {
     // The visitor's own words, as text: nothing in them is ever parsed as markup.
-    return <div className={`${styles.msg} ${styles.you}`}>{msg.text}</div>;
+    return (
+      <div className={`${styles.row} ${styles.youRow}`} data-msg="">
+        <div className={`sk ${styles.msg} ${styles.you}`}>
+          <Sketch shape="right" fill="var(--paper-2)" c="var(--bubble)" w={2.2} draw={false} />
+          {msg.text}
+        </div>
+      </div>
+    );
   }
   return (
-    <div className={`${styles.msg} ${styles.guide}`}>
-      {(msg.blocks ?? []).map((block, i) => (
-        <BlockNode key={i} block={block} go={go} onPick={onPick} />
-      ))}
-      {msg.meta ? <Hud meta={msg.meta} /> : null}
+    <div className={`${styles.row} ${styles.guideRow}`} data-msg="">
+      <div className={`sk ${styles.msg} ${styles.guide}`}>
+        <Sketch shape="left" fill="var(--white)" c="var(--ink)" w={2.4} draw={false} />
+        {(msg.blocks ?? []).map((block, i) => (
+          <BlockNode key={i} block={block} go={go} onPick={onPick} />
+        ))}
+        {msg.meta ? <Hud meta={msg.meta} /> : null}
+      </div>
     </div>
   );
 }
@@ -532,7 +626,7 @@ function BlockNode({
             ))}
           </ol>
           {block.note ? <p className={styles.rpNote}>{block.note}</p> : null}
-          <div className={styles.rpActions}>
+          <div className={styles.actions}>
             {block.actions.map((a, i) => (
               <ActionChip key={i} action={a} go={go} />
             ))}
@@ -554,24 +648,35 @@ function BlockNode({
           ))}
         </ul>
       );
-    case "actions":
+    case "actions": {
+      // A project the answer points at is a small card; everything else is a chip.
+      const cards = block.actions.filter((a): a is Extract<Action, { t: "open" }> => a.t === "open");
+      const rest = block.actions.filter((a) => a.t !== "open");
       return (
-        <div className={styles.actions}>
-          {block.actions.map((a, i) => (
-            <ActionChip key={i} action={a} go={go} />
-          ))}
-        </div>
+        <>
+          {cards.length ? (
+            <div className={styles.minis}>
+              {cards.map((a) => (
+                <MiniCard key={a.id} id={a.id} go={go} />
+              ))}
+            </div>
+          ) : null}
+          {rest.length ? (
+            <div className={styles.actions}>
+              {rest.map((a, i) => (
+                <ActionChip key={i} action={a} go={go} />
+              ))}
+            </div>
+          ) : null}
+        </>
       );
+    }
     case "picks":
       return (
         <div className={styles.actions}>
           {PROJECTS.map((p) => (
-            <button
-              className="chip"
-              type="button"
-              key={p.id}
-              onClick={() => onPick(p.id, block.then)}
-            >
+            <button className="chip sk" type="button" key={p.id} onClick={() => onPick(p.id, block.then)}>
+              <Sketch r={16} w={1.8} hatch={HUE_VAR[p.hue]} gap={7} draw={false} />
               {p.name}
             </button>
           ))}
@@ -580,33 +685,66 @@ function BlockNode({
   }
 }
 
-/** What the guide can offer: a case page, a site page, mail, the clipboard, a link, or a placeholder. */
+/** A project an answer points at: its name and short line, the case page, and on the home page its card. */
+function MiniCard({ id, go }: { id: string; go: Go }) {
+  const p = projectById(id);
+  if (!p) return null;
+  return (
+    <div className={`sk ${styles.mini}`}>
+      <Sketch fill="var(--white)" r={12} w={2} band={8} bandColor={HUE_VAR[p.hue]} draw={false} />
+      <b className={styles.miniName}>{p.name}</b>
+      <p className={styles.miniShort}>{p.short}</p>
+      <div className={styles.miniActs}>
+        <button type="button" className="link-btn" onClick={() => go.open(p.id)}>
+          {HOME.readCase}
+        </button>
+        {go.show ? (
+          <button type="button" className={styles.showMe} onClick={() => go.show?.(p.id)}>
+            {GUIDE.hero.showMe}
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+/** What the assistant can offer: a case page, a site page, mail, the clipboard or a link. */
 function ActionChip({ action, go }: { action: Action; go: Go }) {
-  const amber = "amber" in action && action.amber ? " amber" : "";
+  const ink = "amber" in action && action.amber;
+  const sketch = ink ? (
+    <Sketch r={16} fill="var(--ink)" draw={false} />
+  ) : (
+    <Sketch r={16} w={1.8} hatch="var(--yellow)" gap={7} draw={false} />
+  );
+  const cls = ink ? "btn btn-ink sk sm" : "chip sk";
   switch (action.t) {
     case "mail":
       return (
-        <a className={`chip${amber}`} href={action.href}>
+        <a className={cls} href={action.href}>
+          {sketch}
           {action.label}
         </a>
       );
     case "link":
       return (
-        <a className={`chip${amber}`} href={action.href} target="_blank" rel="noopener">
+        <a className={cls} href={action.href} target="_blank" rel="noopener">
+          {sketch}
           {action.label}
         </a>
       );
     case "copy":
-      return <CopyEmailButton className="chip" label={action.label} />;
+      return <CopyEmailButton className="chip sk" label={action.label} sketch />;
     case "open":
       return (
-        <button className="chip" type="button" onClick={() => go.open(action.id)}>
+        <button className={cls} type="button" onClick={() => go.open(action.id)}>
+          {sketch}
           {action.label}
         </button>
       );
     case "nav":
       return (
-        <button className="chip" type="button" onClick={() => go.nav(action.href)}>
+        <button className={cls} type="button" onClick={() => go.nav(action.href)}>
+          {sketch}
           {action.label}
         </button>
       );

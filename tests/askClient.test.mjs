@@ -205,7 +205,12 @@ test('the transcript around one request: placeholder, then the outcome in place'
 
   const answered = settleMsgs(pending, { kind: 'answer', key: 'stack', scopeId: 'amm', answer: 'Node only.' }, { scopeId: null, langSample: '技术栈是什么' });
   assert.equal(answered.scopeId, 'amm');
-  assert.deepEqual(answered.msgs[2], { key: 2, who: 'guide', blocks: modelAnswerBlocks('Node only.', 'stack', 'amm') });
+  assert.deepEqual(answered.msgs[2], {
+    key: 2,
+    who: 'guide',
+    blocks: modelAnswerBlocks('Node only.', 'stack', 'amm'),
+    answer: { key: 'stack', scopeId: 'amm' },
+  }, 'an answer remembers what it was about, for its follow-ups');
   assert.ok(!answered.msgs.some((m) => m.typing));
   assert.deepEqual(answered.msgs.slice(0, 2), pending.slice(0, 2));
 
@@ -219,6 +224,7 @@ test('the transcript around one request: placeholder, then the outcome in place'
     assert.deepEqual(zh.msgs[2].blocks, build('zh'));
     const en = settleMsgs(pending, { kind }, { scopeId: null, langSample: null });
     assert.deepEqual(en.msgs[2].blocks, build('en'));
+    assert.ok(!('answer' in en.msgs[2]), `${kind} offers no follow-ups`);
   }
 
   // The network path sets no extra timer: nothing in askClient waits TYPING_MS.
@@ -249,13 +255,13 @@ test('the drawer sends typed questions, chips and picks to /api/ask and nothing 
 
   const flat = src.replace(/\s+/g, ' ');
   assert.match(flat, /closeAsk\(\); router\.push\(`\/work\/\$\{id\}`\);/);
-  assert.match(src, /styles\.you\}`\}>\{msg\.text\}</);
+  assert.match(src.replace(/\s+/g, ' '), /styles\.you\}`\}> <Sketch [^>]*\/> \{msg\.text\} </, 'the visitor\'s words are text');
   assert.doesNotMatch(src, /dangerouslySetInnerHTML/);
   assert.match(src, /role="dialog"/);
 
   const dir = fileURLToPath(new URL('../src/components/', import.meta.url));
-  for (const f of readdirSync(dir)) {
-    const text = readFileSync(join(dir, f), 'utf8');
+  for (const f of walk(dir)) {
+    const text = readFileSync(f, 'utf8');
     assert.ok(!text.includes('系统出现了问题'), f);
     assert.ok(!text.includes('今日额度已用完'), f);
     if (/\.tsx?$/.test(f)) assert.doesNotMatch(text, /\b(100|6000)\b/, `${f} spells a limit`);
@@ -266,45 +272,34 @@ test('the drawer sends typed questions, chips and picks to /api/ask and nothing 
   assert.match(read('../src/server/ask/config.ts'), /"ASK_MAX_QUESTION_CHARS", GUIDE\.limits\.maxQuestionChars/);
 });
 
-test('the home console offers its starting points until something is asked, and again when a project is opened', () => {
+test('the assistant offers three starters until something is asked, and a project\'s questions when one is opened', () => {
   const drawer = read('../src/components/AskDrawer.tsx');
   const begin = drawer.slice(drawer.indexOf('const begin = useCallback('), drawer.indexOf('const finish = useCallback('));
   assert.match(begin, /setStarters\(false\);/, 'a question going up hides them');
   for (const name of ['onAsk', 'onChip', 'onPick']) assert.match(callback(drawer, name), /begin\(/, `${name} goes through begin`);
   assert.match(callback(drawer, 'openAsk'), /if \(nextScope !== undefined\) setStarters\(true\);/, 'a project opened from the page brings them back');
 
-  const home = read('../src/components/GuideConsole.tsx');
-  const gate = home.indexOf('{ask.starters ? (');
-  const composer = home.indexOf('<form className={styles.composer}');
-  assert.ok(gate > 0 && gate < composer, 'one gate, above the composer');
-  const rows = home.slice(gate, composer);
-  for (const part of ['GUIDE.hero.quickLabel', 'ask.chips.map', 'GUIDE.hero.startLabel', 'PROJECTS.map']) {
-    assert.ok(rows.includes(part), `${part} sits behind it`);
-  }
-  assert.equal((home.match(/styles\.quick\b/g) ?? []).length, 2, 'no row is left outside it');
-  // A chip pressed from the keyboard disappears with its row; the focus goes to the composer instead of the body.
-  assert.match(rows, /if \(e\.detail === 0\) input\.current\?\.focus\(\{ preventScroll: true \}\);/);
+  // Three starters, one per intent; the projects are the cards below, not chips.
+  assert.deepEqual(GUIDE.chips.global.map((c) => c.key), ['looking', 'work', 'contact']);
+  const home = read('../src/components/Assistant.tsx');
+  assert.match(home, /\{ask\.starters \? <Starters chips=\{ask\.chips\}/, 'one gate, fed by the provider');
+  assert.doesNotMatch(home, /PROJECTS\.map/, 'no row of project chips');
+  assert.match(drawer, /\{starters \? <Starters chips=\{chips\}/, 'the drawer shows them the same way');
 });
 
-test('the home console folds its greeting away once something is asked, and keeps who is answering', () => {
+test('the assistant folds its fine print away once something is asked, and keeps who is answering', () => {
   const greeting = [{ key: 0, who: 'guide', blocks: [] }];
   assert.equal(hasAsked([]), false);
   assert.equal(hasAsked(greeting), false, 'a guide line alone, such as "← All questions", asks nothing');
   assert.equal(hasAsked(pendingMsgs(greeting, 'hi')), true, 'the question counts from the moment it goes up');
 
-  const home = read('../src/components/GuideConsole.tsx');
-  const gate = home.indexOf('<div className={`${styles.greet}${hasAsked(ask.msgs) ? ` ${styles.gone}` : ""}`}>');
-  assert.ok(gate > 0, 'the greeting is wrapped and folded by hasAsked');
-  const folded = home.slice(gate, home.indexOf('{lines > 0 ?'));
-  assert.ok(folded.includes('GUIDE.hero.headline') && folded.includes('GUIDE.greetingFine'), 'headline and fine print fold');
-  const who = home.indexOf('className={styles.who}');
-  assert.ok(who > 0 && who < gate, 'the name, pill and status stay above the fold');
-
-  const css = read('../src/components/GuideConsole.module.css').replace(/\s+/g, ' ');
-  assert.match(css, /\.greet \{[^}]*grid-template-rows: 1fr;[^}]*transition: grid-template-rows/, 'the height slides');
-  assert.match(css, /\.greet > div \{[^}]*min-height: 0;[^}]*overflow: hidden/);
-  assert.match(css, /\.greet\.gone \{[^}]*grid-template-rows: 0fr;[^}]*visibility: hidden;/, 'folded, and gone for screen readers too');
-  assert.doesNotMatch(css, /!important/, 'the reduced-motion reset still stills the slide');
+  const home = read('../src/components/Assistant.tsx');
+  assert.match(home, /const asked = hasAsked\(ask\.msgs\);/);
+  assert.match(home, /className=\{`\$\{styles\.desk\}\$\{asked \? ` \$\{styles\.chatting\}` : ""\}`\}/, 'asking marks the desk');
+  assert.ok(home.indexOf('GUIDE.hero.who') < home.indexOf('GUIDE.greetingFine'), 'who is answering stays above the greeting');
+  const css = read('../src/components/Assistant.module.css').replace(/\s+/g, ' ');
+  assert.match(css, /\.chatting \.fine \{ opacity: 0; max-height: 0; \}/, 'the fine print folds');
+  assert.doesNotMatch(css, /!important/, 'the reduced-motion reset still stills the fold');
 });
 
 test('the guide copy no longer calls itself a mock, and claims no checking', () => {
@@ -322,14 +317,14 @@ test('the guide copy no longer calls itself a mock, and claims no checking', () 
   assert.equal(GUIDE.pill, 'AI · answers from site content');
   assert.equal(
     GUIDE.greetingFine,
-    "Answers are written by an AI model from this site's own content, in the language you ask in. It can get things wrong — the case pages are the source. It never sends anything on Nolan's behalf.",
+    "I answer from Nolan's own site, in the language you ask in, and I can get things wrong — the case pages are the source. I never send anything on his behalf.",
   );
   assert.equal(GUIDE.fallback, "That isn't something this site covers yet — try a chip, or name a project.");
   assert.equal(
     GUIDE.agents.items[2].text,
     "a model answers from the site's own content in the visitor's language, says so when the site doesn't cover something, and never acts on Nolan's behalf.",
   );
-  assert.deepEqual(GUIDE.unavailable, { zh: '问答暂时关闭。', en: 'The guide is switched off for now.' });
+  assert.deepEqual(GUIDE.unavailable, { zh: '问答暂时关闭。', en: "Nolan's assistant is off for now." });
   assert.deepEqual(GUIDE.entries.zh, { lead: '你可以先看看这些：', blog: '博客', linkedin: '领英', x: '推特', work: '项目简介' });
 
   const drawer = read('../src/components/AskDrawer.tsx');
@@ -363,7 +358,13 @@ test('an answer carries the server meta, and hudLines spells it out from guide.t
   const pending = pendingMsgs([], '技术栈是什么');
   const settled = settleMsgs(pending, res, { scopeId: null, langSample: '技术栈是什么' });
   const hud = { ...meta, key: 'stack', scopeId: 'amm', langSample: '技术栈是什么' };
-  assert.deepEqual(settled.msgs[1], { key: 1, who: 'guide', blocks: modelAnswerBlocks('Node only.', 'stack', 'amm'), meta: hud });
+  assert.deepEqual(settled.msgs[1], {
+    key: 1,
+    who: 'guide',
+    blocks: modelAnswerBlocks('Node only.', 'stack', 'amm'),
+    meta: hud,
+    answer: { key: 'stack', scopeId: 'amm' },
+  });
   const plain = settleMsgs(pending, { kind: 'answer', key: 'stack', scopeId: 'amm', answer: 'Node only.' }, { scopeId: null, langSample: null });
   assert.ok(!('meta' in plain.msgs[1]), 'no meta, no panel');
 
@@ -377,23 +378,12 @@ test('an answer carries the server meta, and hudLines spells it out from guide.t
   assert.equal(hudLines({ ...hud, langSample: null })[3].text, GUIDE.hud.languageNone);
 });
 
-test('the home console follows new lines only while the reader is at the bottom, or when they ask', async () => {
-  const { atThreadEnd, followThread } = await import('../src/lib/askClient.ts');
-  // 1000px of lines in a 400px window: the end is scrollTop 600.
-  assert.equal(atThreadEnd({ scrollTop: 600, scrollHeight: 1000, clientHeight: 400 }), true);
-  assert.equal(atThreadEnd({ scrollTop: 580, scrollHeight: 1000, clientHeight: 400 }), true, 'a few px short still counts');
-  assert.equal(atThreadEnd({ scrollTop: 200, scrollHeight: 1000, clientHeight: 400 }), false, 'scrolled up to read');
-  assert.equal(atThreadEnd({ scrollTop: 0, scrollHeight: 300, clientHeight: 400 }), true, 'nothing to scroll');
-
-  const asked = pendingMsgs([], 'hi');
-  const answered = settleMsgs(asked, { kind: 'error' }, { scopeId: null, langSample: 'hi' }).msgs;
-  assert.equal(followThread(false, asked, answered), false, 'a reply landing does not pull a reader back down');
-  assert.equal(followThread(true, asked, answered), true, 'at the bottom, the reply is followed');
-  assert.equal(followThread(false, answered, pendingMsgs(answered, 'more')), true, 'their own question brings them down');
-
-  const home = read('../src/components/GuideConsole.tsx');
-  assert.doesNotMatch(home, /lastElementChild\?\.scrollIntoView/, 'the page itself is never scrolled to the newest line');
-  assert.match(home, /onScroll=\{/, 'the thread remembers whether the reader is at its end');
-  assert.match(home, /followThread\(/);
-  assert.match(home, /el\.scrollTop = el\.scrollHeight/, 'following moves only the thread');
+test('the home page keeps the newest line in view above the composer, never its start under the header', () => {
+  const home = read('../src/components/Assistant.tsx');
+  assert.match(home, /querySelectorAll<HTMLElement>\("\[data-msg\]"\)/, 'the newest line is found by its marker');
+  assert.match(home, /if \(end <= limit\) return;/, 'nothing moves while the end is already in view');
+  assert.match(home, /Math\.min\(end - limit, newest\.getBoundingClientRect\(\)\.top - head - 16\)/);
+  const drawer = read('../src/components/AskDrawer.tsx');
+  assert.equal((drawer.match(/data-msg=""/g) ?? []).length, 3, 'typing, the visitor and the assistant each mark their row');
+  assert.match(drawer, /el\.scrollTop = el\.scrollHeight/, 'the drawer scrolls only its own transcript');
 });

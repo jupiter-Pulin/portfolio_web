@@ -100,6 +100,65 @@
       ]
     },
     {
+      "id": "work",
+      "expect": {
+        "key": "work",
+        "scopeId": null
+      },
+      "cases": [
+        {
+          "question": "Show me the things he has built.",
+          "scopeId": null,
+          "mix": "en",
+          "expect": {
+            "key": "work",
+            "scopeId": null,
+            "lang": "en"
+          }
+        },
+        {
+          "question": "他都做过哪些项目？",
+          "scopeId": null,
+          "mix": "zh",
+          "expect": {
+            "key": "work",
+            "scopeId": null,
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "他的 side projects 有哪些？",
+          "scopeId": null,
+          "mix": "mixed",
+          "expect": {
+            "key": "work",
+            "scopeId": null,
+            "lang": "zh"
+          }
+        },
+        {
+          "question": "¿Qué ha construido Nolan?",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "work",
+            "scopeId": null,
+            "lang": "es"
+          }
+        },
+        {
+          "question": "彼はどんなものを作ってきましたか？",
+          "scopeId": null,
+          "mix": "other",
+          "expect": {
+            "key": "work",
+            "scopeId": null,
+            "lang": "ja"
+          }
+        }
+      ]
+    },
+    {
       "id": "code",
       "expect": {
         "key": "code",
@@ -574,6 +633,28 @@
         "scopeId": "live",
         "lang": "ja"
       }
+    },
+    {
+      "question": "What has he built?",
+      "intent": "work",
+      "scopeId": null,
+      "langSample": "他是做什么的",
+      "expect": {
+        "key": "work",
+        "scopeId": null,
+        "lang": "zh"
+      }
+    },
+    {
+      "question": "Is he a fit for my role?",
+      "intent": "looking",
+      "scopeId": null,
+      "expect": {
+        "key": "looking",
+        "scopeId": null,
+        "lang": "ja"
+      },
+      "langSample": "彼はどんな仕事を探していますか"
     }
   ]
 }

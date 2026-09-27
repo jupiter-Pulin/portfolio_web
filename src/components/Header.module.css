@@ -1,63 +1,73 @@
 .top {
   position: sticky;
   top: 0;
-  z-index: 20;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  background: rgba(10, 14, 26, 0.72);
-  border-bottom: 1px solid var(--line);
+  z-index: 30;
+  height: var(--head);
+  background: var(--head-bg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
-.top :global(.wrap) {
+.in {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  height: 100%;
+  padding: 0 28px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 68px;
+  gap: 18px;
 }
 .brand {
-  font: 900 23px var(--font-display);
-  letter-spacing: -0.01em;
+  font: 400 34px/1 var(--hand);
   text-decoration: none;
 }
 .brand b {
-  color: var(--cyan);
+  font-weight: 400;
+  color: var(--pink);
 }
-.topRight {
+.nav {
+  margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 .navLink {
-  position: relative;
-  font: 800 14px var(--font-display);
-  color: var(--muted);
   text-decoration: none;
-  padding: 10px 12px;
-  margin-right: 6px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  line-height: 1;
+  padding: 6px 12px;
+  font-size: 20px;
 }
-.navLink:hover {
-  color: var(--text);
-  background: rgba(148, 163, 184, 0.08);
-  border-color: var(--line);
-}
+.navLink:hover,
 .navLink[aria-current="page"] {
-  color: var(--cyan);
+  color: var(--pink);
 }
-.navLink[aria-current="page"]::after {
-  content: "";
+.ask {
+  margin-left: 8px;
+}
+.rule {
   position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 5px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--cyan);
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 8px;
+  overflow: visible;
 }
-@media (max-width: 640px) {
-  .navLink {
-    padding: 10px 9px;
-    margin-right: 0;
+
+@media (max-width: 680px) {
+  .in {
+    padding: 0 16px;
+    gap: 8px;
+  }
+  .brand {
+    font-size: 30px;
+  }
+  .hideS,
+  .social {
+    display: none;
+  }
+  .askLabel {
+    display: none;
+  }
+  .ask {
+    padding: 9px 12px 8px;
+    margin-left: 2px;
   }
 }

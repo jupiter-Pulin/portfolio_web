@@ -1,7 +1,8 @@
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
-import { SelectedWorkStrip } from "@/components/SelectedWorkStrip";
+import { LatestNotes } from "@/components/LatestNotes";
+import { WorkCards } from "@/components/WorkCards";
 
 export default function Home() {
   return (
@@ -9,7 +10,8 @@ export default function Home() {
       <Header />
       <main id="top">
         <Hero />
-        <SelectedWorkStrip />
+        <WorkCards />
+        <LatestNotes />
       </main>
       <Footer />
     </>

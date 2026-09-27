@@ -1,13 +1,13 @@
-import { GuideConsole } from "./GuideConsole";
+import { Assistant } from "./Assistant";
 import { IdentityCard } from "./IdentityCard";
 import styles from "./Hero.module.css";
 
-/** Who Pulin is, in one card, and the guide that answers for him, in place. */
+/** Who Nolan is, and the assistant that answers for him. */
 export function Hero() {
   return (
     <section className={styles.hero}>
       <IdentityCard />
-      <GuideConsole />
+      <Assistant />
     </section>
   );
 }

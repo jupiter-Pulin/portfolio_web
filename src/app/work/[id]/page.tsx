@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Footer } from "@/components/Footer";
+import { Header } from "@/components/Header";
 import { WorkCase } from "@/components/WorkCase";
 import { SITE } from "@/content/copy";
 import { PROJECTS, projectById } from "@/content/projects";
@@ -18,5 +20,11 @@ export default async function WorkDetailPage({ params }: PageProps<"/work/[id]">
   const { id } = await params;
   const project = projectById(id);
   if (!project) notFound();
-  return <WorkCase project={project} />;
+  return (
+    <>
+      <Header />
+      <WorkCase project={project} />
+      <Footer />
+    </>
+  );
 }

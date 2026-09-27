@@ -185,6 +185,11 @@ export function answerBlocks(key: AnswerKey, scopeId: string | null): Block[] {
           actions: [mail()],
         },
       ];
+    case "work":
+      return [
+        para(text(GUIDE.work.intro)),
+        actions(...PROJECTS.slice(0, 2).map((p) => open(p.id)), { t: "nav", href: "/work", label: GUIDE.work.all }),
+      ];
     case "code":
       return [
         para(text(codeIntro(scope?.name ?? null))),

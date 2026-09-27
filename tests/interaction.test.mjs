@@ -1,115 +1,58 @@
 // Interaction helpers asserted without a browser.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { copyToastMessage } from '../src/lib/toast.ts';
-import { EMAIL } from '../src/content/links.ts';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { DRIFT_PX_PER_MS, copiesFor, nextOffset } from '../src/lib/marquee.ts';
+import { copyToastMessage } from '../src/lib/toast.ts';
+import { EMAIL } from '../src/content/links.ts';
+import { projectStamps, splitRole, stackTags } from '../src/lib/projectMeta.ts';
+import { bubblePath, mulberry32, seedOf, wavy } from '../src/lib/sketch.ts';
+
+const read = (rel) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8');
 
 test('copy email toast confirms the address, or falls back to showing it', () => {
   assert.equal(copyToastMessage(true, EMAIL), 'Copied Pulin7490@gmail.com');
   assert.equal(copyToastMessage(false, EMAIL), EMAIL);
 });
 
-test('the work strip drifts at reading pace and wraps onto its second copy', () => {
-  assert.equal(DRIFT_PX_PER_MS, 0.028);
-  assert.equal(nextOffset(0, 1000, 1e9), 28);
-  assert.ok(Math.abs(nextOffset(999, 100, 1000) - 1.8) < 1e-9, 'past the first copy, the offset wraps');
-  assert.equal(nextOffset(5, 0, 0), 5, 'an empty strip never divides by its width');
+test('the pen is seeded: the same box wobbles the same way on every visit', () => {
+  const a = mulberry32(seedOf(':r1:')), b = mulberry32(seedOf(':r1:')), c = mulberry32(seedOf(':r2:'));
+  const first = [a(), a(), a()];
+  assert.deepEqual([b(), b(), b()], first);
+  assert.notDeepEqual([c(), c(), c()], first);
+  for (const v of first) assert.ok(v >= 0 && v < 1);
 });
 
-test('a viewport-wide strip gets enough copies that the drift never runs out of scroll', () => {
-  // A browser stops at scrollWidth - clientWidth, so all the copies but the last
-  // one have to cover the visible width; otherwise the row stalls at the end and
-  // snaps back when the offset wraps.
-  const loop = 1248; // four 300px tiles and their 12px gaps
-  assert.equal(copiesFor(1124, loop), 2, 'inside the content column two copies are enough');
-  assert.equal(copiesFor(1440, loop), 3, 'a laptop is wider than one copy');
-  assert.equal(copiesFor(2560, loop), 4, 'a wide display needs another');
-  for (const width of [320, 1124, 1440, 1920, 2560, 3840]) {
-    assert.ok((copiesFor(width, loop) - 1) * loop >= width, `scrollable room at ${width}px`);
-  }
-  assert.equal(copiesFor(1920, 0), 2, 'an unmeasured strip keeps the two it renders');
+test('speech bubbles put their tail where the speaker is', () => {
+  // A bubble above the robot: the tail tip is 38px below the box, at tx of its width.
+  const down = bubblePath(400, 120, 'down', { tx: 0.9 });
+  assert.match(down, /L360,158L/);
+  // Tails on the side leave the box on that side.
+  assert.match(bubblePath(300, 90, 'left'), /L-22,88/);
+  assert.match(bubblePath(300, 90, 'right'), /L320,88/);
+  // Too short for a tail near the top: it stays at the bottom.
+  assert.doesNotMatch(bubblePath(300, 90, 'left', { tail: 'top' }), /L-24,84/);
+  assert.match(bubblePath(300, 160, 'left', { tail: 'top' }), /L-24,84/);
+  assert.match(wavy(0, 7, 100, 3, 4), /^M0,7(Q[\d.,\s-]+){8}$/);
 });
 
-test('the strip wraps on a measured copy, not on half the scroll width', () => {
-  const src = readFileSync(fileURLToPath(new URL('../src/components/WorkMarquee.tsx', import.meta.url)), 'utf8');
-  // scrollWidth counts the row's own padding, which is now viewport-sized: half
-  // of it is nowhere near one copy of the tiles.
-  assert.doesNotMatch(src, /scrollWidth\s*\/\s*2/, 'the loop width is measured off the tiles');
-  assert.match(src, /copiesFor\(/, 'the number of copies follows the width of the row');
-  assert.match(src, /ResizeObserver/, 'and is recomputed when the row is resized');
+test('a card reads its stamps, tags and role accent off the record', () => {
+  assert.deepEqual(projectStamps({ role: 'Solo · private repository · live', private: true, site: { label: 'x', url: 'https://x' } }), ['live', 'private']);
+  assert.deepEqual(projectStamps({ role: 'Solo · open source · live', private: false }), ['live', 'open']);
+  assert.deepEqual(projectStamps({ role: 'Solo · B.Eng. capstone', private: false }), ['capstone']);
+  assert.deepEqual(projectStamps({ role: 'Solo · open source', private: false }), ['open']);
+  assert.deepEqual(stackTags('A · B, C · D · E · F'), ['A', 'B, C', 'D', 'E']);
+  assert.deepEqual(splitRole('Product-minded software engineer · fintech × web3 × AI'), ['Product-minded software engineer', 'fintech × web3 × AI']);
+  assert.deepEqual(splitRole('Engineer'), ['Engineer', '']);
 });
 
-test('the drift wraps behind the gutter, so a loop looks the same before and after', () => {
-  const loop = 1248; // four 300px tiles and their 12px gaps
-  const lead = 433; // the gutter a 1990px viewport leaves left of the content column
-  // Only the very first pass shows that gutter empty. Wrapping to 0 would put it
-  // back every loop, and the tiles standing in it would blink away.
-  assert.ok(
-    Math.abs(nextOffset(loop - 1, 100, loop, lead) - (loop + 1.8)) < 1e-9,
-    'the first pass carries on through the gutter instead of snapping back',
-  );
-  assert.ok(
-    Math.abs(nextOffset(lead + loop - 1, 100, loop, lead) - (lead + 1.8)) < 1e-9,
-    'afterwards it wraps one copy back, to the same picture',
-  );
-  const stepPx = 16 * DRIFT_PX_PER_MS;
-  let x = 0;
-  let previous = 0;
-  let wraps = 0;
-  for (let i = 0; i < 30000; i += 1) {
-    x = nextOffset(x, 16, loop, lead);
-    if (x < previous) {
-      wraps += 1;
-      assert.ok(Math.abs(previous + stepPx - x - loop) < 1e-6, 'a wrap moves back exactly one copy');
-      assert.ok(x >= lead, `a wrap never lands back in the gutter (${x})`);
-    }
-    previous = x;
-  }
-  assert.ok(wraps > 5, 'the run covers several loops');
-  assert.equal(nextOffset(5, 0, 0, lead), 5, 'an unmeasured strip still never wraps');
-});
-
-test('the copies cover the gutter the drift now travels as well as the viewport', () => {
-  const loop = 1248;
-  for (const width of [320, 1124, 1440, 1920, 2560, 3840]) {
-    const lead = Math.max(28, (width - 1180) / 2 + 28); // the row's gutter, --maxw being 1180px
-    // The drift runs to lead + loop, and the browser stops it at
-    // scrollWidth - clientWidth, so the copies have to cover both.
-    assert.ok((copiesFor(width, loop, lead) - 1) * loop >= width + lead, `room to wrap at ${width}px`);
-    assert.ok(copiesFor(width, loop, lead) >= copiesFor(width, loop), 'the gutter only ever asks for more');
-  }
-  assert.equal(copiesFor(1920, 0, 433), 2, 'an unmeasured strip keeps the two it renders');
-});
-
-test('a window dragged wider re-measures the gutter, which its content box would not report', () => {
-  const loop = 1248;
-  const gutter = (width) => Math.max(28, (width - 1180) / 2 + 28); // --maxw being 1180px
-  const contentBox = (width) => width - 2 * gutter(width);
-  // Past the content column the gutter takes up all the leftover width, so the
-  // row's content box is the same 1124px at every one of these: watching it
-  // means never hearing about a window that was opened small and maximised.
-  assert.equal(contentBox(1440), 1124);
-  assert.equal(contentBox(1990), 1124);
-  assert.equal(contentBox(2560), 1124);
-  // And the fit does change out there: both the wrap and the number of copies.
-  assert.equal(gutter(1990), 433);
-  assert.equal(gutter(2560), 718);
-  assert.equal(copiesFor(1990, loop, gutter(1990)), 3);
-  assert.equal(copiesFor(2560, loop, gutter(2560)), 4, 'a wider window needs one more copy');
-  const src = readFileSync(fileURLToPath(new URL('../src/components/WorkMarquee.tsx', import.meta.url)), 'utf8');
-  assert.match(
-    src,
-    /observe\(\s*el\s*,\s*\{\s*box:\s*['"]border-box['"]\s*\}\s*\)/,
-    'so the row watches the box that does follow the viewport',
-  );
-});
-
-test('the marquee measures that gutter and feeds it to the arithmetic', () => {
-  const src = readFileSync(fileURLToPath(new URL('../src/components/WorkMarquee.tsx', import.meta.url)), 'utf8');
-  assert.match(src, /paddingLeft/, 'the gutter is read off the row itself');
-  assert.match(src, /nextOffset\([^)]*lead\)/, 'the drift wraps behind the gutter');
-  assert.match(src, /copiesFor\([^)]*lead\)/, 'and the copies cover it');
+test('the robot walks in once a session, and only when motion is welcome', () => {
+  const src = read('../src/components/Assistant.tsx');
+  assert.match(src, /const WALKED = "assistant-walked";/);
+  assert.match(src, /if \(still\(\) \|\| walked\) \{/, 'reduced motion or a second visit: it is simply there');
+  assert.match(src, /sessionStorage\.setItem\(WALKED, "1"\)/, 'remembered once the walk has finished');
+  assert.match(src, /useLayoutEffect\(\(\) => \{\n\s+const svg = robot\.current;\n\s+const st = stage\.current;/, 'the walk starts before the first paint');
+  // Nothing opens by itself: the chat waits for a click.
+  assert.match(src, /const \[open, setOpen\] = useState\(false\);/);
+  assert.equal((src.match(/setOpen\(true\)/g) ?? []).length, 1, 'one way in: openChat');
 });

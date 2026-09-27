@@ -5,14 +5,14 @@ export const MAILTO =
   `&body=${encodeURIComponent('Hi Nolan,\n\nI saw your work on ... and would like to talk about ...\n\n')}`;
 export const GITHUB = 'https://github.com/jupiter-Pulin';
 export const LINKEDIN = 'https://www.linkedin.com/in/nolan-tang-52b559367/';
-// Provided by Pulin on 2026-09-13, used as-is. Note: x.com/home is the signed-in home feed,
-// not a public profile URL — replace with https://x.com/<handle> once the handle is confirmed.
-export const X = 'https://x.com/home';
+// The public profile. x.com/home was here until 2026-09-27: it is the signed-in home feed,
+// so every visitor landed on their own timeline instead of this profile.
+export const X = 'https://x.com/will_pu7490';
 
 export const SOCIALS = [
   { key: 'github', label: 'GitHub', href: GITHUB, title: 'GitHub · jupiter-Pulin' },
   { key: 'linkedin', label: 'LinkedIn', href: LINKEDIN, title: 'LinkedIn · Nolan Tang' },
-  { key: 'x', label: 'X', href: X, title: 'X' },
+  { key: 'x', label: 'X', href: X, title: 'X · @will_pu7490' },
 ] as const;
 // The blog is a page of this site (src/app/blog), so this is a route, not an external address.
 export const BLOG = { href: '/blog' } as const;
