@@ -154,6 +154,17 @@ test('a card links only inside the site; a private one says so and names no repo
   });
 });
 
+test('the whole card opens its case: "Read the case" is stretched over it', () => {
+  const cards = cardsOf(pages.gallery);
+  PROJECTS.forEach((p, i) => {
+    const open = openTags(cards[i], 'a').filter((a) => a.includes(`href="/work/${p.id}"`) && /class="[^"]*__open[\s"]/.test(a));
+    assert.equal(open.length, 1, `${p.id}: one stretched case link`);
+  });
+  const css = read('../src/components/ProjectCard.module.css');
+  assert.match(css, /\.open::after\s*{[^}]*position:\s*absolute;[^}]*inset:\s*0;[^}]*z-index:\s*1;/, 'the link covers the card');
+  assert.match(css, /\.name a,\s*\.ask\s*{[^}]*position:\s*relative;[^}]*z-index:\s*2;/, 'the name and "ask about it" stay clickable above it');
+});
+
 test('no anchor on either screen is nested inside another', () => {
   for (const [name, html] of Object.entries(pages)) {
     let depth = 0;

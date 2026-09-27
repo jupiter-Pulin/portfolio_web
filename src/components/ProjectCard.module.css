@@ -20,6 +20,23 @@
 .feature {
   grid-column: span 2;
 }
+/* The whole card opens the case: "Read the case" stretches over it, while the
+   name link and "ask about it" sit above the stretch and keep their own clicks. */
+.open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.name a,
+.ask {
+  position: relative;
+  z-index: 2;
+}
+.card:hover .open {
+  color: var(--pink);
+  border-color: var(--pink);
+}
 .art {
   width: 100%;
   height: 150px;
