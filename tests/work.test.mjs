@@ -183,10 +183,6 @@ test('a case page renders every field of its record', () => {
   }
   assert.match(pages.loop, /<title>Loop Conductor · Nolan Tang<\/title>/);
 
-  const pre = markup(pages.loop).match(/<pre\b[^>]*>([\s\S]*?)<\/pre>/);
-  assert.ok(pre, 'the README preview is a <pre>');
-  assert.equal(pre[1].split('\n')[0], '# Loop Conductor');
-
   const readmeBtn = tagWithHref(pages.loop, p.readmeUrl);
   assert.ok(readmeBtn && readmeBtn.includes('target="_blank"'), 'Open README on GitHub');
   for (const r of p.repos) {
@@ -246,12 +242,34 @@ test('a demo takes the cover slot, the live site is linked, the architecture spa
   assert.ok(textOf(pages.platter).includes(p.architecture.caption), 'architecture caption');
   assert.ok(tagWithHref(pages.platter, p.architecture.src), 'full-size link');
 
-  // The other cases keep their cover and carry none of it.
+  // The other cases keep their cover; the only video they may carry is their explainer.
   for (const q of PROJECTS.filter((x) => !x.demo)) {
-    assert.equal(openTags(markup(pages[q.id]), 'video').length, 0, `${q.id} has no video`);
+    const vids = openTags(markup(pages[q.id]), 'video');
+    assert.equal(vids.length, q.explainer ? 1 : 0, `${q.id} videos`);
+    if (q.explainer) assert.ok(vids[0].includes(`src="${q.explainer.src}"`), `${q.id}: the one video is its explainer`);
   }
   // A private card on the overview still links nothing out: the site lives on the case page.
   assert.doesNotMatch(cardFor(pages.gallery, 'platter'), /platterfi\.trade"/);
+});
+
+test('an explainer takes the README preview\'s place; the README stays one click away', () => {
+  const withExplainer = PROJECTS.filter((x) => x.explainer);
+  assert.deepEqual(withExplainer.map((x) => x.id), ['loop', 'live']);
+  for (const p of withExplainer) {
+    const html = markup(pages[p.id]);
+    const video = openTags(html, 'video');
+    assert.equal(video.length, 1, `${p.id}: one explainer video`);
+    assert.ok(video[0].includes(`src="${p.explainer.src}"`) && video[0].includes(`poster="${p.explainer.poster}"`), `${p.id}: video src and poster`);
+    assert.match(video[0], /preload="none"/, `${p.id}: nothing downloads before play`);
+    assert.match(video[0], /controls/);
+    assert.ok(textOf(pages[p.id]).includes(WORK.explainerFile), `${p.id}: panel title`);
+    assert.ok(textOf(pages[p.id]).includes(p.explainer.caption), `${p.id}: explainer caption`);
+    assert.doesNotMatch(html, /<pre\b/, `${p.id}: no README preview beside the video`);
+    assert.ok(tagWithHref(pages[p.id], p.readmeUrl), `${p.id}: Open README on GitHub`);
+    // The page drops the preview, not the text: the assistant still answers from the README.
+    assert.ok(p.readme, `${p.id} keeps its README text`);
+  }
+  assert.ok(projectById('loop').readme.startsWith('# Loop Conductor'));
 });
 
 test('README notes: a caveat bar with a preview, plain copy without one', () => {
@@ -260,7 +278,9 @@ test('README notes: a caveat bar with a preview, plain copy without one', () => 
     const note = markup(pages[id]).match(/<p class="[^"]*rmNote[^"]*"[^>]*>([\s\S]*?)<\/p>/);
     assert.ok(note, `${id} shows the amber README note bar`);
     assert.equal(note[1], p.readmeNote);
-    assert.ok(markup(pages[id]).includes('<pre'), `${id} still previews the README`);
+    // The caveat is about the README behind the link, so it stays when an explainer replaces the preview.
+    if (p.explainer) assert.equal(openTags(markup(pages[id]), 'video').length, 1, `${id} shows its explainer`);
+    else assert.ok(markup(pages[id]).includes('<pre'), `${id} still previews the README`);
   }
   const amm = projectById('amm');
   assert.equal(amm.readme, null);

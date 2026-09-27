@@ -33,6 +33,8 @@ export const WORK = {
   visitSite: 'Visit',
   privateNotes: 'Design notes written for this page — the repository and its README stay private.',
   demoLabel: 'walkthrough video',
+  explainerFile: 'The project, explained',
+  explainerLabel: 'explainer video',
   architecture: 'Architecture',
   openFullSize: 'Open full size ↗',
 } as const;

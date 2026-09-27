@@ -129,6 +129,25 @@ function Demo({ project: p }: { project: Project }) {
   );
 }
 
+/** The explainer video, in the README panel's place. The README text stays in the record: the assistant still answers from it. */
+function ExplainerVideo({ project: p }: { project: Project }) {
+  const ex = p.explainer!;
+  return (
+    <figure className={styles.explainer}>
+      <video
+        className={styles.exVideo}
+        src={ex.src}
+        poster={ex.poster}
+        controls
+        preload="none"
+        playsInline
+        aria-label={`${p.name} · ${WORK.explainerLabel}`}
+      />
+      <figcaption className={styles.demoCaption}>{ex.caption}</figcaption>
+    </figure>
+  );
+}
+
 /** The system diagram, full width under the case, opening at full size in a new tab. */
 function Architecture({ project: p }: { project: Project }) {
   const a = p.architecture;
@@ -180,7 +199,9 @@ function Readme({ project: p }: { project: Project }) {
         <div className={styles.plain}>
           <p>{p.scope}</p>
         </div>
-        {p.readme ? (
+        {p.explainer ? (
+          <ExplainerVideo project={p} />
+        ) : p.readme ? (
           <>
             <p className={styles.rmNote}>{WORK.privateNotes}</p>
             <pre className={`${styles.rmBody} ${styles.notes}`}>{p.readme}</pre>
@@ -194,17 +215,24 @@ function Readme({ project: p }: { project: Project }) {
       <Sketch fill="var(--white)" r={14} w={2.4} />
       <div className={styles.rmHead}>
         <span className={styles.rmFile}>
-          <Icon name="file" />
-          {WORK.readmeFile}
+          <Icon name={p.explainer ? "film" : "file"} />
+          {p.explainer ? WORK.explainerFile : WORK.readmeFile}
         </span>
         <a className="chip sk" href={p.readmeUrl} target="_blank" rel="noopener">
           <Sketch r={16} w={1.8} hatch="var(--yellow)" gap={7} draw={false} />
           {WORK.openReadme}
         </a>
       </div>
-      {p.readme && p.readmeNote ? <p className={styles.rmNote}>{p.readmeNote}</p> : null}
-      {p.readme ? (
-        <pre className={styles.rmBody}>{p.readme}</pre>
+      {p.explainer ? (
+        <>
+          {p.readmeNote ? <p className={styles.rmNote}>{p.readmeNote}</p> : null}
+          <ExplainerVideo project={p} />
+        </>
+      ) : p.readme ? (
+        <>
+          {p.readmeNote ? <p className={styles.rmNote}>{p.readmeNote}</p> : null}
+          <pre className={styles.rmBody}>{p.readme}</pre>
+        </>
       ) : (
         <div className={styles.plain}>
           <p>{p.readmeNote}</p>

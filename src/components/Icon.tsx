@@ -22,6 +22,12 @@ const ICONS = {
       <path d="M14 3v5h5M9 13h6M9 17h6" />
     </g>
   ),
+  film: (
+    <g {...stroke}>
+      <rect x="3" y="5" width="18" height="14" rx="3" />
+      <path d="M10 9.5v5l4.5-2.5z" />
+    </g>
+  ),
   code: (
     <g {...stroke}>
       <path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14" />
