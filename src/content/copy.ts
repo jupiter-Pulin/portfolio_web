@@ -40,7 +40,8 @@ export const WORK = {
 } as const;
 
 // The identity card on the home page, in Nolan's words: what he is after, what he
-// is betting on, what he is strongest at. The assistant is given these too (prompt.ts).
+// is betting on, what he is strongest at, and what he does off hours. The assistant is
+// given these too (prompt.ts).
 export const IDENTITY = {
   status: 'Open to work',
   role: 'Product-minded software engineer · fintech × web3 × AI',
@@ -59,6 +60,7 @@ export const IDENTITY = {
       text: 'Keeping money systems correct: idempotent payouts · consistent concurrent writes · event-driven settlement · on-chain and off-chain state in sync.',
     },
     { label: 'Open to', text: 'Relocation · remote' },
+    { label: 'Off hours', text: "Sports, astronomy, a bit of astrology. Where the body can't go, the mind won't either." },
   ],
   ctaHire: 'Hire me',
   ctaCopy: 'copy email',
