@@ -19,9 +19,15 @@ Three things live in this repository, in order of how much of the code they take
    other page it is the "Ask my assistant" drawer.
    The model reads the site's content, answers in whatever language the visitor typed,
    says plainly when the site does not cover something, and never acts on Nolan's behalf.
+   An answer offers at most two follow-up questions; one about a single project also shows
+   that project's card, with "Read the case" and, on the home page, "show me ↓", which
+   scrolls to the project's card and circles it.
 2. **The work pages** — `/work` and one case page per project, prerendered from a single
-   data file. Every figure shown carries a provenance note; a private project shows a
-   scope note and never a repository link.
+   data file. A project card opens its case page wherever it is clicked. A case page can
+   also carry the live product's link, a walkthrough video, an architecture diagram and a
+   hand-drawn explainer video that takes the README preview's place; each is a file named
+   on the project record. Every figure shown carries a provenance note; a private project
+   shows a scope note and never a repository link.
 3. **A blog** — one Markdown file per post, rendered at build time. Publishing is adding a file.
 
 The hand-drawn look is code, not images: `src/lib/sketch.ts` is the pen (seeded wobble,
@@ -48,8 +54,8 @@ memory and fails when the two drift.
 **Request time**, one Node function with every dependency injectable
 (`src/server/ask/handler.ts`), in this order:
 
-1. **Validate.** The question is at most 100 characters and the scope, if any, is a known
-   project id. Anything else is a 400.
+1. **Validate.** The question is at most 100 characters (`ASK_MAX_QUESTION_CHARS`) and the
+   scope, if any, is a known project id. Anything else is a 400.
 2. **Count, then gate.** Every request bumps a daily counter. The visitor is identified by an
    HMAC of their IP and allowed 10 questions a day; today's and this month's spend are
    checked against their thresholds. Over either limit is a 429 that names the reason.
@@ -58,16 +64,21 @@ memory and fails when the two drift.
 4. **Build the prompt.** One fixed system prompt. The user message is content: the project
    catalogue, what Nolan is looking for, the site-wide summaries, the answer keys and what
    each means, the current scope's details, the six candidates, the public links, a
-   target-language sample, and the question.
+   target-language sample, a language hint when the sample's script settles it, and the
+   question.
 5. **Call the model under a deadline.** Any OpenAI-compatible chat-completions API
-   (DeepSeek today), temperature 0, JSON mode, 700 output tokens, a 5-second server
-   deadline kept below the drawer's 6-second wait. A failure is a 502 or 504 — never a
+   (DeepSeek today), temperature 0, JSON mode, thinking off (DeepSeek's reasoning would
+   otherwise spend the output budget before the JSON is written), 700 output tokens, a
+   5-second server deadline kept below the drawer's 6-second wait. A failure is a 502 or 504 — never a
    made-up answer, never a scripted fallback.
 6. **Record the cost.** Tokens times the configured prices, added to the day and month totals.
 7. **Structure check.** The reply must be `{ key, scopeId, answer }` with a key from the
-   eleven answer keys, a scope that is a project id or null, and a non-empty answer under
-   2000 characters. Only the shape is checked; the words are never read. A reply that fails
-   is a 502 and a counted error.
+   twelve answer keys, a scope that is a project id or null, and a non-empty answer under
+   2000 characters. Before the check, only lossless repairs are made
+   (`src/server/ask/output.ts`): an object wrapped in a code fence or prose is unwrapped, a
+   stray comma before the closing brace is dropped, and a scope written as a project's name
+   becomes its id. Beyond that only the shape is checked; the words are never read. A reply
+   that fails is a 502 and a counted error.
 
 A 200 carries the answer plus a `meta` block — which chunks the model saw, model name,
 wall-clock time, tokens and cost — that the page shows as "under the hood".
@@ -75,12 +86,16 @@ wall-clock time, tokens and cost — that the page shows as "under the hood".
 **Language.** A typed question is its own language sample. When the visitor clicks a
 quick-question chip after typing in Chinese, the chip carries their last typed question
 as the sample, so the answer stays in Chinese. The prompt tells the model that a mixed
-sample takes the language of its sentence structure.
+sample takes the language of its sentence structure. When the script alone settles it —
+kana means Japanese; no Chinese, Japanese or Korean characters means never Chinese — the
+prompt adds a "Language hint" the model must follow (`languageHint` in
+`src/server/ask/prompt.ts`).
 
 **Routing.** The model also routes: the same question in any language, or in other words,
-gets the same answer key and scope. Site-wide keys (`payments`, `agents`, `looking`,
-`contact`, `all`) always have a null scope; project keys (`overview`, `decision`, `stack`,
-`status`, `code`) take the project the question names, or keep the current one. A paid
+gets the same answer key and scope. Site-wide keys (`payments`, `agents`, `work`,
+`looking`, `contact`, `all`) always have a null scope; project keys (`overview`,
+`decision`, `stack`, `status`, `code`) take the project the question names, or keep the
+current one. `fallback` is only for a question nothing on the site relates to. A paid
 evaluation (`scripts/eval-ask.mjs`) checks that stability across English, Chinese, mixed and
 other-language paraphrases, including chips clicked after a Chinese question.
 
@@ -106,9 +121,10 @@ and an `ASK_IP_SALT` (Upstash may incur additional charges). Outside production 
 fall back to memory — the model is still called for real and still billed. Vercel's WAF adds
 its own rate limit in front of the route.
 
-Every outcome is a metric — `answered`, `limited:visitor`, `limited:budget`,
-`error:provider`, `error:timeout`, `error:invalid`, `error:config`, `error:store` — so a
-quiet guide can be told apart from a broken one by reading the counters.
+Every request and every outcome is a metric — `requests`, `answered`, `limited:visitor`,
+`limited:budget`, `unavailable`, `error:provider`, `error:timeout`, `error:invalid`,
+`error:config`, `error:store`, plus the `cost` totals — so a quiet guide can be told apart
+from a broken one by reading the counters.
 
 ## Content is the only source of truth
 
@@ -117,6 +133,10 @@ quiet guide can be told apart from a broken one by reading the counters.
 - Every figure on the site comes from `projects.ts` and keeps its provenance label
   (`statsNote`). A private project (`private: true`) shows its scope note, never a repository.
 - A project cover is a file: drop `public/projects/<id>/cover.webp` and the build picks it up.
+  The live site, the walkthrough (`demo`), the hand-drawn `explainer` video and the
+  `architecture` diagram are optional fields on the record, with their files in the same
+  folder. The explainer videos are drawn and voiced outside this repository and dropped in
+  as `.mp4` files.
 - `src/content/blog/` — one Markdown file per post, photos in `public/blog/<slug>/`.
   `marked` renders them at build time; it is the one runtime dependency beyond Next and React.
 
@@ -140,10 +160,12 @@ variables the route answers 503 and the rest of the site is unaffected.
 
 | Variable | Purpose |
 | --- | --- |
+| `ASK_PROVIDER` | `openai-compatible` (the default and, today, the only provider) |
 | `ASK_MODEL_BASE_URL`, `ASK_MODEL`, `ASK_MODEL_API_KEY` | The OpenAI-compatible endpoint and key |
 | `ASK_PRICE_INPUT_USD_PER_MTOK`, `ASK_PRICE_OUTPUT_USD_PER_MTOK` | Prices used to record cost; no defaults |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `ASK_IP_SALT` | Counters and the visitor hash; required in production |
 | `ASK_DAILY_BUDGET_USD`, `ASK_MONTHLY_BUDGET_USD`, `ASK_VISITOR_DAILY_LIMIT` | The limits above |
+| `ASK_MAX_QUESTION_CHARS` | Longest question accepted; 100 by default |
 | `ASK_SERVER_DEADLINE_MS` | Must stay below the drawer's 6000 ms wait |
 | `ASK_ENABLED` | `false` switches the guide off; anything else leaves it on |
 

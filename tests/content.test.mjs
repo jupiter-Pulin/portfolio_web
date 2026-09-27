@@ -21,7 +21,7 @@ test('identity card and guide hero copy are verbatim from the approved mock', ()
   assert.equal(IDENTITY.role, 'Product-minded software engineer · fintech × web3 × AI');
   assert.deepEqual(
     IDENTITY.facts.map((f) => f.label),
-    ['Looking for', 'Betting on', 'Strength', 'Open to'],
+    ['Looking for', 'Betting on', 'Strength', 'Open to', 'Off hours'],
   );
   assert.ok(IDENTITY.facts.every((f) => f.text.length > 0));
   // No city on the card or anywhere the site shows where he is.
