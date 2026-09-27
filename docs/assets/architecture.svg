@@ -62,8 +62,8 @@
   <rect x="64" y="520" width="332" height="118" rx="12" class="boxc"/>
   <text x="82" y="548" class="t">Static pages</text>
   <text x="82" y="572" class="mc">/  /work  /work/&lt;id&gt;  /blog  /blog/&lt;slug&gt;</text>
-  <text x="82" y="596" class="d">Prerendered HTML. Covers are files at</text>
-  <text x="82" y="616" class="d">public/projects/&lt;id&gt;/cover.webp, detected by the build.</text>
+  <text x="82" y="596" class="d">Prerendered HTML. Covers, videos and diagrams</text>
+  <text x="82" y="616" class="d">are files in public/projects/&lt;id&gt;/.</text>
 
   <path d="M230 474V520" class="ln"/>
 
@@ -85,10 +85,10 @@
   <text x="484" y="176" class="colm">client components · no secrets</text>
 
   <rect x="484" y="200" width="292" height="150" rx="12" class="box"/>
-  <text x="502" y="228" class="t">The guide</text>
-  <text x="502" y="252" class="d">On / it answers in place beside the identity</text>
-  <text x="502" y="272" class="d">card (GuideConsole). Everywhere else it is the</text>
-  <text x="502" y="292" class="d">"Any question?" drawer (AskDrawer).</text>
+  <text x="502" y="228" class="t">The assistant</text>
+  <text x="502" y="252" class="d">On / it walks in beside the identity card and</text>
+  <text x="502" y="272" class="d">opens a chat only when clicked (Assistant).</text>
+  <text x="502" y="292" class="d">Elsewhere it is the "Ask my assistant" drawer.</text>
   <text x="502" y="316" class="d">Quick-question chips carry an intent; a typed</text>
   <text x="502" y="336" class="d">question is its own language sample.</text>
 
@@ -104,8 +104,8 @@
   <text x="502" y="612" class="d">Plain text in the visitor's language, plus a</text>
   <text x="502" y="632" class="d">meta panel: which chunks the model saw,</text>
   <text x="502" y="652" class="d">model name, wall-clock ms, tokens, cost.</text>
-  <text x="502" y="680" class="d">An "open project" action when the answer</text>
-  <text x="502" y="698" class="d">is about one project.</text>
+  <text x="502" y="680" class="d">Up to two follow-ups; a project card with</text>
+  <text x="502" y="698" class="d">"Read the case" and, on /, "show me ↓".</text>
 
   <rect x="484" y="760" width="292" height="130" rx="12" class="boxa"/>
   <text x="502" y="788" class="t">When the model is not reached</text>
@@ -154,14 +154,14 @@
     <text x="906" y="488" class="d">One fixed system prompt. The user message is content:</text>
     <text x="906" y="506" class="d">project catalogue · what Nolan is looking for · site-wide</text>
     <text x="906" y="524" class="d">summaries · answer keys · scope details ·</text>
-    <text x="906" y="542" class="d">6 candidates · links · language sample · question</text>
+    <text x="906" y="542" class="d">6 candidates · links · language sample + hint · question</text>
   </g>
   <path d="M1040 554V570" class="ln"/>
   <g>
     <rect x="864" y="570" width="352" height="90" rx="10" class="boxg"/>
     <circle cx="886" cy="597" r="11" fill="#34d399"/><text x="886" y="601" text-anchor="middle" class="step">5</text>
     <text x="906" y="592" class="t">Call the model, under a deadline</text>
-    <text x="906" y="612" class="d">temperature 0 · JSON mode · 700 output tokens</text>
+    <text x="906" y="612" class="d">temperature 0 · JSON mode · thinking off · 700 tokens</text>
     <text x="906" y="630" class="d">5 s server deadline, below the drawer's 6 s wait</text>
     <text x="906" y="648" class="d">→ 502 / 504 on failure, never a made-up answer</text>
   </g>
@@ -178,7 +178,7 @@
     <circle cx="886" cy="773" r="11" fill="#7de3f5"/><text x="886" y="777" text-anchor="middle" class="step">7</text>
     <text x="906" y="768" class="t">Structure check</text>
     <text x="906" y="788" class="m">{ key, scopeId, answer }</text>
-    <text x="906" y="808" class="d">key ∈ 11 answer keys · scopeId ∈ projects or null ·</text>
+    <text x="906" y="808" class="d">key ∈ 12 answer keys · scopeId ∈ projects or null ·</text>
     <text x="906" y="826" class="d">answer non-empty, ≤ 2000 chars. Shape only: the</text>
     <text x="906" y="844" class="d">words are never read. Fails → 502, counted.</text>
   </g>
@@ -214,8 +214,8 @@
   <text x="1322" y="336" class="ma">ask:day:&lt;utc&gt;:&lt;metric&gt;</text>
   <text x="1322" y="356" class="ma">ask:month:&lt;utc&gt;:cost</text>
   <text x="1322" y="376" class="ma">ask:visitor:&lt;day&gt;:&lt;hmac&gt;</text>
-  <text x="1322" y="404" class="d">No question text and no plain</text>
-  <text x="1322" y="422" class="d">IP is ever written. 30-day TTL.</text>
+  <text x="1322" y="404" class="d">No question text or plain IP is</text>
+  <text x="1322" y="422" class="d">written. Keys expire ≤ 40 days.</text>
   <text x="1322" y="448" class="d">Required in production; memory</text>
   <text x="1322" y="464" class="d">counters only in dev and tests.</text>
 
@@ -224,5 +224,5 @@
   <path d="M1216 615 H1304" class="lnc"/>
 
   <!-- footer -->
-  <text x="48" y="976" class="lbl">139 tests · node --test, no framework · runtime deps: next, react, marked · /work and /blog asserted against the built HTML · the ask route tested as a plain Request → Response function</text>
+  <text x="48" y="976" class="lbl">171 tests · node --test, no framework · runtime deps: next, react, marked · /work and /blog asserted against the built HTML · the ask route tested as a plain Request → Response function</text>
 </svg>
