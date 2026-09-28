@@ -19,7 +19,6 @@ export const SITE = {
 export const WORK = {
   learnMore: 'Learn more →',
   readmeLink: 'README ↗',
-  privateRepo: 'Private repository',
   allWork: '← All work',
   close: 'Close',
   prev: '← Previous',
@@ -31,12 +30,14 @@ export const WORK = {
   askProject: 'Any question about this project?',
   openReadme: 'Open README on GitHub ↗',
   visitSite: 'Visit',
-  privateNotes: 'Design notes written for this page — the repository and its README stay private.',
   demoLabel: 'walkthrough video',
   explainerFile: 'The project, explained',
   explainerLabel: 'explainer video',
   architecture: 'Architecture',
   openFullSize: 'Open full size ↗',
+  rolloutLive: 'Live',
+  rolloutFork: 'Mainnet fork',
+  points: 'Under the hood',
 } as const;
 
 // The identity card on the home page, in Nolan's words: what he is after, what he
@@ -77,7 +78,7 @@ export const HOME = {
   notesTitle: 'Notes from',
   notesAccent: 'building things.',
   allPosts: 'all posts →',
-  stamps: { live: 'LIVE', private: 'private repo', open: 'open source', capstone: 'capstone' },
+  stamps: { live: 'LIVE', open: 'open source', capstone: 'capstone' },
   theme: { toDark: 'Switch to dark theme', toLight: 'Switch to light theme' },
   bye: 'Thanks for stopping by.',
   byeLead: 'Email is the fastest way:',
@@ -85,7 +86,36 @@ export const HOME = {
 
 // Words written inside each project's little drawing on its card.
 export const ART = {
-  platter: { chains: ['Eth', 'Base', 'RH'], api: 'API builds the tx', unsigned: '(unsigned)', sign: 'you sign', note: ['no keys on', 'the server!'] },
+  platter: {
+    swap: 'Swap', sell: 'sell', sellAmount: '1,000', sellToken: 'USDe', buy: 'buy', buyAmount: '≈ 990.9',
+    vault: 'steakUSDG', buyApy: 'APY 3.62%', gasless: 'gasless', sign: 'Sign', note: 'you sign · no gas',
+    protocol: 'Morpho', apy: '3.62%', apyLabel: 'APY',
+    cells: [['TVL', '$510.1M'], ['7d APY', '3.91%'], ['Withdraw now', '$39.6M'], ['Share price', '1.0082']],
+    order: 'order', offChain: 'off-chain', clock: '4 s', auction: 'auction',
+    bids: [['platter', '990.9'], ['solver', '990.7'], ['solver', '990.4'], ['solver', '990.6']], wins: '✓ wins',
+    chain: 'Robinhood', tx: '1 tx ✓', floor: '≥ signed min',
+  },
+  platterSettle: {
+    lanes: [['Wallet', 'holds USDe'], ['VaultRelayer', 'only puller'], ['GPv2Settlement', 'checks the limit'], ['Executor', 'forked 0x Settler'], ['Pool + vault', 'swap, then deposit']],
+    steps: {
+      approve: '① approve', pull: '② pull USDe', into: 'into settlement', send: '③ transfer, no approval', swap: '④ swap + deposit',
+      back: 'steakUSDG back', fees: '⑤ lane fee + clearing', surplus: '⑥ surplus → user', pay: '⑦ pay at clearing price',
+    },
+    keep: ['Settlement keeps', 'protocol fee + lane fee'],
+    legend: ['USDe, sold', 'steakUSDG, bought', 'approval only'],
+  },
+  platterArch: {
+    zones: ['Browser', 'AWS EC2 · Singapore', 'Outside'],
+    web: ['Platter web app', 'Next.js 16, wagmi, viem'], wallet: ['Wallet', 'signs orders and txs'],
+    edge: ['Cloudflare → Caddy', 'TLS · /v1 to the API, the rest to web'], site: ['web', 'Next.js'],
+    db: ['PostgreSQL 18', 'ledger, positions,', 'orders, vaults'],
+    api: 'api · Hono on Node',
+    apiJobs: ['quotes and routing', 'gasless orders and tracking', 'chain sync, reorg-safe ledger', 'per-trade reconciliation', 'vault discovery and APY'],
+    cow: 'CoW stack · Docker Compose · Postgres 16', cowParts: ['orderbook', 'autopilot', 'driver · KMS', 'our solver'],
+    chain: ['Robinhood Chain', 'DEXes and vaults'], contracts: ['Platter contracts', 'settlement, executor'],
+    aggs: ['Aggregators', 'LI.FI, Relay, Uniswap, Across'], data: ['Data', 'DefiLlama · Chainlink'],
+    legend: ['live', 'verified on a Robinhood mainnet fork'],
+  },
   loop: { router: 'router', steps: ['spec', 'make', 'review', 'fix'], note: ['checks', 'only here'], human: 'human signs off' },
   guide: { note: 'answers from the site only' },
   live: { from: 'EN', to: '中', note: 'original audio never off' },

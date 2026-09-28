@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { HOME, WORK } from "@/content/copy";
-import { PROJECTS, type Project } from "@/content/projects";
+import { PROJECTS, type Drawn, type Project } from "@/content/projects";
 import { resolveCover } from "@/lib/projectMedia";
 import { detailEyebrow, projectStamps, stackTags } from "@/lib/projectMeta";
 import { HUE_VAR } from "@/lib/sketchArt";
@@ -9,6 +9,7 @@ import { nextIndex } from "@/lib/workNav";
 import { AskButton } from "./AskButton";
 import { Icon } from "./Icon";
 import { ProjectCover } from "./ProjectCover";
+import { Drawing } from "./sketch/Drawing";
 import { Sketch } from "./sketch/Sketch";
 import { WorkKeys } from "./WorkKeys";
 import styles from "./WorkCase.module.css";
@@ -46,22 +47,28 @@ export function WorkCase({ project: p }: { project: Project }) {
             ))}
           </div>
           <p className={styles.tagline}>{p.tagline}</p>
-          <p className={`sk ${styles.thesis}`}>
-            <Sketch r={12} w={2} c="var(--pink)" hatch={HUE_VAR[p.hue]} gap={10} hw={1.2} />
-            {p.thesis}
-          </p>
-          <dl className={styles.pair}>
-            <div className="sk">
-              <Sketch fill="var(--white)" r={12} w={2} />
-              <dt>{WORK.wrong}</dt>
-              <dd>{p.wrong}</dd>
-            </div>
-            <div className="sk">
-              <Sketch fill="var(--white)" r={12} w={2} />
-              <dt>{WORK.mechanism}</dt>
-              <dd>{p.mechanism}</dd>
-            </div>
-          </dl>
+          {/* A record with "Under the hood" cards shows them further down instead of the thesis and the pair. */}
+          {p.points ? null : (
+            <>
+              <p className={`sk ${styles.thesis}`}>
+                <Sketch r={12} w={2} c="var(--pink)" hatch={HUE_VAR[p.hue]} gap={10} hw={1.2} />
+                {p.thesis}
+              </p>
+              <dl className={styles.pair}>
+                <div className="sk">
+                  <Sketch fill="var(--white)" r={12} w={2} />
+                  <dt>{WORK.wrong}</dt>
+                  <dd>{p.wrong}</dd>
+                </div>
+                <div className="sk">
+                  <Sketch fill="var(--white)" r={12} w={2} />
+                  <dt>{WORK.mechanism}</dt>
+                  <dd>{p.mechanism}</dd>
+                </div>
+              </dl>
+            </>
+          )}
+          <Rollout project={p} />
           <div className={styles.stack}>
             <span className={styles.stackLabel}>{WORK.stackLabel}</span>
             {stackTags(p.stack, 99).map((t) => (
@@ -92,6 +99,8 @@ export function WorkCase({ project: p }: { project: Project }) {
       </div>
 
       <Readme project={p} />
+      <Figures project={p} />
+      <Points project={p} />
       <Architecture project={p} />
 
       <nav className={styles.foot} aria-label={WORK.allWork}>
@@ -148,10 +157,101 @@ function ExplainerVideo({ project: p }: { project: Project }) {
   );
 }
 
-/** The system diagram, full width under the case, opening at full size in a new tab. */
+/** What can be used today, and what is built but only verified on a mainnet fork. */
+function Rollout({ project: p }: { project: Project }) {
+  const r = p.rollout;
+  if (!r) return null;
+  const row = (label: string, items: string[], color: string) => (
+    <div className={styles.stack}>
+      <span className={styles.stackLabel}>{label}</span>
+      {items.map((t) => (
+        <span key={t} className={`sk ${styles.tag}`}>
+          <Sketch r={10} w={1.6} c={color} draw={false} />
+          {t}
+        </span>
+      ))}
+    </div>
+  );
+  return (
+    <div className={styles.rollout}>
+      {row(WORK.rolloutLive, r.live, "var(--mint)")}
+      {row(WORK.rolloutFork, r.fork, "var(--grey)")}
+    </div>
+  );
+}
+
+/** A drawing made in code, in a frame, with its words in the alt text for screen readers. */
+function DrawnFigure({ art, className }: { art: Drawn; className?: string }) {
+  return (
+    <figure className={`sk ${styles.drawnFig} ${className ?? ""}`}>
+      <Sketch fill="var(--white)" r={10} w={2.4} />
+      <div className={styles.drawnScroll} role="img" aria-label={art.alt}>
+        <Drawing kind="case" art={art.art} className={styles.drawn} draw={120} dur={1400} />
+      </div>
+      <figcaption className={styles.archCaption}>{art.caption}</figcaption>
+    </figure>
+  );
+}
+
+/** Drawings of how the thing works, each under its own heading, full width. */
+function Figures({ project: p }: { project: Project }) {
+  if (!p.figures?.length) return null;
+  return (
+    <>
+      {p.figures.map((f) => (
+        <section key={f.art} className={styles.arch} aria-label={`${p.name} · ${f.title}`}>
+          <div className={styles.archHead}>
+            <h2 className={styles.h2}>{f.title}</h2>
+          </div>
+          <DrawnFigure art={f} />
+        </section>
+      ))}
+    </>
+  );
+}
+
+/** "Under the hood": one card per piece of engineering, each with its figure; the note says where the figures come from. */
+function Points({ project: p }: { project: Project }) {
+  if (!p.points?.length) return null;
+  return (
+    <section className={styles.arch} aria-label={`${p.name} · ${WORK.points}`}>
+      <div className={styles.archHead}>
+        <h2 className={styles.h2}>{WORK.points}</h2>
+      </div>
+      <dl className={styles.points}>
+        {p.points.map((pt) => (
+          <div key={pt.t} className={`sk ${styles.point}`}>
+            <Sketch fill="var(--white)" r={12} w={2} />
+            <dt>{pt.t}</dt>
+            <dd>{pt.d}</dd>
+            {pt.v ? (
+              <dd className={styles.pointFig}>
+                <b>{pt.v}</b>
+                {pt.l ? <small>{pt.l}</small> : null}
+              </dd>
+            ) : null}
+          </div>
+        ))}
+      </dl>
+      {p.pointsNote ? <p className={`fine ${styles.pointsNote}`}>{p.pointsNote}</p> : null}
+    </section>
+  );
+}
+
+/** The system diagram, full width under the case: a drawing made in code, or an image that opens at full size in a new tab. */
 function Architecture({ project: p }: { project: Project }) {
   const a = p.architecture;
   if (!a) return null;
+  if ("art" in a) {
+    return (
+      <section className={styles.arch} aria-label={`${p.name} · ${WORK.architecture}`}>
+        <div className={styles.archHead}>
+          <h2 className={styles.h2}>{WORK.architecture}</h2>
+        </div>
+        <DrawnFigure art={a} />
+      </section>
+    );
+  }
   return (
     <section className={styles.arch} aria-label={`${p.name} · ${WORK.architecture}`}>
       <div className={styles.archHead}>
@@ -185,31 +285,9 @@ const ProjectAskButton = ({ id }: { id: string }) => (
   <AskButton className="chip sk amber" label={WORK.askProject} scopeId={id} sketch={{ r: 16, w: 1.8, c: "var(--pink)", draw: false }} />
 );
 
+/** The README panel. A private project has none: its page shows the product, its drawings and the live site instead. */
 function Readme({ project: p }: { project: Project }) {
-  if (p.private) {
-    return (
-      <section className={`sk ${styles.readme}`}>
-        <Sketch fill="var(--white)" r={14} w={2.4} />
-        <div className={styles.rmHead}>
-          <span className={styles.rmFile}>
-            <Icon name="lock" />
-            {WORK.privateRepo}
-          </span>
-        </div>
-        <div className={styles.plain}>
-          <p>{p.scope}</p>
-        </div>
-        {p.explainer ? (
-          <ExplainerVideo project={p} />
-        ) : p.readme ? (
-          <>
-            <p className={styles.rmNote}>{WORK.privateNotes}</p>
-            <pre className={`${styles.rmBody} ${styles.notes}`}>{p.readme}</pre>
-          </>
-        ) : null}
-      </section>
-    );
-  }
+  if (p.private) return null;
   return (
     <section className={`sk ${styles.readme}`}>
       <Sketch fill="var(--white)" r={14} w={2.4} />

@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import { HOME } from "@/content/copy";
 import type { Project } from "@/content/projects";
 import { projectStamps, stackTags } from "@/lib/projectMeta";
-import { HUE_VAR } from "@/lib/sketchArt";
+import { artSize, HUE_VAR, PROJECT_ART } from "@/lib/sketchArt";
 import { AskAbout } from "./AskAbout";
 import { Drawing } from "./sketch/Drawing";
 import { Sketch } from "./sketch/Sketch";
@@ -29,6 +29,7 @@ export function ProjectCard({
   heading?: "h2" | "h3";
 }) {
   const H = heading;
+  const art = artSize(PROJECT_ART[p.id]);
   return (
     <article
       id={`card-${p.id}`}
@@ -36,7 +37,14 @@ export function ProjectCard({
       style={{ "--rot": `${TILT[index % TILT.length]}deg` } as CSSProperties}
     >
       <Sketch fill="var(--white)" r={16} w={2.6} band={12} bandColor={HUE_VAR[p.hue]} />
-      <Drawing kind="project" id={p.id} className={styles.art} draw={150} dur={1100} />
+      <Drawing
+        kind="project"
+        id={p.id}
+        className={styles.art}
+        style={{ aspectRatio: `${art.w} / ${art.h}` }}
+        draw={150}
+        dur={1100}
+      />
       <div className={styles.t}>
         <H className={styles.name}>
           <Link href={`/work/${p.id}`}>{p.name}</Link>

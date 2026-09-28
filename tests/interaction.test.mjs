@@ -37,7 +37,9 @@ test('speech bubbles put their tail where the speaker is', () => {
 });
 
 test('a card reads its stamps, tags and role accent off the record', () => {
-  assert.deepEqual(projectStamps({ role: 'Solo · private repository · live', private: true, site: { label: 'x', url: 'https://x' } }), ['live', 'private']);
+  // A private project is stamped by what it is (live), never by where its code lives.
+  assert.deepEqual(projectStamps({ role: 'Solo · live', private: true, site: { label: 'x', url: 'https://x' } }), ['live']);
+  assert.deepEqual(projectStamps({ role: 'Solo · open source', private: true }), []);
   assert.deepEqual(projectStamps({ role: 'Solo · open source · live', private: false }), ['live', 'open']);
   assert.deepEqual(projectStamps({ role: 'Solo · B.Eng. capstone', private: false }), ['capstone']);
   assert.deepEqual(projectStamps({ role: 'Solo · open source', private: false }), ['open']);

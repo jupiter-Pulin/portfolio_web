@@ -26,8 +26,9 @@ Three things live in this repository, in order of how much of the code they take
    data file. A project card opens its case page wherever it is clicked. A case page can
    also carry the live product's link, a walkthrough video, an architecture diagram and a
    hand-drawn explainer video that takes the README preview's place; each is a file named
-   on the project record. Every figure shown carries a provenance note; a private project
-   shows a scope note and never a repository link.
+   on the project record. A case page can also carry drawings made in code, cards on how it
+   works ("Under the hood") and what is live versus only verified on a fork. Every figure
+   shown carries a provenance note; a private project never shows a repository link.
 3. **A blog** — one Markdown file per post, rendered at build time. Publishing is adding a file.
 
 The hand-drawn look is code, not images: `src/lib/sketch.ts` is the pen (seeded wobble,
@@ -131,7 +132,8 @@ from a broken one by reading the counters.
 - `src/content/` holds every string, link and project record (`copy.ts`, `links.ts`,
   `projects.ts`, `guide.ts`). Components import from here and never hardcode a second copy.
 - Every figure on the site comes from `projects.ts` and keeps its provenance label
-  (`statsNote`). A private project (`private: true`) shows its scope note, never a repository.
+  (`statsNote` / `pointsNote`). A private project (`private: true`) never shows a repository;
+  its scope note is given to the assistant, not rendered.
 - A project cover is a file: drop `public/projects/<id>/cover.webp` and the build picks it up.
   The live site, the walkthrough (`demo`), the hand-drawn `explainer` video and the
   `architecture` diagram are optional fields on the record, with their files in the same

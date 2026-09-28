@@ -140,7 +140,7 @@ test('the gallery shows the five projects in registry order, featured first', ()
   }
 });
 
-test('a card links only inside the site; a private one says so and names no repository', () => {
+test('a card links only inside the site; a private one names no repository', () => {
   const cards = cardsOf(pages.gallery);
   PROJECTS.forEach((p, i) => {
     const external = openTags(cards[i], 'a').filter((a) => a.includes('target="_blank"'));
@@ -148,7 +148,7 @@ test('a card links only inside the site; a private one says so and names no repo
     assert.ok(textOf(cards[i]).includes(HOME.readCase), `${p.id} read the case`);
     assert.match(cards[i], new RegExp(`data-scope="${p.id}"`), `${p.id} can be asked about`);
     if (p.private) {
-      assert.ok(textOf(cards[i]).includes(HOME.stamps.private), `${p.id} says the repository is private`);
+      assert.doesNotMatch(textOf(cards[i]), /private repo/i, `${p.id}: the card shows the product, not where its code lives`);
       assert.doesNotMatch(cards[i], /github\.com/, `no repository link anywhere on the ${p.id} card`);
     }
   });
@@ -211,29 +211,57 @@ test('a case page without stats renders no stats block', () => {
   }
 });
 
-test('a private case page shows the scope note and links no repository', () => {
+test('a private case page links no repository and carries no README panel', () => {
   const privates = PROJECTS.filter((x) => x.private);
   assert.ok(privates.length > 0, 'platter is private');
   for (const p of privates) {
-    const body = textOf(pages[p.id]);
-    assert.ok(body.includes(WORK.privateRepo), `${p.id} lock label`);
-    assert.ok(body.includes(p.scope), `${p.id} scope note`);
     // The header and footer link the GitHub account; the case itself links no repository.
     const html = markup(pages[p.id]);
     const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'));
     assert.doesNotMatch(main, /github\.com/, `no github link in the ${p.id} case`);
-    if (p.readme) {
-      // Design notes stand in for the private README: shown in full, scrollable, not a clipped preview.
-      assert.ok(body.includes(WORK.privateNotes), `${p.id} notes label`);
-      const pre = markup(pages[p.id]).match(/<pre\b[^>]*class="([^"]*)"[^>]*>([\s\S]*?)<\/pre>/);
-      assert.ok(pre, `${p.id} notes are a <pre>`);
-      assert.match(pre[1], /notes/, `${p.id} notes scroll in place`);
-      assert.equal(pre[2].split('\n')[0], p.readme.split('\n')[0]);
-    }
+    // No lock, no scope note, no design notes: the scope note is for the assistant only.
+    assert.doesNotMatch(main, /class="[^"]*rmHead/, `${p.id} has no README panel`);
+    assert.doesNotMatch(main, /<pre\b/, `${p.id} has no notes preview`);
+    assert.ok(!textOf(main).includes(p.scope), `${p.id} scope note stays off the page`);
+    assert.doesNotMatch(textOf(main), /private repository/i, `${p.id} says nothing about its repository`);
   }
 });
 
-test('a demo takes the cover slot, the live site is linked, the architecture spans the page', () => {
+test('platter: rollout, drawings and "Under the hood" replace the thesis and the pair', () => {
+  const p = projectById('platter');
+  const html = markup(pages.platter);
+  const body = textOf(pages.platter);
+  assert.ok(!body.includes(WORK.wrong) && !body.includes(WORK.mechanism), 'no pair on a page with points');
+  assert.ok(!body.includes(p.thesis), 'no thesis callout on a page with points');
+
+  assert.ok(body.includes(WORK.rolloutLive) && body.includes(WORK.rolloutFork), 'rollout labels');
+  for (const item of [...p.rollout.live, ...p.rollout.fork]) assert.ok(body.includes(item), `rollout item ${item}`);
+
+  // Each drawing sits in its own section, labelled for screen readers with its alt text.
+  for (const f of p.figures) {
+    assert.ok(body.includes(f.title), `figure title ${f.title}`);
+    assert.ok(body.includes(f.caption), `figure caption ${f.title}`);
+    assert.ok(html.includes(`role="img" aria-label="${f.alt}"`), `figure alt ${f.title}`);
+  }
+  assert.ok(html.includes(`role="img" aria-label="${p.architecture.alt}"`), 'the architecture is drawn, with its alt text');
+  assert.ok(body.includes(p.architecture.caption), 'architecture caption');
+  assert.ok(!tagWithHref(pages.platter, '/projects/platter/architecture.webp'), 'no image to open at full size');
+
+  assert.ok(body.includes(WORK.points), '"Under the hood" heading');
+  for (const pt of p.points) {
+    assert.ok(body.includes(pt.t) && body.includes(pt.d), `point ${pt.t}`);
+    if (pt.v) assert.ok(body.includes(pt.v) && body.includes(pt.l), `point figure ${pt.t}`);
+  }
+  assert.ok(body.includes(p.pointsNote), 'the figures say where they come from');
+
+  // Order down the page: the drawings, then the cards, then the architecture.
+  const at = (text) => body.indexOf(text);
+  assert.ok(at(p.figures[0].title) < at(p.figures[1].title), 'drawings in record order');
+  assert.ok(at(p.figures[1].title) < at(WORK.points), 'cards after the drawings');
+  assert.ok(at(WORK.points) < at(WORK.architecture), 'architecture last');
+});
+
+test('a demo takes the cover slot and the live site is linked', () => {
   const p = projectById('platter');
   const html = markup(pages.platter);
   const video = openTags(html, 'video');
@@ -247,11 +275,7 @@ test('a demo takes the cover slot, the live site is linked, the architecture spa
   assert.ok(site && /target="_blank"/.test(site) && /rel="noopener"/.test(site), 'live site opens safely');
   assert.ok(textOf(pages.platter).includes(`${WORK.visitSite} ${p.site.label}`), 'live site label');
 
-  const img = openTags(html, 'img').find((t) => t.includes(`src="${p.architecture.src}"`));
-  assert.ok(img, 'architecture image');
-  assert.ok(img.includes(`alt="${p.architecture.alt}"`), 'architecture alt text');
   assert.ok(textOf(pages.platter).includes(p.architecture.caption), 'architecture caption');
-  assert.ok(tagWithHref(pages.platter, p.architecture.src), 'full-size link');
 
   // The other cases keep their cover; the only video they may carry is their explainer.
   for (const q of PROJECTS.filter((x) => !x.demo)) {
@@ -390,4 +414,6 @@ test('nothing on either screen can push the page wider than a 375px viewport', (
   assert.doesNotMatch(cards, /min-width:\s*(?:[4-9]\d\d|\d{4,})px/, 'no card wider than a phone');
   assert.match(squash(mediaBlock(read('../src/components/WorkCase.module.css'), 680)), /\.page \{[^}]*padding: 18px 16px/);
   assert.match(squash(read('../src/components/WorkCase.module.css')), /\.rmBody \{[^}]*overflow: auto/, 'a README scrolls inside its box');
+  // A drawing keeps a readable width and scrolls sideways inside its own frame instead of the page.
+  assert.match(squash(read('../src/components/WorkCase.module.css')), /\.drawnScroll \{[^}]*overflow-x: auto/, 'a drawing scrolls inside its frame');
 });

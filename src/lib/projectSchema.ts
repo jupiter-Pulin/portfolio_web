@@ -4,6 +4,7 @@
 // Relative import on purpose: tests/schema.test.mjs loads this file directly
 // under Node's type stripping, which does not know the "@/" tsconfig alias.
 import type { Hue, Project, Status } from "../content/projects";
+import { CASE_ART } from "./sketchArt.ts";
 
 export const HUES: Hue[] = ["cyan", "amber", "blue", "green", "violet"];
 export const STATUSES: Status[] = ["shipped", "building", "archived"];
@@ -39,10 +40,39 @@ export function validateProject(p: Project): string[] {
     if (!own(p.explainer.poster)) fail(`explainer poster must be in /projects/${p.id}/`);
     if (!p.explainer.caption) fail("explainer needs a caption");
   }
+  // A drawing made in code is named by its CASE_ART key; its words are the alt text.
+  const drawn = (what: string, d: { art: string; alt: string; caption: string }) => {
+    if (!CASE_ART[d.art]) fail(`${what} art "${d.art}" is not a drawing in CASE_ART`);
+    if (!d.alt) fail(`${what} needs alt text`);
+    if (!d.caption) fail(`${what} needs a caption`);
+  };
   if (p.architecture) {
-    if (!own(p.architecture.src)) fail(`architecture src must be in /projects/${p.id}/`);
-    if (!p.architecture.alt) fail("architecture needs alt text");
-    if (!(p.architecture.width > 0 && p.architecture.height > 0)) fail("architecture needs its width and height");
+    const a = p.architecture;
+    if ("art" in a) drawn("architecture", a);
+    else {
+      if (!own(a.src)) fail(`architecture src must be in /projects/${p.id}/`);
+      if (!a.alt) fail("architecture needs alt text");
+      if (!(a.width > 0 && a.height > 0)) fail("architecture needs its width and height");
+    }
+  }
+  if (p.figures) {
+    for (const f of p.figures) {
+      if (!f.title) fail("a figure needs a title");
+      drawn(`figure "${f.title}"`, f);
+    }
+    if (new Set(p.figures.map((f) => f.art)).size !== p.figures.length) fail("a figure is drawn twice");
+  }
+  if (p.points) {
+    for (const pt of p.points) {
+      if (!pt.t || !pt.d) fail("a point needs a title and a sentence");
+      if (pt.v && !pt.l) fail(`point "${pt.t}" shows a figure without a label`);
+    }
+    // Figures keep their provenance, as stats do.
+    if (p.points.some((pt) => pt.v) && !p.pointsNote) fail("points with figures need a pointsNote saying where they come from");
+  }
+  if (p.rollout) {
+    if (p.rollout.live.length === 0 && p.rollout.fork.length === 0) fail("rollout lists nothing");
+    if ([...p.rollout.live, ...p.rollout.fork].some((x) => !x)) fail("rollout has an empty item");
   }
 
   if (p.private) {

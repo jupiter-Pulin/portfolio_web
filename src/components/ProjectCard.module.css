@@ -44,8 +44,10 @@
   overflow: visible;
   margin: 8px 0 12px;
 }
+/* The featured card's drawing keeps its own proportions (the style carries its aspect ratio). */
 .feature .art {
-  height: 170px;
+  height: auto;
+  min-height: 170px;
 }
 .t {
   display: flex;

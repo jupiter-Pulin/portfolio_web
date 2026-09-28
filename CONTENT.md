@@ -9,7 +9,8 @@ Everything below is a data edit or a file drop; the table says which file to tou
 | Reorder the work, change what is featured | `src/content/projects.ts` — array order |
 | Replace or add a cover image | `public/projects/<id>/cover.webp` (see below) |
 | Change a README preview or its caveat | `src/content/projects.ts` — `readme` / `readmeNote` |
-| Change a figure or where it came from | `src/content/projects.ts` — `stats` / `statsNote` |
+| Change a figure or where it came from | `src/content/projects.ts` — `stats` / `statsNote`, `points` / `pointsNote` |
+| Add drawings, "Under the hood" cards or a live / fork line to a case page | `src/content/projects.ts` — `figures` / `points` / `rollout`, drawings in `CASE_ART` in `src/lib/sketchArt.ts` (see below) |
 | Change a repository or README link | `src/content/projects.ts` — `readmeUrl` / `repos` |
 | Link a live product, add a demo video, an explainer video or a diagram | `src/content/projects.ts` — `site` / `demo` / `explainer` / `architecture` + files in `public/projects/<id>/` (see below) |
 | Publish a blog post | `src/content/blog/YYYY-MM-DD-<slug>.md` + photos in `public/blog/<slug>/` (see below) |
@@ -32,7 +33,8 @@ Then:
 
 - **Public project** → `readmeUrl` and every `repos[].url` must be `https://github.com/…`.
 - **Private project** → set `private: true`, write a `scope` note, and leave `repos` empty.
-  The case page shows a lock and the scope note; no repository link is rendered anywhere.
+  No repository link is rendered anywhere, and the page carries no README panel: the scope
+  note is given to the assistant, not shown.
 
 Nothing else is needed. `/work`, `/work/<id>`, `generateStaticParams`, the home page
 cards and the previous/next loop all read the same array. A new project also wants a small
@@ -72,13 +74,34 @@ a private record links no repository:
   text: the guide still indexes it.
 - `architecture: { src, alt, caption, width, height }` — a diagram in
   `public/projects/<id>/`, shown full width under the case with a link to open it at
-  full size. `width` / `height` are the file's pixel size.
+  full size. `width` / `height` are the file's pixel size. Or `{ art, alt, caption }`:
+  a drawing made in code (below) in the same place, with no full-size link.
 
 `npm test` checks the shapes and that every file a record names exists.
 
-A **private** record may also carry `readme`: design notes written for this site, since
-the real README is not published. The case page shows them under the scope note,
-scrollable and in full, and the guide indexes them like any README (addresses stripped).
+A **private** record may also carry `readme`: notes written for the assistant, since the
+real README is not published. The page does not show them; the guide indexes them like
+any README (addresses stripped).
+
+## Drawings, "Under the hood" and the live / fork line
+
+Three more optional fields, rendered in this order under the case:
+
+- `figures: [{ art, title, alt, caption }]` — drawings made in code, each under its own
+  heading. `art` is a key in `CASE_ART` in `src/lib/sketchArt.ts` (a card drawing from
+  `PROJECT_ART` can be reused there, larger); the words inside go in `ART` in
+  `src/content/copy.ts`, and `alt` says in a sentence what the drawing shows. A drawing
+  keeps a readable width and scrolls sideways inside its frame on a phone.
+- `points: [{ t, d, v?, l? }]` + `pointsNote` — the "Under the hood" cards: a title, a
+  sentence or two, and optionally a figure `v` with its label `l`. A record whose points
+  carry figures needs a `pointsNote` saying where they come from. A record with points
+  shows them instead of the thesis callout and the wrong / mechanism pair; those fields
+  stay on the record for the assistant.
+- `rollout: { live, fork }` — what a visitor can use today and what is built but only
+  verified on a mainnet fork, as two tag rows under the tagline.
+
+The card drawing itself is `PROJECT_ART[<id>]`: 320 × 156 by default, or its own `w` / `h`
+(the featured card keeps the drawing's proportions).
 
 The guide's LP / DeFi summary lines are `GUIDE.lp` in `src/content/guide.ts`: sent with
 every question and indexed, with no answer card of their own. Run
@@ -101,7 +124,8 @@ block that is self-reported carries a `statsNote` saying so. Do not add a number
 without one, and do not drop a `statsNote` from a record that has figures — the case
 page renders the note directly under the four stat tiles, and it is the only thing
 telling a reader where the number came from. With `stats: []` the whole block, note
-included, is not rendered.
+included, is not rendered. The same holds for figures on `points`: they need a
+`pointsNote`, rendered under the cards.
 
 ## Blog posts
 

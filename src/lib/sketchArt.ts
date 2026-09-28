@@ -15,6 +15,7 @@ const C = {
   lav: "var(--lav)",
   green: "var(--green)",
   grey: "var(--grey)",
+  ink2: "var(--ink-2)",
   lgrey: "var(--lgrey)",
   bubble: "var(--bubble)",
 };
@@ -83,30 +84,108 @@ export function buildRobotHead(svg: SVGSVGElement) {
 export const ROBOT_HEAD_VIEWBOX = "-90 -116 180 194";
 
 type ArtFn = (p: Pen, s: SVGSVGElement) => void;
+/** A drawing and its viewBox size; `h` defaults to the cards' 156. */
+export type Art = { w: number; h?: number; draw: ArtFn };
 
-/** One small diagram per project: the mechanism at a glance. Wide ones are 600 × 156, the rest 320 × 156. */
-export const PROJECT_ART: Record<string, { w: number; draw: ArtFn }> = {
+/** Dash a drawn line, or the outline of a drawn shape (for things verified on a fork, or off-chain). */
+function dashed<T extends Element>(node: T, pattern = "6 7"): T {
+  const ln = node.classList.contains("ln") ? node : node.querySelector(".ln");
+  ln?.setAttribute("stroke-dasharray", pattern);
+  return node;
+}
+
+/** One small diagram per project: the mechanism at a glance. Wide ones are 600 × 156, the rest 320 × 156; Platter's is taller. */
+export const PROJECT_ART: Record<string, Art> = {
   platter: {
-    w: 600,
+    w: 780,
+    h: 290,
     draw(p, s) {
       const a = ART.platter;
-      a.chains.forEach((label, i) => {
-        const y = 30 + i * 45;
-        p.shape(s, ell(66, y, 16), { fill: C.white, hatch: C.green, gap: 6, w: 2.4 });
-        p.text(s, 42, y + 5, label, { size: 15, a: "end" });
-        p.line(s, `M84,${y}Q108,${y} 128,${75 + (i - 1) * 10}`, { w: 2, c: C.lgrey });
+      // The swap box: sell a token, buy vault shares, sign once.
+      p.shape(s, rr(10, 20, 192, 232, 12), { fill: C.white, w: 2.4 });
+      p.text(s, 24, 44, a.swap, { size: 17, a: "start" });
+      p.shape(s, rr(22, 56, 168, 52, 7), { w: 2, amp: 0.8 });
+      p.text(s, 32, 72, a.sell, { size: 13.5, c: C.grey, a: "start" });
+      p.text(s, 32, 97, a.sellAmount, { size: 17, a: "start" });
+      p.shape(s, rr(128, 76, 54, 22, 11), { w: 1.8, amp: 0.5 });
+      p.text(s, 155, 92, a.sellToken, { size: 13 });
+      p.shape(s, rr(22, 124, 168, 52, 7), { w: 2, amp: 0.8 });
+      p.shape(s, ell(106, 116, 9), { fill: C.white, w: 2, amp: 0.3 });
+      p.line(s, "M106,111L106,121M102,117L106,121L110,117", { w: 1.8, amp: 0.2 });
+      p.text(s, 32, 140, a.buy, { size: 13.5, c: C.grey, a: "start" });
+      p.text(s, 32, 165, a.buyAmount, { size: 17, a: "start" });
+      p.shape(s, rr(106, 132, 76, 22, 11), { w: 1.8, amp: 0.5 });
+      p.text(s, 144, 148, a.vault, { size: 12.5 });
+      p.text(s, 182, 170, a.buyApy, { size: 12.5, c: C.mint, a: "end" });
+      p.text(s, 24, 198, a.gasless, { size: 13.5, c: C.grey, a: "start" });
+      p.shape(s, rr(150, 186, 32, 16, 8), { w: 1.8, amp: 0.3 });
+      el("circle", { cx: 174, cy: 194, r: 5.5, fill: C.mint, class: "fill" }, s);
+      p.shape(s, rr(22, 210, 168, 28, 14), { fill: C.white, hatch: C.pink, gap: 7, hw: 1.6, c: C.pink, w: 2.2, amp: 0.6 });
+      p.text(s, 106, 230, a.sign, { size: 17 });
+      p.text(s, 106, 276, a.note, { size: 16, c: C.pink, rot: -2 });
+      // The vault beside it: APY, TVL and the hourly APY dots.
+      p.shape(s, rr(212, 20, 208, 232, 12), { fill: C.white, w: 2.4 });
+      p.shape(s, ell(232, 44, 10), { fill: C.white, hatch: C.blue, gap: 5, hw: 1.4, w: 2, amp: 0.3 });
+      p.text(s, 248, 43, a.vault, { size: 15, a: "start" });
+      p.text(s, 248, 59, a.protocol, { size: 13.5, c: C.grey, a: "start" });
+      p.text(s, 408, 47, a.apy, { size: 22, c: C.mint, a: "end" });
+      p.text(s, 408, 62, a.apyLabel, { size: 13.5, c: C.grey, a: "end" });
+      p.shape(s, rr(224, 72, 184, 80, 6), { w: 1.5, c: C.lgrey, amp: 0.6 });
+      el(
+        "path",
+        {
+          d: "M232,132C244,130 252,126 262,128S276,90 284,96S296,124 306,122S330,118 342,120S360,84 368,92S384,126 400,130",
+          fill: "none",
+          stroke: C.mint,
+          "stroke-width": 3.2,
+          "stroke-dasharray": "0.1 5.5",
+          "stroke-linecap": "round",
+          class: "fill",
+        },
+        s,
+      );
+      a.cells.forEach(([label, value], i) => {
+        const x = 224 + (i % 2) * 96, y = 160 + Math.floor(i / 2) * 46;
+        p.shape(s, rr(x, y, 88, 40, 5), { w: 1.5, c: C.lgrey, amp: 0.5 });
+        p.text(s, x + 8, y + 16, label, { size: 12.5, c: C.grey, a: "start" });
+        p.text(s, x + 8, y + 33, value, { size: 14, a: "start" });
       });
-      p.shape(s, rr(130, 48, 130, 56, 10), { fill: C.white, w: 2.6 });
-      p.text(s, 195, 72, a.api, { size: 16 });
-      p.text(s, 195, 92, a.unsigned, { size: 14, c: C.grey });
-      p.arrow(s, 264, 76, 290, 60, 318, 76, { w: 2.4 });
-      p.shape(s, rr(326, 50, 96, 56, 10), { fill: C.white, hatch: C.yellow, gap: 7, w: 2.6 });
-      p.shape(s, rr(396, 66, 26, 22, 6), { fill: C.white, w: 2.2 });
-      p.text(s, 362, 126, a.sign, { size: 16 });
-      p.line(s, "M440,58L450,70L468,44", { c: C.pink, w: 3.6, amp: 0.4 });
-      p.text(s, 520, 36, a.note[0], { size: 17, c: C.pink, rot: -5 });
-      p.text(s, 522, 56, a.note[1], { size: 17, c: C.pink, rot: -5 });
-      p.arrow(s, 520, 70, 520, 110, 470, 120, { c: C.pink, w: 2 });
+      // The signed order leaves for the auction.
+      p.shape(s, rr(428, 110, 22, 15, 2), { w: 1.8, amp: 0.2 });
+      p.line(s, "M428,112L439,120L450,112", { w: 1.6, amp: 0.2 });
+      p.arrow(s, 426, 140, 439, 140, 452, 140, { w: 2.2, hl: 8 });
+      p.text(s, 439, 162, a.order, { size: 13.5, c: C.grey });
+      // Off-chain: the auctioneer takes the solvers' bids and picks one within the deadline.
+      dashed(p.shape(s, rr(458, 20, 210, 232, 12), { w: 1.6, c: C.grey, amp: 0.8 }));
+      p.text(s, 470, 40, a.offChain, { size: 13.5, c: C.grey, a: "start" });
+      p.shape(s, ell(490, 66, 13), { w: 2, amp: 0.3 });
+      p.line(s, "M490,66L490,57M490,66L496,69", { w: 1.8, amp: 0.1 });
+      p.text(s, 507, 71, a.clock, { size: 13.5, c: C.grey, a: "start" });
+      p.shape(s, ell(563, 68, 12), { fill: C.white, w: 2.2, amp: 0.3 });
+      p.line(s, "M540,98Q563,78 586,98", { w: 2.2, amp: 0.4 });
+      p.line(s, "M590,92L608,70", { w: 2.2, amp: 0.2 });
+      p.shape(s, rr(602, 56, 20, 10, 2), { fill: C.white, w: 2, amp: 0.2 }).setAttribute("transform", "rotate(-42 612 61)");
+      p.shape(s, rr(515, 98, 96, 32, 4), { fill: C.white, w: 2.2, amp: 0.6 });
+      p.text(s, 563, 120, a.auction, { size: 16 });
+      p.line(s, "M489,160L535,131M539,160L555,131M589,160L571,131M639,160L591,131", { w: 1.6, c: C.grey, amp: 0.3 });
+      a.bids.forEach(([who, bid], i) => {
+        const x = 468 + i * 50;
+        const won = i === 0;
+        p.shape(s, rr(x, 160, 42, 42, 6), won ? { fill: C.white, hatch: C.mint, gap: 6, hw: 1.5, c: C.mint, w: 2.2, amp: 0.4 } : { fill: C.white, w: 2, amp: 0.4 });
+        p.text(s, x + 21, 178, who, { size: 12.5 });
+        p.text(s, x + 21, 195, bid, { size: 12, c: C.grey });
+      });
+      p.text(s, 489, 222, a.wins, { size: 14, c: C.mint });
+      // On-chain: the winning bid settles in one transaction, for at least the signed minimum.
+      p.arrow(s, 672, 109, 683, 109, 694, 109, { w: 2.2, hl: 8 });
+      p.text(s, 700, 40, a.chain, { size: 13.5, c: C.grey, a: "start" });
+      p.shape(s, rr(700, 50, 70, 30, 4), { w: 2, amp: 0.4 });
+      p.line(s, "M735,80L735,94", { w: 2, amp: 0.1 });
+      p.shape(s, rr(700, 94, 70, 30, 4), { fill: C.white, hatch: C.yellow, gap: 6, hw: 1.5, w: 2.2, amp: 0.4 });
+      p.text(s, 735, 114, a.tx, { size: 14 });
+      p.line(s, "M735,124L735,138", { w: 2, amp: 0.1 });
+      dashed(p.shape(s, rr(700, 138, 70, 30, 4), { w: 1.6, c: C.grey, amp: 0.4 }));
+      p.text(s, 735, 192, a.floor, { size: 14, c: C.pink, rot: -3 });
     },
   },
   loop: {
@@ -177,13 +256,118 @@ export const PROJECT_ART: Record<string, { w: number; draw: ArtFn }> = {
   },
 };
 
-/** Draw a project's diagram; unknown ids draw nothing. Returns the viewBox width. */
-export function buildProjectArt(svg: SVGSVGElement, id: string, seed: number): number {
-  const art = PROJECT_ART[id];
-  if (!art) return 320;
-  art.draw(pen(svg, seed), svg);
-  return art.w;
+const LANES = [110, 325, 540, 755, 970];
+
+/** Drawings that sit under a case page, full width, keyed by a record's `figures[].art` or `architecture.art`. */
+export const CASE_ART: Record<string, Art> = {
+  // The card's drawing, larger.
+  "platter-fill": PROJECT_ART.platter,
+  // Who holds the money at each step of one gasless settlement.
+  "platter-settle": {
+    w: 1080,
+    h: 630,
+    draw(p, s) {
+      const a = ART.platterSettle;
+      a.lanes.forEach(([name, sub], i) => {
+        const x = LANES[i];
+        p.shape(s, rr(x - 85, 20, 170, 64, 8), { fill: C.white, w: 2.4, amp: 0.8 });
+        p.text(s, x, 48, name, { size: 19 });
+        p.text(s, x, 70, sub, { size: 15, c: C.grey });
+        dashed(p.line(s, `M${x},90L${x},${i === 2 ? 504 : 490}`, { w: 1.6, c: C.lgrey, amp: 0.4 }), "3 7");
+      });
+      const step = (y: number, from: number, to: number, c: string, label: string, lx: number, approval = false) => {
+        const dir = to > from ? 1 : -1;
+        const x0 = LANES[from] + 4 * dir, x1 = LANES[to] - 6 * dir;
+        const g = p.arrow(s, x0, y, (x0 + x1) / 2, y, x1, y, { c, w: 2.4, hl: 10, amp: 0.6 });
+        if (approval) dashed(g);
+        p.text(s, lx, y - 11, label, { size: 16.5, c: C.ink2 });
+      };
+      const t = a.steps;
+      step(124, 0, 1, C.grey, t.approve, 217, true);
+      step(174, 0, 1, C.mint, t.pull, 217);
+      step(174, 1, 2, C.mint, t.into, 432);
+      step(224, 2, 3, C.mint, t.send, 647);
+      step(274, 3, 4, C.mint, t.swap, 862);
+      step(324, 4, 3, C.blue, t.back, 862);
+      step(374, 3, 2, C.blue, t.fees, 647);
+      step(424, 3, 0, C.blue, t.surplus, 647);
+      step(474, 2, 0, C.blue, t.pay, 217);
+      p.shape(s, rr(430, 508, 220, 62, 8), { fill: C.white, c: C.blue, w: 2.4, amp: 0.6 });
+      p.text(s, 540, 534, a.keep[0], { size: 18 });
+      p.text(s, 540, 556, a.keep[1], { size: 15, c: C.grey });
+      [C.mint, C.blue, C.grey].forEach((c, i) => {
+        const x = 40 + i * 220;
+        const ln = p.line(s, `M${x},606L${x + 30},606`, { c, w: 2.6, amp: 0.2 });
+        if (i === 2) dashed(ln);
+        p.text(s, x + 40, 611, a.legend[i], { size: 15, c: C.grey, a: "start" });
+      });
+    },
+  },
+  // As built: solid boxes are live, dashed ones are verified on a mainnet fork.
+  "platter-arch": {
+    w: 1080,
+    h: 556,
+    draw(p, s) {
+      const a = ART.platterArch;
+      const box = (x: number, y: number, w: number, h: number, title: string, subs: readonly string[], subSize = 14) => {
+        const g = p.shape(s, rr(x, y, w, h, 8), { fill: C.white, w: 2.2, amp: 0.6 });
+        p.text(s, x + 14, y + 26, title, { size: 17, a: "start" });
+        subs.forEach((line, i) => p.text(s, x + 14, y + 47 + i * 19, line, { size: subSize, c: C.grey, a: "start" }));
+        return g;
+      };
+      ([[20, 230], [280, 520], [830, 230]] as const).forEach(([x, w], i) => {
+        p.shape(s, rr(x, 20, w, 480, 14), { w: 1.4, c: C.lgrey, amp: 1 });
+        p.text(s, x + 18, 48, a.zones[i], { size: 15, c: C.grey, a: "start" });
+      });
+      box(40, 66, 190, 70, a.web[0], [a.web[1]]);
+      box(40, 156, 190, 70, a.wallet[0], [a.wallet[1]]);
+      box(300, 66, 480, 62, a.edge[0], [a.edge[1]]);
+      box(300, 148, 150, 62, a.site[0], [a.site[1]]);
+      box(300, 226, 150, 80, a.db[0], [a.db[1], a.db[2]]);
+      p.shape(s, rr(470, 148, 310, 158, 8), { fill: C.white, w: 2.2, amp: 0.6 });
+      p.text(s, 484, 174, a.api, { size: 17, a: "start" });
+      a.apiJobs.forEach((job, i) => p.text(s, 490, 198 + i * 21, `· ${job}`, { size: 14, c: C.ink2, a: "start" }));
+      dashed(p.shape(s, rr(300, 326, 480, 150, 10), { w: 1.8, c: C.grey, amp: 0.8 }));
+      p.text(s, 318, 352, a.cow, { size: 14, c: C.grey, a: "start" });
+      a.cowParts.forEach((part, i) => {
+        const x = 316 + i * 116;
+        p.shape(s, rr(x, 378, 92, 44, 8), { fill: C.white, w: 2, amp: 0.5 });
+        p.text(s, x + 46, 405, part, { size: 14 });
+        if (i < a.cowParts.length - 1) p.arrow(s, x + 94, 400, x + 104, 400, x + 114, 400, { w: 1.8, hl: 6, amp: 0.2 });
+      });
+      box(850, 66, 190, 70, a.chain[0], [a.chain[1]]);
+      dashed(box(850, 154, 190, 70, a.contracts[0], [a.contracts[1]]));
+      box(850, 242, 190, 70, a.aggs[0], [a.aggs[1]], 13);
+      box(850, 330, 190, 70, a.data[0], [a.data[1]]);
+      p.arrow(s, 232, 100, 266, 92, 298, 96, { w: 2, hl: 8 });
+      p.arrow(s, 375, 130, 377, 138, 375, 146, { w: 2, hl: 7, amp: 0.2 });
+      p.arrow(s, 625, 130, 627, 138, 625, 146, { w: 2, hl: 7, amp: 0.2 });
+      p.arrow(s, 470, 250, 461, 256, 452, 262, { w: 2, hl: 7, amp: 0.2 });
+      p.arrow(s, 540, 308, 470, 340, 380, 376, { w: 2, hl: 8 });
+      p.arrow(s, 782, 180, 816, 150, 848, 112, { w: 2, hl: 8 });
+      p.arrow(s, 782, 240, 816, 256, 848, 272, { w: 2, hl: 8 });
+      p.arrow(s, 782, 380, 812, 300, 848, 202, { w: 2, hl: 8 });
+      p.line(s, "M40,532L72,532", { w: 2.2, amp: 0.2 });
+      p.text(s, 82, 537, a.legend[0], { size: 15, c: C.grey, a: "start" });
+      dashed(p.line(s, "M170,532L202,532", { w: 2.2, c: C.grey, amp: 0.2 }));
+      p.text(s, 212, 537, a.legend[1], { size: 15, c: C.grey, a: "start" });
+    },
+  },
+};
+
+/** The viewBox size of a drawing; an unknown one is the small card size. */
+export const artSize = (art: Art | undefined) => ({ w: art?.w ?? 320, h: art?.h ?? 156 });
+
+function build(svg: SVGSVGElement, art: Art | undefined, seed: number) {
+  if (art) art.draw(pen(svg, seed), svg);
+  return artSize(art);
 }
+
+/** Draw a project's diagram; unknown ids draw nothing. Returns the viewBox size. */
+export const buildProjectArt = (svg: SVGSVGElement, id: string, seed: number) => build(svg, PROJECT_ART[id], seed);
+
+/** Draw one of the case pages' larger drawings; unknown keys draw nothing. Returns the viewBox size. */
+export const buildCaseArt = (svg: SVGSVGElement, key: string, seed: number) => build(svg, CASE_ART[key], seed);
 
 /** A strip of yellow tape, 86 × 26. */
 export function buildTape(svg: SVGSVGElement) {
