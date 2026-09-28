@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, type CSSProperties } from "react";
 import { drawIn, seedOf } from "@/lib/sketch";
 import {
+  artSize,
   buildArrow,
+  buildCaseArt,
   buildCheck,
   buildPencil,
   buildProjectArt,
+  CASE_ART,
+  PROJECT_ART,
   buildRobotHead,
   buildTape,
   buildThemeIcon,
@@ -20,7 +24,8 @@ type Kind =
   | { kind: "theme" }
   | { kind: "robot-head" }
   | { kind: "arrow"; w: number; h: number; pts: [number, number, number, number, number, number] }
-  | { kind: "project"; id: string };
+  | { kind: "project"; id: string }
+  | { kind: "case"; art: string };
 
 const VIEWBOX: Record<string, string> = {
   tape: "0 0 86 26",
@@ -35,11 +40,18 @@ const VIEWBOX: Record<string, string> = {
  * lines in when the drawing first scrolls into view (after that many ms);
  * false shows it at once.
  */
-export function Drawing(props: Kind & { className?: string; draw?: number | false; dur?: number }) {
+export function Drawing(props: Kind & { className?: string; style?: CSSProperties; draw?: number | false; dur?: number }) {
   const ref = useRef<SVGSVGElement>(null);
   const id = useId();
-  const { className, draw = false, dur = 700 } = props;
-  const key = props.kind === "project" ? `project:${props.id}` : props.kind === "arrow" ? `arrow:${props.pts.join(",")}` : props.kind;
+  const { className, style, draw = false, dur = 700 } = props;
+  const key =
+    props.kind === "project"
+      ? `project:${props.id}`
+      : props.kind === "case"
+        ? `case:${props.art}`
+        : props.kind === "arrow"
+          ? `arrow:${props.pts.join(",")}`
+          : props.kind;
 
   useEffect(() => {
     const svg = ref.current;
@@ -66,8 +78,13 @@ export function Drawing(props: Kind & { className?: string; draw?: number | fals
         buildArrow(svg, seed, props.pts);
         break;
       case "project": {
-        const w = buildProjectArt(svg, props.id, seed);
-        svg.setAttribute("viewBox", `0 0 ${w} 156`);
+        const { w, h } = buildProjectArt(svg, props.id, seed);
+        svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+        break;
+      }
+      case "case": {
+        const { w, h } = buildCaseArt(svg, props.art, seed);
+        svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
         break;
       }
     }
@@ -90,7 +107,7 @@ export function Drawing(props: Kind & { className?: string; draw?: number | fals
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, key, draw, dur]);
 
-  const viewBox =
-    props.kind === "arrow" ? `0 0 ${props.w} ${props.h}` : props.kind === "project" ? "0 0 320 156" : VIEWBOX[props.kind];
-  return <svg ref={ref} className={className} viewBox={viewBox} aria-hidden="true" focusable="false" />;
+  const size = props.kind === "project" ? artSize(PROJECT_ART[props.id]) : props.kind === "case" ? artSize(CASE_ART[props.art]) : null;
+  const viewBox = props.kind === "arrow" ? `0 0 ${props.w} ${props.h}` : size ? `0 0 ${size.w} ${size.h}` : VIEWBOX[props.kind];
+  return <svg ref={ref} className={className} style={style} viewBox={viewBox} aria-hidden="true" focusable="false" />;
 }

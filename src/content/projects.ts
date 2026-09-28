@@ -1,6 +1,6 @@
 // Project data.
-// Rules: every figure here has a provenance (statsNote marks self-reported ledger numbers);
-// a private project carries a scope note and no repository link; qa.* strings may contain only <em> and <code> tags.
+// Rules: every figure here has a provenance (statsNote / pointsNote say where it came from);
+// a private project carries a scope note (for the assistant) and no repository link; qa.* strings may contain only <em> and <code> tags.
 export type Stat = { v: string; l: string };
 export type Repo = { label: string; url: string };
 export type Hue = 'cyan' | 'amber' | 'blue' | 'green' | 'violet';
@@ -16,13 +16,22 @@ export type Demo = { src: string; poster: string; caption: string };
 export type Explainer = { src: string; poster: string; caption: string };
 // A diagram in public/projects/<id>/, shown full width under the case; width/height are the file's.
 export type Diagram = { src: string; alt: string; caption: string; width: number; height: number };
+// A drawing made in code (CASE_ART in src/lib/sketchArt.ts), keyed by `art`; its words live in ART in copy.ts.
+export type Drawn = { art: string; alt: string; caption: string };
+// A drawing with its own heading, shown full width under the case, in array order.
+export type Figure = Drawn & { title: string };
+// One card under "Under the hood": a title, one or two sentences, and optionally a figure with its label.
+export type Point = { t: string; d: string; v?: string; l?: string };
+// What the visitor can use today, and what is built but only verified on a mainnet fork.
+export type Rollout = { live: string[]; fork: string[] };
 export type Project = {
   id: string; name: string; hue: Hue; short: string; role: string; stack: string;
   tagline: string; thesis: string; wrong: string; mechanism: string;
   status?: Status; updated?: string;
   stats: Stat[]; statsNote?: string;
   private?: boolean; scope?: string;
-  site?: Site; demo?: Demo; explainer?: Explainer; architecture?: Diagram;
+  site?: Site; demo?: Demo; explainer?: Explainer; architecture?: Diagram | Drawn;
+  rollout?: Rollout; figures?: Figure[]; points?: Point[]; pointsNote?: string;
   readmeUrl?: string; readmeNote?: string; repos: Repo[]; readme: string | null;
   qa: { decision: string; stack: string; status: string };
 };
@@ -32,16 +41,16 @@ export const PROJECTS: Project[] = [
     "id": "platter",
     "name": "Platter",
     "hue": "green",
-    "short": "A multi-chain DEX front end, live at platterfi.trade: swap, bridge and LP positions on three chains, with a server that never holds a key.",
-    "role": "Solo · private repository · live",
-    "stack": "TypeScript monorepo (pnpm, Turborepo) · Next.js 16, wagmi, viem · Hono on Node · PostgreSQL + Drizzle · AWS EC2 behind Cloudflare",
-    "tagline": "One interface for liquidity on Ethereum, Base and Robinhood Chain, across Uniswap V3, Uniswap V4 and Aerodrome Slipstream: compare pools, swap or bridge on the best quote from the Uniswap API, Relay or LI.FI, and follow each LP position with its history and PnL. The backend builds every transaction; only the user's wallet signs it.",
-    "thesis": "The server never holds a key. Every write path ends in an unsigned transaction handed to the wallet, so nothing moves until the user has read it there and signed it.",
-    "wrong": "A position's history quietly drifts from the chain: a reorg rewrites blocks that were already indexed, or a price that could not be fetched shows up as zero.",
-    "mechanism": "Each chain keeps a bookmark of block number and block hash, and a hash that no longer matches rolls the scan back. A value that cannot be fetched is null with a stated reason, never 0.",
+    "short": "Gasless swaps on Robinhood Chain, straight into vaults like steakUSDG: you sign once, solvers bid in an auction, and the winner settles on-chain.",
+    "role": "Solo · live",
+    "stack": "TypeScript monorepo (pnpm, Turborepo) · Hono on Node · PostgreSQL + Drizzle · Rust (CoW services) · Solidity + Foundry · Next.js 16, wagmi, viem · Docker Compose · AWS EC2 behind Cloudflare",
+    "tagline": "Gasless swaps on Robinhood Chain: you sign an order, and solvers bid in a batch auction to fill it. Vault shares such as steakUSDG sit in the same swap box, with APY and TVL beside the quote, so any token on the chain becomes a yield position in one trade. Bridging in and out of Robinhood Chain is built in.",
+    "thesis": "The user signs once and pays no gas; whoever fills the order has to beat the other bids and deliver at least what was signed, or the settlement reverts.",
+    "wrong": "A timed-out order gets created twice, or a settlement leaves the fee books a few wei off without anyone noticing.",
+    "mechanism": "The order's UID is computed from the signed order, so a timeout is settled by looking the order up; every trade is reconciled against its on-chain transfers to within two smallest units.",
     "stats": [],
     "private": true,
-    "scope": "The repository is private. This page shows the live product at platterfi.trade, a 40-second walkthrough of it and the system architecture as deployed; the code itself is not published.",
+    "scope": "The repository is private. The case page shows the live product at platterfi.trade, a walkthrough, and drawings of how a gasless swap is filled and settled; the code itself is not published.",
     "site": {
       "label": "platterfi.trade",
       "url": "https://platterfi.trade"
@@ -51,19 +60,101 @@ export const PROJECTS: Project[] = [
       "poster": "/projects/platter/demo-poster.webp",
       "caption": "40-second walkthrough: the landing page, a pool on Robinhood Chain, adding liquidity with the wallet's confirmation, and the new position in the portfolio."
     },
+    "rollout": {
+      "live": [
+        "swap",
+        "bridge",
+        "pools",
+        "positions + PnL"
+      ],
+      "fork": [
+        "gasless",
+        "solver",
+        "earn"
+      ]
+    },
+    "figures": [
+      {
+        "art": "platter-fill",
+        "title": "How a swap gets filled",
+        "alt": "A swap box selling 1,000 USDe for about 990.9 steakUSDG with gasless on, beside a steakUSDG panel showing its APY, TVL, amount withdrawable now, share price and hourly APY dots. The signed order goes to an off-chain auction, where Platter's solver outbids three other solvers within 4 seconds, and the winning bid settles in one transaction on Robinhood Chain for at least the signed minimum.",
+        "caption": "The numbers in the sketch are illustrative, taken from the Earn design mock of 2026-09-26."
+      },
+      {
+        "art": "platter-settle",
+        "title": "Inside the settlement",
+        "alt": "One gasless settlement, selling USDe for steakUSDG. The wallet has approved VaultRelayer; VaultRelayer pulls the USDe into GPv2Settlement; the settlement transfers it to the executor without an approval; the executor swaps to USDG and deposits it into the vault, sends the lane fee and the clearing amount back to the settlement and the surplus straight to the user; the settlement pays the user at the clearing price and keeps the protocol fee and the lane fee.",
+        "caption": "One transaction. Platter's submitter wallet pays the gas, the executor ends at zero, and every trade is reconciled against its on-chain transfers."
+      }
+    ],
+    "points": [
+      {
+        "t": "Intent settlement",
+        "d": "CoW's orderbook, autopilot and driver, ported to Robinhood Chain. The driver skips any settlement whose fees don't cover gas.",
+        "v": "10 / 47",
+        "l": "Rust crates changed"
+      },
+      {
+        "t": "Solver",
+        "d": "Orders split into 256 slices over up to 6 paths by output after gas. Aggregator quotes join the same auction as extra solver lanes.",
+        "v": "17",
+        "l": "DEXes · 4 s deadline"
+      },
+      {
+        "t": "Any token to a vault",
+        "d": "ERC-4626 shares are a buy token, so swap and deposit settle in one trade. Vaults are listed from factory events after a simulated deposit.",
+        "v": "$100k",
+        "l": "TVL to list"
+      },
+      {
+        "t": "Reorg-safe ledger",
+        "d": "Events keyed by block hash. Rollback lands only on a hash-verified ancestor, otherwise sync stops and alerts. Data and bookmark commit together.",
+        "v": "4",
+        "l": "real reorgs on anvil"
+      },
+      {
+        "t": "Idempotent orders",
+        "d": "The order UID is computed from the signed order. On a timeout the API looks the order up instead of reporting a failure.",
+        "v": "56",
+        "l": "bytes: digest, owner, validTo"
+      },
+      {
+        "t": "Per-trade reconciliation",
+        "d": "Each settlement is checked against its on-chain transfers. It caught CoW rounding the protocol fee down twice.",
+        "v": "±2",
+        "l": "smallest units allowed"
+      },
+      {
+        "t": "Upstream resilience",
+        "d": "eth_getLogs ranges halve and grow per chain, paid and public nodes run on separate channels, and missing data carries a reason, never 0.",
+        "v": "1M+",
+        "l": "pools scanned"
+      },
+      {
+        "t": "Incident",
+        "d": "Public nodes answered block-hash log queries with empty arrays and Ethereum sync was marked blocked. Reproduced on a database copy behind a faulty-node proxy, then fixed.",
+        "v": "9,932 s → 47 s",
+        "l": "index lag"
+      },
+      {
+        "t": "Tests and delivery",
+        "d": "Zero-secret boot check, mainnet-fork regressions, and a one-command deploy with an atomic switch and automatic rollback.",
+        "v": "4,700+",
+        "l": "tests"
+      }
+    ],
+    "pointsNote": "Figures from Platter's code, test runs and incident log, as of 2026-09-28.",
     "architecture": {
-      "src": "/projects/platter/architecture.webp",
-      "alt": "Platter's system architecture. The browser app and the wallet; Cloudflare; one AWS EC2 host running Caddy, the Next.js web server, the Hono API and PostgreSQL; and outside services: Ethereum, Base and Robinhood Chain, the Uniswap API, Relay, LI.FI and market data. The API returns unsigned transactions; the wallet signs them and sends them straight to the chain.",
-      "caption": "As deployed. The API quotes, builds unsigned transactions and owns the chain sync — one eth_getLogs per chain every 12 seconds, with a block-hash bookmark that rolls back on a reorg. PostgreSQL holds tracked addresses, scan state, position events and the token registry. Signed transactions go from the wallet straight to the chain.",
-      "width": 2000,
-      "height": 1280
+      "art": "platter-arch",
+      "alt": "Platter's architecture. In the browser, the web app and the wallet. On one AWS EC2 host in Singapore, behind Cloudflare and Caddy: the Next.js web server, the Hono API, PostgreSQL, and the CoW stack of orderbook, autopilot, driver with a KMS key and Platter's solver. Outside: Robinhood Chain with its DEXes and vaults, Platter's settlement and executor contracts, the aggregators and the price feeds.",
+      "caption": "Solid boxes are live; dashed ones are verified on a Robinhood mainnet fork."
     },
     "repos": [],
-    "readme": "# Platter — design notes\n\nHow Platter handles liquidity positions, as the code does it today. The repository is private; these notes stand in for its README.\n\n## Reading a position\n\n- One adapter interface covers Uniswap V3, Uniswap V4 and Aerodrome Slipstream: list positions, quote add / remove, build the transaction.\n- V3 and Slipstream positions are enumerated from the position NFT (`balanceOf` → `tokenOfOwnerByIndex` → `positions`). V4's PositionManager cannot list by owner, so V4 positions are found from backfilled NFT transfers and read with `getPoolAndPositionInfo` + `getPositionLiquidity` in one Multicall3 call.\n- A Slipstream position staked in a gauge is held by the gauge, not the wallet; it is found from the gauge's Deposit / Withdraw logs, and its rewards come from `gauge.earned`.\n- In range means `tickLower <= tick < tickUpper` against the pool's current tick. If the pool state cannot be read, the position is not guessed.\n- Token amounts use bigint ports of Uniswap's TickMath and LiquidityAmounts.\n\n## Fees: principal first, then fees\n\n- Collectable fees are `tokensOwed + L × (feeGrowthInside − feeGrowthInsideLast) / 2^128`, with wrapping uint256 subtraction and the three placements of fee growth inside (below, inside, above the range). Tests pin the wraparound.\n- `decreaseLiquidity` does not send tokens: the withdrawn principal waits in `tokensOwed` next to the fees. So when a `collect` arrives, it first pays back owed principal, and only the remainder counts as fees. Counting the whole collect as fees would inflate fee income every time a position is reduced.\n- The positions list still shows the owed balance stored on-chain; the exact fee-growth figure is computed in the collect quote.\n\n## PnL: against holding, with fees and IL apart\n\n- Cash flows are replayed in block / log order: mint and increase deposit, decrease withdraws (and owes principal), collect settles owed principal before fees.\n- Compared with holding: the tokens deposited, valued at today's price. `vs hold = position value + withdrawn + fees − hold`, and impermanent loss is reported on its own (`position + withdrawn − hold`), so fee income cannot hide it.\n- Gas is summed per transaction and reported separately, never folded into PnL.\n- A position that arrived by transfer, with no mint in its history, reports fees and PnL as missing (`history-incomplete`) rather than as a number.\n- Prices: current from DeFiLlama (confidence ≥ 0.8), then GeckoTerminal; historical from the hourly candle before each event, so every timeline event is priced at its own block time. A missing price is null with a reason; only a zero amount is $0.\n\n## Timeline and chain sync\n\n- Events: mint, increase, decrease, collect, transfer, gauge stake / unstake. V3 and Slipstream come from the NFT and position-manager logs; V4 comes from PoolManager `ModifyLiquidity` with the PositionManager as sender, where `salt` is the token id and a zero liquidity delta is a fee collect.\n- Backfill starts at the contract's deploy block and stops at the last complete segment rather than guessing past a failed range.\n- Live sync keeps a bookmark of block number and hash per chain, scanning up to head − confirmations (Ethereum 3, Base 8, Robinhood Chain 100). A hash that no longer matches is a reorg: roll back max(2 × confirmations, 32) blocks, delete those events and rescan.\n\n## Adding liquidity\n\n- Range presets ±3%, ±10%, ±30% and full range. A ±p range is symmetric in tick space — `round(ln(1 + p) / ln 1.0001)` ticks each side — so the lower bound is `price / (1 + p)`, not `price × (1 − p)`.\n- The page widens a range outward to the pool's tick spacing; the backend rejects an unaligned tick instead of rounding it silently.\n- The second token's amount comes from the quote: computed in-house for Aerodrome, through the Uniswap LP API for V3 / V4. Depositing the wrong side into an out-of-range position is rejected. Default slippage is 50 bps.\n- Approvals are exact amounts, reset to zero first where a token requires it; V4 goes through Permit2, and USDG on Robinhood Chain can use an EIP-2612 permit whose domain is re-checked on-chain. ETH into a V3 WETH pool becomes `multicall(mint, refundETH)`.\n- Every step comes back as an unsigned transaction — approvals first, then the position — for the wallet to sign.\n\n## Pools\n\n- TVL and 24 h volume from GeckoTerminal; fee APR = volume × fee × 365 / TVL, and none for dynamic-fee pools, where the fee is not known in advance.\n- Robinhood Chain's pool catalog is scanned from V3 `PoolCreated` and V4 `Initialize`, with tabs for tokenized-stock and memecoin pools. TVL is taken from the trusted side (USDG or WETH) × 2, and anything above $1B is treated as bad data.\n- A V4 pool with hooks is treated as allowlisted: until the allowlist can be checked, its add-liquidity button is disabled with the reason shown, and no quote is requested.\n\n## Not done yet\n\n- The hold comparison and IL cover Uniswap V3 only; V4 and Aerodrome return them as missing. V4 fee amounts are not in its events, so V4 collected fees are missing too.\n- Position APR, gauge reward claims in the timeline and Merkl incentives are not built.",
+    "readme": null,
     "qa": {
-      "decision": "Keep the server out of custody entirely. Swap, bridge, adding and removing liquidity all end in an unsigned transaction returned to the browser; the wallet shows it, signs it and sends it straight to the chain. There is no private key and no signing code in the backend, so the server's mistakes stop at a transaction the user can still refuse.",
-      "stack": "A pnpm + Turborepo monorepo in strict TypeScript. <code>apps/web</code> is Next.js 16 with wagmi and viem; <code>apps/api</code> is Hono on Node and also runs the chain sync — one <code>eth_getLogs</code> per chain every 12 seconds, reorgs caught by a block-hash bookmark. One zod contract package is shared by both ends, protocol adapters for Uniswap V3, Uniswap V4 and Aerodrome Slipstream sit behind one interface, and PostgreSQL is reached through Drizzle (embedded PGlite in development). The whole repository builds and tests with zero secrets and the network cut off.",
-      "status": "Live at platterfi.trade, solo, started on 2026-09-20. It runs on one AWS EC2 instance in Singapore behind Cloudflare; a deploy script builds on the server, switches releases and rolls back when the new one fails its self-check. The repository is private, so this page carries the product link, a 40-second walkthrough and the architecture instead."
+      "decision": "Run the auction off-chain and settle on-chain. The user signs an order and pays no gas; solvers bid, and the winning bid settles through a contract that checks the user gets at least the signed minimum, or the whole transaction reverts. Platter's own solver bids beside aggregator quotes, and a gasless order is offered only when the gas is at most $1 and the fee needed to cover it stays within 0.25%; otherwise the swap falls back to a transaction the wallet signs directly.",
+      "stack": "A pnpm + Turborepo monorepo in strict TypeScript: <code>apps/web</code> is Next.js 16 with wagmi and viem, <code>apps/api</code> is Hono on Node with the chain sync and reconciliation, and <code>apps/solver</code> implements the CoW Solver Engine API. CoW's Rust services (orderbook, autopilot, driver) run from a fork under Docker Compose, and a forked 0x Settler is the executor, in Solidity with Foundry. PostgreSQL is reached through Drizzle, with embedded PGlite in development.",
+      "status": "Live at platterfi.trade for swaps, bridging, pools and positions, on one AWS EC2 instance in Singapore behind Cloudflare; a deploy switches releases and rolls back when the new one fails its self-check. Gasless swaps, the solver and Earn are built and verified end to end on a Robinhood mainnet fork; the mainnet contracts wait on an audit sign-off and the multisigs. Solo, started on 2026-09-20."
     }
   },
   {

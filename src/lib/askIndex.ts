@@ -194,6 +194,7 @@ export function chunkCorpus(corpus: Corpus): Chunk[] {
     const named = (s: string) => `${p.name}: ${s}`;
     for (const field of PROJECT_FIELDS) push(p.id, field, 0, named(fieldValue(p, field)), priv);
     if (p.readme) readmeExcerpts(p.readme).forEach((s, i) => push(p.id, "readme", i, named(s), priv));
+    (p.points ?? []).forEach((pt, i) => push(p.id, "points", i, named(pointText(pt)), priv));
     if (priv && p.scope) push(p.id, "scope", 0, named(p.scope), true);
   }
   push(null, "looking", 0, corpus.looking);
@@ -209,6 +210,10 @@ export function chunkCorpus(corpus: Corpus): Chunk[] {
   }
   return chunks;
 }
+
+/** One "Under the hood" card as a sentence: title, text, and the figure with its label. */
+export const pointText = (pt: NonNullable<Project["points"]>[number]) =>
+  `${pt.t}: ${pt.d}${pt.v ? ` (${[pt.v, pt.l].filter(Boolean).join(" ")})` : ""}`;
 
 const guideText = (item: GuideItem) => (item.lead ? `${item.lead}: ${item.text}` : item.text);
 

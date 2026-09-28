@@ -137,6 +137,15 @@
 .statsNote {
   margin: 0 0 18px;
 }
+.rollout {
+  margin: -6px 0 0;
+}
+.rollout .stack {
+  margin-bottom: 10px;
+}
+.rollout .stackLabel {
+  min-width: 92px;
+}
 .acts {
   display: flex;
   flex-wrap: wrap;
@@ -181,10 +190,6 @@
   border: 1.5px dashed var(--lgrey);
   border-radius: 10px;
   background: var(--paper);
-}
-/* design notes standing in for a private README: taller, still scrolling in place */
-.notes {
-  max-height: 720px;
 }
 .plain p {
   font: 400 16px/1.6 var(--font-body);
@@ -240,6 +245,64 @@
   margin: 12px 4px 0;
   max-width: 90ch;
 }
+/* A drawing made in code: full width, scrolling sideways in its own frame on a phone so its words stay legible. */
+.drawnFig {
+  margin: 0;
+  padding: 16px 18px 14px;
+}
+.drawnScroll {
+  overflow-x: auto;
+}
+.drawn {
+  display: block;
+  width: 100%;
+  min-width: 720px;
+  height: auto;
+  overflow: visible;
+}
+.points {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  margin: 0;
+}
+.point {
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.point dt {
+  color: var(--pink);
+  font-size: 16px;
+}
+.point dd {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.38;
+}
+.point .pointFig {
+  margin-top: auto;
+  padding-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+.pointFig b {
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--mint);
+  font-variant-numeric: tabular-nums;
+}
+.pointFig small {
+  font-size: 15px;
+  color: var(--grey);
+}
+.pointsNote {
+  margin: 14px 4px 0;
+}
 .foot {
   display: flex;
   align-items: center;
@@ -259,6 +322,9 @@
   .figCol {
     position: static;
   }
+  .points {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 @media (max-width: 680px) {
   .page {
@@ -266,6 +332,12 @@
   }
   .pair {
     grid-template-columns: 1fr;
+  }
+  .points {
+    grid-template-columns: 1fr;
+  }
+  .drawnFig {
+    padding: 12px;
   }
   .readme {
     padding: 16px 16px;

@@ -74,7 +74,28 @@ test('site, demo and architecture: the product, not the code, and files of its o
   assert.match(lerrs({ explainer: { ...loop.explainer, src: '/projects/platter/explainer.mp4' } }), /explainer src must be an \.mp4 in \/projects\/loop\//);
   assert.match(lerrs({ explainer: { ...loop.explainer, poster: '/projects/platter/x.webp' } }), /explainer poster/);
   assert.match(lerrs({ explainer: { ...loop.explainer, caption: '' } }), /explainer needs a caption/);
-  assert.match(errs({ architecture: { ...platter.architecture, src: 'https://example.com/a.png' } }), /architecture src/);
-  assert.match(errs({ architecture: { ...platter.architecture, alt: '' } }), /needs alt text/);
-  assert.match(errs({ architecture: { ...platter.architecture, width: 0 } }), /width and height/);
+  // An architecture image keeps the file rules; a drawn one names a drawing that exists.
+  const img = { src: '/projects/platter/architecture.webp', alt: 'diagram', caption: 'as deployed', width: 2000, height: 1280 };
+  assert.deepEqual(validateProject({ ...platter, architecture: img }), [], 'an image architecture is still legal');
+  assert.match(errs({ architecture: { ...img, src: 'https://example.com/a.png' } }), /architecture src/);
+  assert.match(errs({ architecture: { ...img, alt: '' } }), /needs alt text/);
+  assert.match(errs({ architecture: { ...img, width: 0 } }), /width and height/);
+  assert.match(errs({ architecture: { ...platter.architecture, art: 'nope' } }), /architecture art "nope" is not a drawing/);
+  assert.match(errs({ architecture: { ...platter.architecture, alt: '' } }), /architecture needs alt text/);
+});
+
+test('figures, points and rollout: drawings that exist, figures with a provenance', () => {
+  const platter = byId('platter');
+  const errs = (patch) => validateProject({ ...platter, ...patch }).join('\n');
+  const [first] = platter.figures;
+  assert.match(errs({ figures: [{ ...first, art: 'nope' }] }), /is not a drawing in CASE_ART/);
+  assert.match(errs({ figures: [{ ...first, title: '' }] }), /a figure needs a title/);
+  assert.match(errs({ figures: [{ ...first, caption: '' }] }), /needs a caption/);
+  assert.match(errs({ figures: [first, first] }), /drawn twice/);
+  assert.match(errs({ pointsNote: undefined }), /pointsNote/);
+  assert.match(errs({ points: [{ t: 'x', d: 'y', v: '1' }] }), /figure without a label/);
+  assert.match(errs({ points: [{ t: '', d: 'y' }] }), /title and a sentence/);
+  assert.deepEqual(validateProject({ ...platter, points: [{ t: 'x', d: 'y' }], pointsNote: undefined }), [], 'no figure, no note needed');
+  assert.match(errs({ rollout: { live: [], fork: [] } }), /rollout lists nothing/);
+  assert.match(errs({ rollout: { live: [''], fork: [] } }), /empty item/);
 });

@@ -14,18 +14,19 @@ export function detailEyebrow(project: Pick<Project, "role" | "updated">): strin
   return project.updated ? `${project.role} · updated ${project.updated}` : project.role;
 }
 
-export type Stamp = "live" | "private" | "open" | "capstone";
+export type Stamp = "live" | "open" | "capstone";
 
 /**
  * The little stamps on a project card, read off the record: live when it has a
- * site or says so in its role, then private / capstone / open source.
+ * site or says so in its role, then capstone / open source. A private project
+ * gets no stamp of its own: the page shows the product, not where its code lives.
  */
 export function projectStamps(p: Pick<Project, "role" | "private" | "site">): Stamp[] {
   const role = p.role.toLowerCase();
   const stamps: Stamp[] = [];
   if (p.site || /\blive\b/.test(role)) stamps.push("live");
-  if (p.private) stamps.push("private");
-  else if (role.includes("capstone")) stamps.push("capstone");
+  if (p.private) return stamps;
+  if (role.includes("capstone")) stamps.push("capstone");
   else if (role.includes("open source")) stamps.push("open");
   return stamps;
 }
