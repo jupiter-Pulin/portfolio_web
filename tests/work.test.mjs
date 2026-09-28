@@ -124,7 +124,6 @@ test('the gallery shows the five projects in registry order, featured first', ()
   const cards = cardsOf(pages.gallery);
   assert.equal(cards.length, PROJECTS.length);
   assert.ok(textOf(pages.gallery).includes(SITE.workTitle), 'work title');
-  assert.ok(textOf(pages.gallery).includes(SITE.workSubtitle), 'work subtitle');
 
   PROJECTS.forEach((p, i) => {
     const body = textOf(cards[i]);

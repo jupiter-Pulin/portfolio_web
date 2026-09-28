@@ -17,12 +17,6 @@
   line-height: 1;
   margin: 0;
 }
-.sub {
-  color: var(--grey);
-  font-size: 19px;
-  max-width: 52ch;
-  margin: 0;
-}
 .more {
   margin-left: auto;
 }
