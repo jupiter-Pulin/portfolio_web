@@ -1,4 +1,4 @@
-import { HOME, SITE } from "@/content/copy";
+import { HOME } from "@/content/copy";
 import { PROJECTS } from "@/content/projects";
 import { ProjectCard } from "./ProjectCard";
 import { Wavy } from "./sketch/Wavy";
@@ -12,7 +12,6 @@ export function WorkGallery() {
         <h1 id="work-title" className={styles.title}>
           {HOME.workTitle} <Wavy>{HOME.workAccent}</Wavy>
         </h1>
-        <p className={styles.sub}>{SITE.workSubtitle}</p>
       </div>
       <div className={styles.cards}>
         {PROJECTS.map((p, i) => (

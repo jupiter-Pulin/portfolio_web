@@ -13,7 +13,6 @@ export function WorkCards() {
         <h2 id="work-title" className={styles.title}>
           {HOME.workTitle} <Wavy>{HOME.workAccent}</Wavy>
         </h2>
-        <p className={styles.sub}>{SITE.workSubtitle}</p>
         <Link className={`link-btn ${styles.more}`} href="/work">
           {SITE.stripOpenAll}
         </Link>

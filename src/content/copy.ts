@@ -9,7 +9,6 @@ export const SITE = {
   askLabel: 'Ask my assistant',
   workNav: 'Work',
   workTitle: 'Selected Work',
-  workSubtitle: 'Four systems, one recurring problem: keeping state correct when the environment is not reliable.',
   stripOpenAll: 'open all →',
   footNote: "Drawn by hand, built with Next.js · answers from Nolan's assistant are written by an AI model.",
   imageSlot: 'image slot · replace with a product screenshot',
