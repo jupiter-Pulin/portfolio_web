@@ -195,6 +195,7 @@ export function chunkCorpus(corpus: Corpus): Chunk[] {
     for (const field of PROJECT_FIELDS) push(p.id, field, 0, named(fieldValue(p, field)), priv);
     if (p.readme) readmeExcerpts(p.readme).forEach((s, i) => push(p.id, "readme", i, named(s), priv));
     (p.points ?? []).forEach((pt, i) => push(p.id, "points", i, named(pointText(pt)), priv));
+    guaranteeTexts(p).forEach((line, i) => push(p.id, "guarantees", i, named(line), priv));
     if (priv && p.scope) push(p.id, "scope", 0, named(p.scope), true);
   }
   push(null, "looking", 0, corpus.looking);
@@ -214,6 +215,18 @@ export function chunkCorpus(corpus: Corpus): Chunk[] {
 /** One "Under the hood" card as a sentence: title, text, and the figure with its label. */
 export const pointText = (pt: NonNullable<Project["points"]>[number]) =>
   `${pt.t}: ${pt.d}${pt.v ? ` (${[pt.v, pt.l].filter(Boolean).join(" ")})` : ""}`;
+
+/** "How it stays correct" as sentences: each promise, each stage with its failure rule, the budget line, each money rule. */
+export const guaranteeTexts = (p: Project): string[] => {
+  const g = p.guarantees;
+  if (!g) return [];
+  return [
+    ...g.pledges.map((x) => `${x.t}: ${x.v}. ${x.d}`),
+    ...g.stages.map((x, i) => `Stage ${i + 1} of an order, ${x.name} (${x.who}): ${x.does} If it fails: ${x.guard}`),
+    `${g.budget.rule}. ${g.budget.d}`,
+    ...g.rules.map((x) => `Money rule: ${x.rule} Enforced by: ${x.by} If broken: ${x.broken}. Proof: ${x.proof}`),
+  ];
+};
 
 const guideText = (item: GuideItem) => (item.lead ? `${item.lead}: ${item.text}` : item.text);
 

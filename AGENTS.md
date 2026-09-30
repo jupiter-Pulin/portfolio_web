@@ -11,7 +11,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## This repository (added 2026-09-13)
 
 - Copy, links and project data live only in `src/content/*.ts`; blog posts are Markdown files in `src/content/blog/` with photos in `public/blog/<slug>/` (contract in `CONTENT.md`). Never hardcode a second copy in components; if you believe the content is wrong, say so in your log instead of editing it.
-- Every project figure shown on the site comes from `src/content/projects.ts` and keeps its provenance label (`statsNote`, or `pointsNote` for the "Under the hood" cards). Do not invent figures. Numbers inside a blog post are part of the author's text and stay as written.
+- Every project figure shown on the site comes from `src/content/projects.ts` and keeps its provenance label (`statsNote`, `pointsNote` for the "Under the hood" cards, or `guarantees.note`). Do not invent figures. Numbers inside a blog post are part of the author's text and stay as written.
+- "How it stays correct" (`guarantees`) explains mechanisms only. Values that operations tune (time limits, polling intervals, retry counts, thresholds, vendor names) stay off the page.
 - A private project (`private: true`) never shows a repository link, and its page says nothing about where the code lives; its scope note is for the assistant only.
 - `npm test` is `node --test tests/*.test.mjs` (Node ≥ 22.18 strips TS types; no test framework). Add UI tests there; do not add vitest/jest.
 - No new runtime dependencies without a reason written in the task log.

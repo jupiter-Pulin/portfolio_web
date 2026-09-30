@@ -1,5 +1,5 @@
 // Project data.
-// Rules: every figure here has a provenance (statsNote / pointsNote say where it came from);
+// Rules: every figure here has a provenance (statsNote / pointsNote / guarantees.note say where it came from);
 // a private project carries a scope note (for the assistant) and no repository link; qa.* strings may contain only <em> and <code> tags.
 export type Stat = { v: string; l: string };
 export type Repo = { label: string; url: string };
@@ -24,6 +24,18 @@ export type Figure = Drawn & { title: string };
 export type Point = { t: string; d: string; v?: string; l?: string };
 // What the visitor can use today, and what is built but only verified on a mainnet fork.
 export type Rollout = { live: string[]; fork: string[] };
+// "How it stays correct": four promises, the stages one order passes through, and the money rules.
+// Mechanisms only. Values that operations tune (time limits, intervals, retry counts, vendors) stay off the page.
+export type Pledge = { t: string; v: string; d: string };
+// One stage: who runs it, whether the user waits for it, what it does and what happens when it fails.
+export type Stage = { name: string; who: string; waits: boolean; timed?: boolean; does: string; guard: string };
+// One rule about money: who enforces it, what happens when it breaks (`stops`: the system refuses or reverts), and the proof.
+export type MoneyRule = { rule: string; by: string; broken: string; stops: boolean; proof: string };
+export type Guarantees = {
+  lede: string; pledges: Pledge[];
+  stages: Stage[]; budget: { rule: string; d: string };
+  rules: MoneyRule[]; note: string;
+};
 export type Project = {
   id: string; name: string; hue: Hue; short: string; role: string; stack: string;
   tagline: string; thesis: string; wrong: string; mechanism: string;
@@ -31,7 +43,7 @@ export type Project = {
   stats: Stat[]; statsNote?: string;
   private?: boolean; scope?: string;
   site?: Site; demo?: Demo; explainer?: Explainer; architecture?: Diagram | Drawn;
-  rollout?: Rollout; figures?: Figure[]; points?: Point[]; pointsNote?: string;
+  rollout?: Rollout; figures?: Figure[]; points?: Point[]; pointsNote?: string; guarantees?: Guarantees;
   readmeUrl?: string; readmeNote?: string; repos: Repo[]; readme: string | null;
   qa: { decision: string; stack: string; status: string };
 };
@@ -50,7 +62,7 @@ export const PROJECTS: Project[] = [
     "mechanism": "The order's UID is computed from the signed order, so a timeout is settled by looking the order up; every trade is reconciled against its on-chain transfers to within two smallest units.",
     "stats": [],
     "private": true,
-    "scope": "The repository is private. The case page shows the live product at platterfi.trade, a walkthrough, and drawings of how a gasless swap is filled and settled; the code itself is not published.",
+    "scope": "The repository is private. The case page shows the live product at platterfi.trade, a walkthrough, the stages one gasless order passes through with what happens when each fails, the money rules, and a drawing of the settlement; the code itself is not published.",
     "site": {
       "label": "platterfi.trade",
       "url": "https://platterfi.trade"
@@ -75,75 +87,118 @@ export const PROJECTS: Project[] = [
     },
     "figures": [
       {
-        "art": "platter-fill",
-        "title": "How a swap gets filled",
-        "alt": "A swap box selling 1,000 USDe for about 990.9 steakUSDG with gasless on, beside a steakUSDG panel showing its APY, TVL, amount withdrawable now, share price and hourly APY dots. The signed order goes to an off-chain auction, where Platter's solver outbids three other solvers within 4 seconds, and the winning bid settles in one transaction on Robinhood Chain for at least the signed minimum.",
-        "caption": "The numbers in the sketch are illustrative, taken from the Earn design mock of 2026-09-26."
-      },
-      {
         "art": "platter-settle",
         "title": "Inside the settlement",
         "alt": "One gasless settlement, selling USDe for steakUSDG. The wallet has approved VaultRelayer; VaultRelayer pulls the USDe into GPv2Settlement; the settlement transfers it to the executor without an approval; the executor swaps to USDG and deposits it into the vault, sends the lane fee and the clearing amount back to the settlement and the surplus straight to the user; the settlement pays the user at the clearing price and keeps the protocol fee and the lane fee.",
         "caption": "One transaction. Platter's submitter wallet pays the gas, the executor ends at zero, and every trade is reconciled against its on-chain transfers."
       }
     ],
-    "points": [
-      {
-        "t": "Intent settlement",
-        "d": "CoW's orderbook, autopilot and driver, ported to Robinhood Chain. The driver skips any settlement whose fees don't cover gas.",
-        "v": "10 / 47",
-        "l": "Rust crates changed"
+    "guarantees": {
+      "lede": "A gasless swap passes through six stages, four of them in the background. Each stage has a time limit and a rule for what happens when it fails. After it settles, every trade is checked against the chain.",
+      "pledges": [
+        {
+          "t": "No duplicate orders",
+          "v": "One signature, one order",
+          "d": "The order ID is a hash of what the user signed. A retry, a double click and a timeout all produce the same ID, and that ID is the order table's primary key."
+        },
+        {
+          "t": "Every trade reconciled",
+          "v": "±2 smallest units",
+          "d": "After each settlement, the on-chain transfers are checked against the recorded fees. Two roundings may each be off by one smallest unit. Anything beyond that is marked wrong."
+        },
+        {
+          "t": "Deadlines that add up",
+          "v": "Entry bar > solve + land",
+          "d": "An order enters an auction only if its remaining lifetime is longer than the solve limit plus the on-chain limit. A deploy test asserts that inequality, so a wrong config fails the test."
+        },
+        {
+          "t": "Stops on bad data",
+          "v": "Stop, then alert",
+          "d": "A reorg it cannot verify, or a node that returns empty results, halts that path and says why. A value it could not fetch is stored as empty with a reason, never as 0."
+        }
+      ],
+      "stages": [
+        {
+          "name": "Quote",
+          "who": "API + solver",
+          "waits": true,
+          "does": "Prices the order. Amounts stay integers, and the sell amount is rounded down to a size the fee divides evenly.",
+          "guard": "A quote has a lifetime. An expired one is refused; ask again."
+        },
+        {
+          "name": "Sign and submit",
+          "who": "Wallet → API → orderbook",
+          "waits": true,
+          "does": "One signature, no gas. The API rebuilds the order from its own draft and forwards it only if every field and the signature match.",
+          "guard": "Orderbook times out: look the order up by its ID. Found means created."
+        },
+        {
+          "name": "Auction",
+          "who": "Autopilot",
+          "waits": false,
+          "does": "Each new block opens an auction. An order goes in only if its remaining lifetime covers the next two stages.",
+          "guard": "Too little time left: it stays out, so it cannot expire halfway."
+        },
+        {
+          "name": "Solve",
+          "who": "Solver",
+          "waits": false,
+          "timed": true,
+          "does": "Splits the order across several routes. Aggregator lanes race the same limit as its own routes.",
+          "guard": "A late lane is dropped. Without fresh pool state it does not bid; stale data is never used."
+        },
+        {
+          "name": "Settle",
+          "who": "Driver → chain",
+          "waits": false,
+          "timed": true,
+          "does": "One order per transaction. The submitting key is kept in a cloud key service, never on the server.",
+          "guard": "Fees don't cover gas: not submitted. Below the signed minimum: the whole transaction reverts on-chain."
+        },
+        {
+          "name": "Reconcile",
+          "who": "API background job",
+          "waits": false,
+          "does": "Reads the settlement's on-chain transfers and checks them against the orderbook's trade record.",
+          "guard": "Off by more than rounding: marked wrong and saved on the order."
+        }
+      ],
+      "budget": {
+        "rule": "Stage 3's entry bar > stage 4's limit + stage 5's limit",
+        "d": "An order that enters an auction always has time to settle before it expires."
       },
-      {
-        "t": "Solver",
-        "d": "Orders split into 256 slices over up to 6 paths by output after gas. Aggregator quotes join the same auction as extra solver lanes.",
-        "v": "17",
-        "l": "DEXes · 4 s deadline"
-      },
-      {
-        "t": "Any token to a vault",
-        "d": "ERC-4626 shares are a buy token, so swap and deposit settle in one trade. Vaults are listed from factory events after a simulated deposit.",
-        "v": "$100k",
-        "l": "TVL to list"
-      },
-      {
-        "t": "Reorg-safe ledger",
-        "d": "Events keyed by block hash. Rollback lands only on a hash-verified ancestor, otherwise sync stops and alerts. Data and bookmark commit together.",
-        "v": "4",
-        "l": "real reorgs on anvil"
-      },
-      {
-        "t": "Idempotent orders",
-        "d": "The order UID is computed from the signed order. On a timeout the API looks the order up instead of reporting a failure.",
-        "v": "56",
-        "l": "bytes: digest, owner, validTo"
-      },
-      {
-        "t": "Per-trade reconciliation",
-        "d": "Each settlement is checked against its on-chain transfers. It caught CoW rounding the protocol fee down twice.",
-        "v": "±2",
-        "l": "smallest units allowed"
-      },
-      {
-        "t": "Upstream resilience",
-        "d": "eth_getLogs ranges halve and grow per chain, paid and public nodes run on separate channels, and missing data carries a reason, never 0.",
-        "v": "1M+",
-        "l": "pools scanned"
-      },
-      {
-        "t": "Incident",
-        "d": "Public nodes answered block-hash log queries with empty arrays and Ethereum sync was marked blocked. Reproduced on a database copy behind a faulty-node proxy, then fixed.",
-        "v": "9,932 s → 47 s",
-        "l": "index lag"
-      },
-      {
-        "t": "Tests and delivery",
-        "d": "Zero-secret boot check, mainnet-fork regressions, and a one-command deploy with an atomic switch and automatic rollback.",
-        "v": "4,700+",
-        "l": "tests"
-      }
-    ],
-    "pointsNote": "Figures from Platter's code, test runs and incident log, as of 2026-09-28.",
+      "rules": [
+        {
+          "rule": "The user receives at least the minimum they signed for.",
+          "by": "CoW's settlement contract, plus the executor's final balance check",
+          "broken": "Whole transaction reverts",
+          "stops": true,
+          "proof": "Fork test: a two-leg route whose second leg is manipulated. Everything reverts and the user's balance is unchanged."
+        },
+        {
+          "rule": "Fees on a direct swap never exceed 25 bps per execution.",
+          "by": "The executor contract. The cap is fixed in the contract and summed within one execution.",
+          "broken": "Whole transaction reverts",
+          "stops": true,
+          "proof": "Fuzz tests, including two fees in one call."
+        },
+        {
+          "rule": "The executor keeps no funds, holds no allowance and cannot be upgraded.",
+          "by": "Its bytecode has no storage write, no delegatecall and no self-destruct.",
+          "broken": "Cannot happen",
+          "stops": false,
+          "proof": "A test scans the deployed bytecode. Reconciliation also checks that its balances did not move in any trade."
+        },
+        {
+          "rule": "The settlement contract keeps exactly the protocol fee plus the lane fee.",
+          "by": "Per-trade reconciliation in the API",
+          "broken": "Marked wrong",
+          "stops": true,
+          "proof": "It caught CoW's driver rounding the protocol fee down twice. The fix: size amounts to the fee's granularity."
+        }
+      ],
+      "note": "From Platter's code and tests, as of 2026-09-30."
+    },
     "architecture": {
       "art": "platter-arch",
       "alt": "Platter's architecture. In the browser, the web app and the wallet. On one AWS EC2 host in Singapore, behind Cloudflare and Caddy: the Next.js web server, the Hono API, PostgreSQL, and the CoW stack of orderbook, autopilot, driver with a KMS key and Platter's solver. Outside: Robinhood Chain with its DEXes and vaults, Platter's settlement and executor contracts, the aggregators and the price feeds.",
