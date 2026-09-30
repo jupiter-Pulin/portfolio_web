@@ -10,7 +10,7 @@ Everything below is a data edit or a file drop; the table says which file to tou
 | Replace or add a cover image | `public/projects/<id>/cover.webp` (see below) |
 | Change a README preview or its caveat | `src/content/projects.ts` — `readme` / `readmeNote` |
 | Change a figure or where it came from | `src/content/projects.ts` — `stats` / `statsNote`, `points` / `pointsNote` |
-| Add drawings, "Under the hood" cards or a live / fork line to a case page | `src/content/projects.ts` — `figures` / `points` / `rollout`, drawings in `CASE_ART` in `src/lib/sketchArt.ts` (see below) |
+| Add drawings, "How it stays correct", "Under the hood" cards or a live / fork line to a case page | `src/content/projects.ts` — `figures` / `guarantees` / `points` / `rollout`, drawings in `CASE_ART` in `src/lib/sketchArt.ts` (see below) |
 | Change a repository or README link | `src/content/projects.ts` — `readmeUrl` / `repos` |
 | Link a live product, add a demo video, an explainer video or a diagram | `src/content/projects.ts` — `site` / `demo` / `explainer` / `architecture` + files in `public/projects/<id>/` (see below) |
 | Publish a blog post | `src/content/blog/YYYY-MM-DD-<slug>.md` + photos in `public/blog/<slug>/` (see below) |
@@ -85,7 +85,7 @@ any README (addresses stripped).
 
 ## Drawings, "Under the hood" and the live / fork line
 
-Three more optional fields, rendered in this order under the case:
+Four more optional fields. Under the case the order is guarantees, figures, points:
 
 - `figures: [{ art, title, alt, caption }]` — drawings made in code, each under its own
   heading. `art` is a key in `CASE_ART` in `src/lib/sketchArt.ts` (a card drawing from
@@ -97,6 +97,14 @@ Three more optional fields, rendered in this order under the case:
   carry figures needs a `pointsNote` saying where they come from. A record with points
   shows them instead of the thesis callout and the wrong / mechanism pair; those fields
   stay on the record for the assistant.
+- `guarantees: { lede, pledges, stages, budget, rules, note }` — "How it stays correct",
+  shown above the drawings: promise cards (`t` label, `v` headline, `d` sentence), "Life of
+  one order" (each stage says who runs it, whether the user `waits`, what it `does` and its
+  `guard`, what happens when it fails; the ones the user waits for come first), a `budget`
+  line under the stages, and the "Money rules" table (`rule`, `by`, `broken`, `proof`;
+  `stops` colours the tag). `note` says where the figures come from. Mechanisms only: values
+  that operations tune (time limits, intervals, retry counts, vendors) stay off the page.
+  Like points, a record with guarantees drops the thesis callout and the pair.
 - `rollout: { live, fork }` — what a visitor can use today and what is built but only
   verified on a mainnet fork, as two tag rows under the tagline.
 

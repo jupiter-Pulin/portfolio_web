@@ -226,15 +226,35 @@ test('a private case page links no repository and carries no README panel', () =
   }
 });
 
-test('platter: rollout, drawings and "Under the hood" replace the thesis and the pair', () => {
+test('platter: rollout, "How it stays correct" and the drawings replace the thesis and the pair', () => {
   const p = projectById('platter');
   const html = markup(pages.platter);
   const body = textOf(pages.platter);
-  assert.ok(!body.includes(WORK.wrong) && !body.includes(WORK.mechanism), 'no pair on a page with points');
-  assert.ok(!body.includes(p.thesis), 'no thesis callout on a page with points');
+  assert.ok(!body.includes(WORK.wrong) && !body.includes(WORK.mechanism), 'no pair on a page with guarantees');
+  assert.ok(!body.includes(p.thesis), 'no thesis callout on a page with guarantees');
 
   assert.ok(body.includes(WORK.rolloutLive) && body.includes(WORK.rolloutFork), 'rollout labels');
   for (const item of [...p.rollout.live, ...p.rollout.fork]) assert.ok(body.includes(item), `rollout item ${item}`);
+
+  // The promises, then one order through its stages, then the money rules.
+  const g = p.guarantees;
+  assert.ok(body.includes(WORK.guarantees) && body.includes(g.lede), 'heading and lede');
+  for (const pl of g.pledges) assert.ok(body.includes(pl.t) && body.includes(pl.v) && body.includes(pl.d), `pledge ${pl.t}`);
+  assert.ok(body.includes(WORK.flow) && body.includes(WORK.flowSub), 'the stages have their heading');
+  assert.ok(body.includes(WORK.flowWaits) && body.includes(WORK.flowBackground), 'the rail says which stages the user waits for');
+  for (const st of g.stages) {
+    assert.ok(body.includes(st.name) && body.includes(st.who), `stage ${st.name}`);
+    assert.ok(body.includes(st.does) && body.includes(st.guard), `stage ${st.name}: what it does and what happens when it fails`);
+  }
+  assert.equal(body.split(WORK.ifFails).length - 1, g.stages.length, 'every stage says what happens when it fails');
+  assert.ok(body.includes(g.budget.rule) && body.includes(g.budget.d), 'the budget line');
+  assert.ok(body.includes(WORK.rules) && body.includes(WORK.rulesSub), 'the rules have their heading');
+  for (const h of WORK.rulesHead) assert.ok(html.includes(`<th scope="col">${h}</th>`), `column ${h}`);
+  for (const r of g.rules) {
+    assert.ok(body.includes(r.rule) && body.includes(r.by) && body.includes(r.broken) && body.includes(r.proof), `rule ${r.rule}`);
+  }
+  assert.ok(body.includes(g.note), 'the figures say where they come from');
+  assert.ok(!body.includes(WORK.points), 'no "Under the hood" cards on this page');
 
   // Each drawing sits in its own section, labelled for screen readers with its alt text.
   for (const f of p.figures) {
@@ -246,18 +266,12 @@ test('platter: rollout, drawings and "Under the hood" replace the thesis and the
   assert.ok(body.includes(p.architecture.caption), 'architecture caption');
   assert.ok(!tagWithHref(pages.platter, '/projects/platter/architecture.webp'), 'no image to open at full size');
 
-  assert.ok(body.includes(WORK.points), '"Under the hood" heading');
-  for (const pt of p.points) {
-    assert.ok(body.includes(pt.t) && body.includes(pt.d), `point ${pt.t}`);
-    if (pt.v) assert.ok(body.includes(pt.v) && body.includes(pt.l), `point figure ${pt.t}`);
-  }
-  assert.ok(body.includes(p.pointsNote), 'the figures say where they come from');
-
-  // Order down the page: the drawings, then the cards, then the architecture.
+  // Order down the page: promises, stages, rules, the drawing, then the architecture.
   const at = (text) => body.indexOf(text);
-  assert.ok(at(p.figures[0].title) < at(p.figures[1].title), 'drawings in record order');
-  assert.ok(at(p.figures[1].title) < at(WORK.points), 'cards after the drawings');
-  assert.ok(at(WORK.points) < at(WORK.architecture), 'architecture last');
+  assert.ok(at(WORK.guarantees) < at(WORK.flow), 'stages after the promises');
+  assert.ok(at(WORK.flow) < at(WORK.rules), 'rules after the stages');
+  assert.ok(at(WORK.rules) < at(p.figures[0].title), 'the drawing after the rules');
+  assert.ok(at(p.figures[0].title) < at(WORK.architecture), 'architecture last');
 });
 
 test('a demo takes the cover slot and the live site is linked', () => {

@@ -47,8 +47,8 @@ export function WorkCase({ project: p }: { project: Project }) {
             ))}
           </div>
           <p className={styles.tagline}>{p.tagline}</p>
-          {/* A record with "Under the hood" cards shows them further down instead of the thesis and the pair. */}
-          {p.points ? null : (
+          {/* A record with "Under the hood" cards or "How it stays correct" shows those further down instead of the thesis and the pair. */}
+          {p.points || p.guarantees ? null : (
             <>
               <p className={`sk ${styles.thesis}`}>
                 <Sketch r={12} w={2} c="var(--pink)" hatch={HUE_VAR[p.hue]} gap={10} hw={1.2} />
@@ -99,6 +99,7 @@ export function WorkCase({ project: p }: { project: Project }) {
       </div>
 
       <Readme project={p} />
+      <Guarantees project={p} />
       <Figures project={p} />
       <Points project={p} />
       <Architecture project={p} />
@@ -235,6 +236,111 @@ function Points({ project: p }: { project: Project }) {
       </dl>
       {p.pointsNote ? <p className={`fine ${styles.pointsNote}`}>{p.pointsNote}</p> : null}
     </section>
+  );
+}
+
+/** "How it stays correct": the promises, one order through its stages with what happens when each fails, and the money rules. */
+function Guarantees({ project: p }: { project: Project }) {
+  const g = p.guarantees;
+  if (!g) return null;
+  const waiting = g.stages.filter((st) => st.waits).length;
+  const columns = { "--n": g.stages.length } as React.CSSProperties;
+  return (
+    <>
+      <section className={styles.arch} aria-label={`${p.name} · ${WORK.guarantees}`}>
+        <div className={styles.archHead}>
+          <h2 className={styles.h2}>{WORK.guarantees}</h2>
+        </div>
+        <p className={styles.lede}>{g.lede}</p>
+        <dl className={styles.pledges}>
+          {g.pledges.map((pl) => (
+            <div key={pl.t} className={`sk ${styles.pledge}`}>
+              <Sketch fill="var(--white)" r={12} w={2} />
+              <dt>{pl.t}</dt>
+              <dd className={styles.pledgeFig}>{pl.v}</dd>
+              <dd>{pl.d}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section className={styles.arch} aria-label={`${p.name} · ${WORK.flow}`}>
+        <div className={styles.archHead}>
+          <h2 className={styles.h2}>{WORK.flow}</h2>
+        </div>
+        <p className={styles.sub}>{WORK.flowSub}</p>
+        <div className={styles.rail} style={columns} aria-hidden="true">
+          {waiting > 0 ? (
+            <span className={styles.railWaits} style={{ gridColumn: `span ${waiting}` }}>
+              {WORK.flowWaits}
+            </span>
+          ) : null}
+          {waiting < g.stages.length ? (
+            <span className={styles.railBackground} style={{ gridColumn: `span ${g.stages.length - waiting}` }}>
+              {WORK.flowBackground}
+            </span>
+          ) : null}
+        </div>
+        <ol className={styles.stages} style={columns}>
+          {g.stages.map((st, n) => (
+            <li key={st.name} className={`sk ${styles.stage} ${st.waits ? styles.waits : styles.background}`}>
+              <Sketch fill="var(--white)" r={12} w={2} />
+              <span className={styles.stageN}>{n + 1}</span>
+              <span className={styles.stageName}>{st.name}</span>
+              <span className={styles.stageWho}>{st.who}</span>
+              <span className={styles.stageKind}>
+                {st.waits ? WORK.stageWaits : st.timed ? `${WORK.stageBackground} · ${WORK.stageTimed}` : WORK.stageBackground}
+              </span>
+              <p className={styles.stageDoes}>{st.does}</p>
+              <p className={styles.stageGuard}>
+                <b>{WORK.ifFails}</b>
+                {st.guard}
+              </p>
+            </li>
+          ))}
+        </ol>
+        <p className={styles.budget}>
+          <b>{g.budget.rule}</b>
+          <span>{g.budget.d}</span>
+        </p>
+      </section>
+
+      <section className={styles.arch} aria-label={`${p.name} · ${WORK.rules}`}>
+        <div className={styles.archHead}>
+          <h2 className={styles.h2}>{WORK.rules}</h2>
+        </div>
+        <p className={styles.sub}>{WORK.rulesSub}</p>
+        <div className={`sk ${styles.rulesBox}`}>
+          <Sketch fill="var(--white)" r={12} w={2.2} />
+          <div className={styles.rulesScroll}>
+            <table className={styles.rules}>
+              <thead>
+                <tr>
+                  {WORK.rulesHead.map((h) => (
+                    <th key={h} scope="col">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {g.rules.map((r) => (
+                  <tr key={r.rule}>
+                    <td>{r.rule}</td>
+                    <td>{r.by}</td>
+                    <td>
+                      <span className={`${styles.ruleTag} ${r.stops ? styles.ruleStops : styles.ruleSafe}`}>{r.broken}</span>
+                    </td>
+                    <td>{r.proof}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p className={`fine ${styles.pointsNote}`}>{g.note}</p>
+      </section>
+    </>
   );
 }
 

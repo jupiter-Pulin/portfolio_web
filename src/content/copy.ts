@@ -37,6 +37,18 @@ export const WORK = {
   rolloutLive: 'Live',
   rolloutFork: 'Mainnet fork',
   points: 'Under the hood',
+  guarantees: 'How it stays correct',
+  flow: 'Life of one order',
+  flowSub: 'In order. Above the dashed line is what the stage does; below it, what happens when it fails.',
+  flowWaits: 'The user waits for these',
+  flowBackground: 'These run in the background; the page keeps asking for the order status',
+  stageWaits: 'user waits',
+  stageBackground: 'background',
+  stageTimed: 'time-limited',
+  ifFails: 'If it fails',
+  rules: 'Money rules',
+  rulesSub: 'What must always hold, which layer enforces it, and what proves it.',
+  rulesHead: ['Rule', 'Enforced by', 'If broken', 'Proof'],
 } as const;
 
 // The identity card on the home page, in Nolan's words: what he is after, what he

@@ -7,7 +7,7 @@ import { GUIDE, type AnswerKey } from "../../content/guide.ts";
 import { EMAIL, GITHUB, LINKEDIN, X } from "../../content/links.ts";
 import { LOOKING, PROJECTS, type Project } from "../../content/projects.ts";
 import { ANSWER_KEYS } from "../../lib/askContract.ts";
-import { pointText, stripTags, type AskBlogEntry, type Chunk } from "../../lib/askIndex.ts";
+import { guaranteeTexts, pointText, stripTags, type AskBlogEntry, type Chunk } from "../../lib/askIndex.ts";
 
 export const SYSTEM_PROMPT = `You are Nolan Tang's personal assistant. You work for Nolan and look after the people who come to his website while he is busy building: recruiters, hiring managers, engineers, anyone curious. They ask about his projects, his skills, what he is looking for, and how to reach him.
 
@@ -99,6 +99,8 @@ const scopeDetails = (p: Project) =>
     ...(p.statsNote ? [`figures: ${p.stats.map((s) => `${s.l} ${s.v}`).join(", ")} (${p.statsNote})`] : []),
     ...(p.points ?? []).map((pt) => `under the hood · ${pointText(pt)}`),
     ...(p.pointsNote ? [`where those figures come from: ${p.pointsNote}`] : []),
+    ...guaranteeTexts(p).map((line) => `how it stays correct · ${line}`),
+    ...(p.guarantees ? [`where those figures come from: ${p.guarantees.note}`] : []),
   ].join("\n");
 
 // The site-wide answers are sent every time: retrieval ranks by shared words, so a

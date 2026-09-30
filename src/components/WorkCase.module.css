@@ -303,6 +303,190 @@
 .pointsNote {
   margin: 14px 4px 0;
 }
+/* "How it stays correct": four promises, one order through its stages, the money rules. */
+.lede {
+  font-size: 21px;
+  line-height: 1.4;
+  color: var(--ink-2);
+  max-width: 68ch;
+  margin: -4px 0 20px;
+}
+.sub {
+  font-size: 18px;
+  color: var(--grey);
+  max-width: 80ch;
+  margin: -10px 0 16px;
+}
+.pledges {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0;
+}
+.pledge {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.pledge dt {
+  color: var(--pink);
+  font-size: 16px;
+}
+.pledge dd {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.38;
+}
+.pledge .pledgeFig {
+  color: var(--mint);
+  font-size: 24px;
+  line-height: 1.12;
+  padding-bottom: 2px;
+}
+.rail,
+.stages {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  gap: 12px;
+}
+.rail {
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+.rail span {
+  padding: 2px 12px;
+  border-radius: 8px;
+}
+.railWaits,
+.waits .stageKind {
+  background: color-mix(in srgb, var(--mint) 15%, transparent);
+  color: var(--mint);
+}
+.railBackground,
+.background .stageKind {
+  background: color-mix(in srgb, var(--blue) 15%, transparent);
+  color: var(--blue);
+}
+.stages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.stage {
+  padding: 12px 13px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.stageN {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--grey);
+}
+.stageName {
+  font-size: 25px;
+  line-height: 1.08;
+}
+.stageWho {
+  font-size: 15px;
+  color: var(--grey);
+}
+.stageKind {
+  align-self: flex-start;
+  font-size: 14px;
+  padding: 0 8px;
+  border-radius: 6px;
+}
+.stageDoes,
+.stageGuard {
+  margin: 0;
+  font-size: 16.5px;
+  line-height: 1.36;
+}
+.stageDoes {
+  color: var(--ink-2);
+}
+.stageGuard {
+  margin-top: auto;
+  border-top: 1.5px dashed var(--lgrey);
+  padding-top: 7px;
+}
+.stageGuard b {
+  display: block;
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--pink);
+}
+.budget {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 12px 0 0;
+  padding: 8px 14px;
+  border: 1.5px dashed var(--blue);
+  border-radius: 10px;
+  font-size: 18px;
+  color: var(--ink-2);
+}
+.budget b {
+  font-weight: 400;
+  color: var(--blue);
+}
+.rulesBox {
+  padding: 6px 18px 10px;
+}
+.rulesScroll {
+  overflow-x: auto;
+}
+.rules {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 720px;
+  font-size: 17px;
+  line-height: 1.38;
+}
+.rules th {
+  text-align: left;
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--pink);
+  padding: 10px 14px 8px 0;
+}
+.rules td {
+  padding: 10px 14px 10px 0;
+  vertical-align: top;
+  border-top: 1.5px dashed var(--lgrey);
+  color: var(--ink-2);
+}
+.rules td:first-child {
+  width: 28%;
+  font-size: 18px;
+  color: var(--ink);
+}
+.rules td:nth-child(2) {
+  width: 27%;
+}
+.rules th:last-child,
+.rules td:last-child {
+  padding-right: 0;
+}
+.ruleTag {
+  font-size: 14.5px;
+  padding: 1px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+.ruleStops {
+  background: color-mix(in srgb, var(--pink) 10%, transparent);
+  color: var(--pink);
+}
+.ruleSafe {
+  background: color-mix(in srgb, var(--mint) 15%, transparent);
+  color: var(--mint);
+}
 .foot {
   display: flex;
   align-items: center;
@@ -325,6 +509,15 @@
   .points {
     grid-template-columns: 1fr 1fr;
   }
+  .pledges {
+    grid-template-columns: 1fr 1fr;
+  }
+  .rail {
+    display: none;
+  }
+  .stages {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 @media (max-width: 680px) {
   .page {
@@ -333,8 +526,13 @@
   .pair {
     grid-template-columns: 1fr;
   }
-  .points {
+  .points,
+  .pledges,
+  .stages {
     grid-template-columns: 1fr;
+  }
+  .rulesBox {
+    padding: 4px 12px 8px;
   }
   .drawnFig {
     padding: 12px;

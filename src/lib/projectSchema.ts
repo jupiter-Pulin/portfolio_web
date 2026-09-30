@@ -70,6 +70,22 @@ export function validateProject(p: Project): string[] {
     // Figures keep their provenance, as stats do.
     if (p.points.some((pt) => pt.v) && !p.pointsNote) fail("points with figures need a pointsNote saying where they come from");
   }
+  if (p.guarantees) {
+    const g = p.guarantees;
+    if (!g.lede) fail("guarantees need a lede");
+    if (g.pledges.length === 0 || g.pledges.some((x) => !x.t || !x.v || !x.d)) fail("a pledge needs a label, a headline and a sentence");
+    if (g.stages.length === 0 || g.stages.some((x) => !x.name || !x.who || !x.does || !x.guard)) {
+      fail("a stage needs a name, who runs it, what it does and what happens when it fails");
+    }
+    // The rail above the stages is drawn as two runs: the ones the user waits for, then the rest.
+    if (g.stages.some((x, i) => x.waits && i > 0 && !g.stages[i - 1].waits)) fail("the stages the user waits for come first");
+    if (!g.budget.rule || !g.budget.d) fail("the budget line needs its rule and a sentence");
+    if (g.rules.length === 0 || g.rules.some((x) => !x.rule || !x.by || !x.broken || !x.proof)) {
+      fail("a money rule needs the rule, who enforces it, what happens when it breaks and a proof");
+    }
+    // Figures keep their provenance, as stats do.
+    if (!g.note) fail("guarantees need a note saying where their figures come from");
+  }
   if (p.rollout) {
     if (p.rollout.live.length === 0 && p.rollout.fork.length === 0) fail("rollout lists nothing");
     if ([...p.rollout.live, ...p.rollout.fork].some((x) => !x)) fail("rollout has an empty item");

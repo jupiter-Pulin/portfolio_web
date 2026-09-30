@@ -260,8 +260,6 @@ const LANES = [110, 325, 540, 755, 970];
 
 /** Drawings that sit under a case page, full width, keyed by a record's `figures[].art` or `architecture.art`. */
 export const CASE_ART: Record<string, Art> = {
-  // The card's drawing, larger.
-  "platter-fill": PROJECT_ART.platter,
   // Who holds the money at each step of one gasless settlement.
   "platter-settle": {
     w: 1080,
