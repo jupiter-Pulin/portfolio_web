@@ -58,7 +58,7 @@ export const PROJECTS: Project[] = [
     "demo": {
       "src": "/projects/platter/demo.mp4",
       "poster": "/projects/platter/demo-poster.webp",
-      "caption": "40-second walkthrough: the landing page, a pool on Robinhood Chain, adding liquidity with the wallet's confirmation, and the new position in the portfolio."
+      "caption": "48-second walkthrough: the landing page, 12 USDG turned into steakUSDG from the swap box with the wallet's confirmation, the new Earn position in the portfolio, and the vault's own page."
     },
     "rollout": {
       "live": [
