@@ -116,8 +116,8 @@ Model calls are paid by Nolan. Three things keep that bounded:
 | Spend per month | $20 | `ASK_MONTHLY_BUDGET_USD` |
 
 Counters live in Upstash Redis, shared by every Vercel instance, under keys that carry the
-UTC day or month and a hashed IP. No question text and no plain IP is ever written; every
-key expires within 40 days. On Vercel's multiple instances, in-memory counters would only be
+UTC day or month and a hashed IP. No plain IP is ever written; every key expires within 40
+days. On Vercel's multiple instances, in-memory counters would only be
 a weak per-instance limit, which is why production refuses to call the model without Upstash
 and an `ASK_IP_SALT` (Upstash may incur additional charges). Outside production the counters
 fall back to memory — the model is still called for real and still billed. Vercel's WAF adds
@@ -127,6 +127,12 @@ Every request and every outcome is a metric — `requests`, `answered`, `limited
 `limited:budget`, `unavailable`, `error:provider`, `error:timeout`, `error:invalid`,
 `error:config`, `error:store`, plus the `cost` totals — so a quiet guide can be told apart
 from a broken one by reading the counters.
+
+What visitors asked is kept too, so Nolan can read it back: every question that reached the
+model goes to the list `ask:questions:<UTC day>` as one JSON entry (time, hashed visitor,
+question, page scope, intent, outcome, and the answer when there was one). The list expires
+30 days after its last entry. Requests refused by a limit, the budget or the switch are not
+recorded, so the list grows no faster than paid calls, and a failed write never fails the answer.
 
 ## Content is the only source of truth
 

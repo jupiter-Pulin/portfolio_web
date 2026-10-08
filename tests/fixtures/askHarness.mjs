@@ -19,7 +19,7 @@ export const baseEnv = (extra = {}) => ({
 export const upstashEnv = (extra = {}) =>
   baseEnv({ UPSTASH_REDIS_REST_URL: UPSTASH_URL, UPSTASH_REDIS_REST_TOKEN: 'test-upstash-token', ...extra });
 
-/** Redis semantics for the four commands the store sends, over a Map. */
+/** Redis semantics for the commands the store sends, over a Map (lists as arrays). */
 export function fakeUpstash({ fail = null } = {}) {
   const data = new Map();
   const ttl = new Map();
@@ -41,6 +41,13 @@ export function fakeUpstash({ fail = null } = {}) {
         return 1;
       case 'GET':
         return data.get(key) ?? null;
+      case 'RPUSH': {
+        const items = [...(data.get(key) ?? []), arg];
+        data.set(key, items);
+        return items.length;
+      }
+      case 'LRANGE':
+        return [...(data.get(key) ?? [])];
       default:
         return { error: `unknown ${cmd}` };
     }

@@ -5,7 +5,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import index from '../src/generated/ask-index.json' with { type: 'json' };
-import { COUNTER_TTL_SEC, dayKey, monthKey, visitorKey } from '../src/server/ask/limits.ts';
+import { COUNTER_TTL_SEC, dayKey, monthKey, visitorHash, visitorKey } from '../src/server/ask/limits.ts';
+import { questionsKey } from '../src/server/ask/questions.ts';
 import { TOP_K, createAskHandler } from '../src/server/ask/handler.ts';
 import { DEV_IP_SALT } from '../src/server/ask/config.ts';
 import { createMemoryStore } from '../src/server/ask/store.ts';
@@ -334,7 +335,7 @@ test('outside production with no Upstash: memory counters, real provider, one in
   assert.equal(fetch.modelCalls.length, 3);
 });
 
-test('a day of mixed outcomes lands in Upstash as counts, never as text or IPs', async () => {
+test('a day of mixed outcomes lands in Upstash as counts plus the questions that reached the model, never IPs', async () => {
   const upstash = fakeUpstash();
   const clock = fixedClock(NOON);
   const env = upstashEnv({ ASK_IP_SALT: 'pepper' });
@@ -366,9 +367,61 @@ test('a day of mixed outcomes lands in Upstash as counts, never as text or IPs',
     assert.equal(upstash.data.get(day(metric)), value, metric);
     assert.equal(upstash.ttl.get(day(metric)), COUNTER_TTL_SEC, `${metric} TTL`);
   }
-  const everything = [...upstash.data.entries()].flat().join('\n') + [...upstash.ttl.keys()].join('\n');
-  for (const secret of [...questions, sample, ...ips]) assert.ok(!everything.includes(secret), secret);
-  assert.ok(!everything.includes(sample.toLowerCase()));
+  const log = questionsKey(new Date(NOON));
+  const records = upstash.data.get(log).map((r) => JSON.parse(r));
+  assert.deepEqual(records, [
+    {
+      at: '2026-09-14T12:00:00.000Z',
+      visitor: visitorHash(ips[0], 'pepper'),
+      question: questions[0],
+      scopeId: 'amm',
+      intent: 'stack',
+      outcome: 'answered',
+      key: 'stack',
+      answer: 'Node only.',
+    },
+    { at: '2026-09-14T12:00:00.000Z', visitor: visitorHash(ips[3], 'pepper'), question: questions[3], scopeId: null, outcome: 'error:provider' },
+  ]);
+  assert.equal(upstash.ttl.get(log), COUNTER_TTL_SEC);
+
+  // Refused requests leave no text; no IP and no language sample is written anywhere.
+  const everything = [...upstash.data.entries()].flat(2).join('\n') + [...upstash.ttl.keys()].join('\n');
+  for (const secret of [questions[1], questions[2], questions[4], sample, ...ips]) assert.ok(!everything.includes(secret), secret);
+});
+
+test('every question that reached the model is recorded once with its outcome; a lost record only warns', async () => {
+  const records = async (store) => (await store.list(questionsKey(new Date(NOON)))).map((r) => JSON.parse(r));
+  const cases = [
+    ['answered', 200, fakeProvider(() => ({ content: '{"key":"overview","scopeId":"amm","answer":"OK"}', usage: { inputTokens: 1, outputTokens: 1 } }))],
+    ['error:provider', 502, fakeProvider(() => { throw new ProviderError('boom'); })],
+    ['error:invalid', 502, fakeProvider(() => ({ content: 'not json', usage: { inputTokens: 1, outputTokens: 1 } }))],
+    ['error:invalid', 502, fakeProvider(() => ({ content: '{"key":"all","scopeId":null,"answer":"x"}' }))],
+    ['error:timeout', 504, fakeProvider(() => new Promise(() => {}))],
+  ];
+  for (const [outcome, status, provider] of cases) {
+    const { handler, store, log } = setup({ env: baseEnv({ ASK_SERVER_DEADLINE_MS: '30' }), provider });
+    assert.equal((await post(handler, { question: '  AMM   DEX 是什么 ', scopeId: 'amm', intent: 'stack' })).status, status, outcome);
+    const [record, ...more] = await records(store);
+    assert.equal(more.length, 0, `${outcome}: one record`);
+    assert.equal(record.outcome, outcome);
+    assert.equal(record.question, 'AMM DEX 是什么', 'the normalized question the model saw');
+    assert.equal(record.scopeId, 'amm');
+    assert.equal(record.intent, 'stack');
+    assert.equal(record.visitor, visitorHash('198.51.100.1', DEV_IP_SALT));
+    assert.equal('answer' in record, outcome === 'answered');
+    assert.ok(!log.entries.some((e) => e.text.includes('not recorded')));
+  }
+
+  const refused = setup({ env: baseEnv({ ASK_VISITOR_DAILY_LIMIT: '0' }) });
+  assert.equal((await post(refused.handler, { question: 'over the limit', scopeId: null })).status, 429);
+  assert.deepEqual(await records(refused.store), [], 'a refused request never reaches the log');
+
+  const broken = { ...createMemoryStore(), push: async () => { throw new Error('down'); } };
+  const lossy = setup({ store: broken });
+  const res = await readJson(await post(lossy.handler, { question: 'hi', scopeId: null }));
+  assert.equal(res.status, 200, 'the answer still goes out');
+  assert.equal(res.body.ok, true);
+  assert.deepEqual(lossy.log.entries.map((e) => [e.level, e.text]), [['warn', 'ask: question not recorded']]);
 });
 
 test('sentinel secrets never reach a response body or a log line', async () => {

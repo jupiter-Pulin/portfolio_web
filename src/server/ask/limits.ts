@@ -1,5 +1,6 @@
 // Rate limits, budget and the 30-day counters for /api/ask. Keys carry the UTC
-// day (or month) and a hashed IP; no question text and no plain IP is written.
+// day (or month) and a hashed IP; no plain IP is written. Question text is kept
+// separately, in questions.ts.
 import { createHmac } from "node:crypto";
 import type { Store } from "./store.ts";
 
@@ -26,8 +27,11 @@ const utcMonth = (now: Date) => now.toISOString().slice(0, 7);
 export const dayKey = (now: Date, metric: Metric) => `ask:day:${utcDay(now)}:${metric}`;
 export const monthKey = (now: Date) => `ask:month:${utcMonth(now)}:cost`;
 
-export const visitorKey = (ip: string, salt: string, now: Date) =>
-  `ask:visitor:${utcDay(now)}:${createHmac("sha256", salt).update(ip).digest("hex").slice(0, 32)}`;
+/** The salted IP hash that stands in for a visitor wherever one is stored. */
+export const visitorHash = (ip: string, salt: string) =>
+  createHmac("sha256", salt).update(ip).digest("hex").slice(0, 32);
+
+export const visitorKey = (ip: string, salt: string, now: Date) => `ask:visitor:${utcDay(now)}:${visitorHash(ip, salt)}`;
 
 /** First x-forwarded-for hop, then x-real-ip, then "unknown". Shared exits share a quota. */
 export function clientIp(headers: Headers): string {
