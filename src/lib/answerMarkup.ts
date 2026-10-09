@@ -5,7 +5,7 @@
 // address the site does not list stays ordinary text, so the model cannot make a
 // link clickable by writing one.
 import BLOG_POSTS from "../generated/ask-blog.json" with { type: "json" };
-import { BLOG, EMAIL, GITHUB, LINKEDIN, MAILTO, X } from "../content/links.ts";
+import { BLOG, EMAIL, GITHUB, LINKEDIN, MAILTO } from "../content/links.ts";
 import { PROJECTS, type Project } from "../content/projects.ts";
 import type { AskBlogEntry } from "./askIndex.ts";
 import type { Run } from "./guideAnswer.ts";
@@ -42,7 +42,7 @@ export function buildLexicon(projects: readonly Project[] = PROJECTS, posts: rea
   const termSet = new Set<string>();
   for (const p of projects) for (const t of stackTerms(p.stack)) termSet.add(t);
   for (const { name } of names) termSet.delete(name);
-  const urls = new Set<string>([GITHUB, LINKEDIN, X].map(stripSlash));
+  const urls = new Set<string>([GITHUB, LINKEDIN].map(stripSlash));
   for (const p of projects) {
     // A live site is the product, not the code: private projects may name theirs.
     if (p.site) urls.add(stripSlash(p.site.url));

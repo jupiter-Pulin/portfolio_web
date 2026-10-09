@@ -3,17 +3,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { EMAIL, MAILTO, GITHUB, LINKEDIN, X, SOCIALS } from '../src/content/links.ts';
+import { EMAIL, MAILTO, GITHUB, LINKEDIN, SOCIALS } from '../src/content/links.ts';
 import { IDENTITY, SITE } from '../src/content/copy.ts';
 import { GUIDE } from '../src/content/guide.ts';
 import { PROJECTS, LOOKING, projectById } from '../src/content/projects.ts';
 
 test('links are the ones Pulin provided', () => {
   assert.equal(LINKEDIN, 'https://www.linkedin.com/in/nolan-tang-52b559367/');
-  assert.equal(X, 'https://x.com/will_pu7490');
   assert.equal(GITHUB, 'https://github.com/jupiter-Pulin');
   assert.ok(MAILTO.startsWith(`mailto:${EMAIL}?subject=`));
-  assert.equal(SOCIALS.length, 3);
+  assert.equal(SOCIALS.length, 2);
+  assert.ok(!SOCIALS.some((s) => s.key === 'x'), 'the suspended X account is off the site');
 });
 
 test('identity card and guide hero copy are verbatim from the approved mock', () => {
