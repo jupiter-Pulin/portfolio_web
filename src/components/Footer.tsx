@@ -1,5 +1,5 @@
 import { HOME, SITE } from "@/content/copy";
-import { EMAIL, GITHUB, LINKEDIN, MAILTO, X } from "@/content/links";
+import { EMAIL, GITHUB, LINKEDIN, MAILTO } from "@/content/links";
 import { CopyEmailButton } from "./CopyEmailButton";
 import { Rule } from "./sketch/Rule";
 import styles from "./Footer.module.css";
@@ -7,7 +7,6 @@ import styles from "./Footer.module.css";
 const LINKS = [
   { label: "GitHub", href: GITHUB },
   { label: "LinkedIn", href: LINKEDIN },
-  { label: "X", href: X },
 ];
 
 export function Footer() {

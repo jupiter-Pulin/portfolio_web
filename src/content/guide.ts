@@ -6,7 +6,7 @@
 // Figures quoted in prose are the ones projects.ts already carries, with their
 // provenance word kept ("self-reported"); nothing here invents a number.
 import { SITE } from "./copy.ts";
-import { GITHUB, LINKEDIN, X } from "./links.ts";
+import { GITHUB, LINKEDIN } from "./links.ts";
 import { PROJECTS } from "./projects.ts";
 
 /** The kinds of answer the guide gives. Every answer routes to one of these. */
@@ -159,7 +159,6 @@ export const GUIDE = {
     rows: [
       { label: "LinkedIn", href: LINKEDIN, text: "nolan-tang" },
       { label: "GitHub", href: GITHUB, text: "jupiter-Pulin" },
-      { label: "X", href: X, text: "will_pu7490" },
     ],
   },
 
@@ -181,8 +180,8 @@ export const GUIDE = {
   limited: { zh: "今日额度已用完", en: "Today's quota is used up." },
   unavailable: { zh: "问答暂时关闭。", en: "Nolan's assistant is off for now." },
   entries: {
-    zh: { lead: "你可以先看看这些：", blog: "博客", linkedin: "领英", x: "推特", work: "项目简介" },
-    en: { lead: "In the meantime:", blog: "Blog", linkedin: "LinkedIn", x: "X", work: "Projects" },
+    zh: { lead: "你可以先看看这些：", blog: "博客", linkedin: "领英", work: "项目简介" },
+    en: { lead: "In the meantime:", blog: "Blog", linkedin: "LinkedIn", work: "Projects" },
   },
   // The input's maxLength and the server's default question limit read the same number;
   // the daily quota the home page states is the server's default visitor limit.

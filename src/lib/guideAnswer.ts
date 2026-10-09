@@ -15,7 +15,7 @@ import {
   type AnswerKey,
 } from "../content/guide.ts";
 import BLOG_POSTS from "../generated/ask-blog.json" with { type: "json" };
-import { BLOG, EMAIL, GITHUB, LINKEDIN, MAILTO, X } from "../content/links.ts";
+import { BLOG, EMAIL, GITHUB, LINKEDIN, MAILTO } from "../content/links.ts";
 import { LOOKING, PROJECTS, projectById, type Project } from "../content/projects.ts";
 import { markupLine } from "./answerMarkup.ts";
 import type { AskBlogEntry } from "./askIndex.ts";
@@ -301,13 +301,12 @@ export const modelAnswerBlocks = (
   ];
 };
 
-/** Four ways onward when the guide cannot answer: the blog, LinkedIn, X, the projects. */
+/** Three ways onward when the guide cannot answer: the blog, LinkedIn, the projects. */
 export const entryActions = (lang: CopyLang): Action[] => {
   const labels = GUIDE.entries[lang];
   return [
     { t: "nav", href: BLOG.href, label: labels.blog },
     { t: "link", href: LINKEDIN, label: labels.linkedin },
-    { t: "link", href: X, label: labels.x },
     { t: "nav", href: "/work", label: labels.work },
   ];
 };

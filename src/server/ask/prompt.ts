@@ -4,7 +4,7 @@
 import BLOG_POSTS from "../../generated/ask-blog.json" with { type: "json" };
 import { IDENTITY } from "../../content/copy.ts";
 import { GUIDE, type AnswerKey } from "../../content/guide.ts";
-import { EMAIL, GITHUB, LINKEDIN, X } from "../../content/links.ts";
+import { EMAIL, GITHUB, LINKEDIN } from "../../content/links.ts";
 import { LOOKING, PROJECTS, type Project } from "../../content/projects.ts";
 import { ANSWER_KEYS } from "../../lib/askContract.ts";
 import { guaranteeTexts, pointText, stripTags, type AskBlogEntry, type Chunk } from "../../lib/askIndex.ts";
@@ -49,7 +49,7 @@ export const KEY_MEANINGS: Record<AnswerKey, string> = {
   work: "site-wide (scopeId null): what Nolan has built — his projects as a whole and which to look at first",
   code: "project key: where the source code is — the named or current project's repositories, or all public repositories when there is no project",
   looking: "site-wide (scopeId null): what kind of job or role Nolan is looking for, the work he wants next, relocation, remote",
-  contact: "site-wide (scopeId null): how to reach Nolan — email, LinkedIn, GitHub, X",
+  contact: "site-wide (scopeId null): how to reach Nolan — email, LinkedIn, GitHub",
   decision: "project key: the hardest design decision or trade-off in one project",
   stack: "project key: the technologies / tech stack one project uses",
   status: "project key: whether one project is in production, live or in use; its current status",
@@ -148,7 +148,7 @@ export function buildUserPrompt(input: PromptInput): string {
     ...(scope ? ([["Scope project details", scopeDetails(scope)]] as [string, string][]) : []),
     ["Intent", input.intent ?? "none"],
     ["Candidate passages", input.candidates.map((c) => `[${c.id}] ${c.text}`).join("\n") || "none"],
-    ["Public links", [`email: ${EMAIL}`, `LinkedIn: ${LINKEDIN}`, `GitHub: ${GITHUB}`, `X: ${X}`].join("\n")],
+    ["Public links", [`email: ${EMAIL}`, `LinkedIn: ${LINKEDIN}`, `GitHub: ${GITHUB}`].join("\n")],
     ["Target language sample", sample],
     ...(hint ? ([["Language hint", hint]] as [string, string][]) : []),
     ["Question", input.question],

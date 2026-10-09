@@ -15,7 +15,7 @@ import {
   scopedHeading,
   scopedNotice,
 } from '../src/content/guide.ts';
-import { EMAIL, GITHUB, LINKEDIN, MAILTO, X } from '../src/content/links.ts';
+import { EMAIL, GITHUB, LINKEDIN, MAILTO } from '../src/content/links.ts';
 import { LOOKING, PROJECTS, projectById } from '../src/content/projects.ts';
 import { SITE } from '../src/content/copy.ts';
 import BLOG_POSTS from '../src/generated/ask-blog.json' with { type: 'json' };
@@ -266,7 +266,6 @@ test('the contact answer is the links.ts values, plus the location line', () => 
     [
       ['LinkedIn', LINKEDIN],
       ['GitHub', GITHUB],
-      ['X', X],
     ],
   );
   // Every handle shown is a piece of the URL it opens, so it cannot drift.

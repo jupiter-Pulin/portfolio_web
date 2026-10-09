@@ -7,7 +7,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GUIDE } from '../src/content/guide.ts';
-import { BLOG, EMAIL, GITHUB, LINKEDIN, MAILTO, X } from '../src/content/links.ts';
+import { BLOG, EMAIL, GITHUB, LINKEDIN, MAILTO } from '../src/content/links.ts';
 import { PROJECTS } from '../src/content/projects.ts';
 import { ASK_CLIENT_TIMEOUT_MS } from '../src/lib/askContract.ts';
 import { askBody, askGuide, copyLang, hasAsked, hudLines, nextLangSample, pendingMsgs, settleMsgs } from '../src/lib/askClient.ts';
@@ -127,14 +127,13 @@ test('fixed copy picks zh or en from the sample, and has the wording Pulin gave'
   }
 });
 
-test('entry actions: blog, LinkedIn, X, projects — labels from content', () => {
+test('entry actions: blog, LinkedIn, projects — labels from content', () => {
   for (const lang of ['zh', 'en']) {
     const labels = GUIDE.entries[lang];
     const entries = entryActions(lang);
     assert.deepEqual(entries, [
       { t: 'nav', href: BLOG.href, label: labels.blog },
       { t: 'link', href: LINKEDIN, label: labels.linkedin },
-      { t: 'link', href: X, label: labels.x },
       { t: 'nav', href: '/work', label: labels.work },
     ]);
     for (const blocks of [limitedBlocks(lang), unavailableBlocks(lang)]) {
@@ -169,7 +168,7 @@ test('answerActions: only the clickable part of the scripted answer', () => {
 
   const contact = answerActions('contact', null)[0].actions;
   assert.ok(contact.some((a) => a.t === 'mail' && a.href === MAILTO && a.label === EMAIL));
-  for (const href of [LINKEDIN, GITHUB, X]) assert.ok(contact.some((a) => a.t === 'link' && a.href === href), href);
+  for (const href of [LINKEDIN, GITHUB]) assert.ok(contact.some((a) => a.t === 'link' && a.href === href), href);
   assert.ok(contact.some((a) => a.t === 'copy'));
 
   // Repeats collapse: payments lists mail and copy once each.
@@ -325,7 +324,7 @@ test('the guide copy no longer calls itself a mock, and claims no checking', () 
     "a model answers from the site's own content in the visitor's language, says so when the site doesn't cover something, and never acts on Nolan's behalf.",
   );
   assert.deepEqual(GUIDE.unavailable, { zh: '问答暂时关闭。', en: "Nolan's assistant is off for now." });
-  assert.deepEqual(GUIDE.entries.zh, { lead: '你可以先看看这些：', blog: '博客', linkedin: '领英', x: '推特', work: '项目简介' });
+  assert.deepEqual(GUIDE.entries.zh, { lead: '你可以先看看这些：', blog: '博客', linkedin: '领英', work: '项目简介' });
 
   const drawer = read('../src/components/AskDrawer.tsx');
   const provider = drawer.slice(drawer.indexOf('/**', drawer.indexOf('export const useAsk')), drawer.indexOf('export function AskProvider'));

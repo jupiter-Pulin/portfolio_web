@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import index from '../src/generated/ask-index.json' with { type: 'json' };
 import BLOG_POSTS from '../src/generated/ask-blog.json' with { type: 'json' };
-import { EMAIL, GITHUB, LINKEDIN, X } from '../src/content/links.ts';
+import { EMAIL, GITHUB, LINKEDIN } from '../src/content/links.ts';
 import { GUIDE } from '../src/content/guide.ts';
 import { IDENTITY } from '../src/content/copy.ts';
 import { LOOKING, PROJECTS } from '../src/content/projects.ts';
@@ -127,7 +127,7 @@ test('buildUserPrompt carries the catalogue, keys, scope, intent, candidates, li
   assert.equal(section(user, 'Current scope'), 'loop');
   assert.equal(section(user, 'Intent'), 'code');
   for (const c of candidates) assert.ok(section(user, 'Candidate passages').includes(c.text));
-  for (const link of [EMAIL, LINKEDIN, GITHUB, X]) assert.ok(section(user, 'Public links').includes(link), link);
+  for (const link of [EMAIL, LINKEDIN, GITHUB]) assert.ok(section(user, 'Public links').includes(link), link);
   assert.equal(section(user, 'Question'), 'Where is the code?');
   assert.equal(section(user, 'Target language sample'), 'Where is the code?');
 
