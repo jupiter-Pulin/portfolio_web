@@ -1,5 +1,5 @@
-// Counters for /api/ask: Upstash Redis over its REST API in production, a
-// process-local Map for development and tests. Both speak the same three calls.
+// Counters and the question log for /api/ask: Upstash Redis over its REST API in
+// production, process-local Maps for development and tests. Both speak the same calls.
 import { isProduction, type ConfigError, type Env } from "./config.ts";
 
 export type Store = {
@@ -9,6 +9,10 @@ export type Store = {
   /** Add `delta` and (re)set the TTL; resolves to the new total. */
   incrByFloat(key: string, delta: number, ttlSec: number): Promise<number>;
   get(key: string): Promise<string | null>;
+  /** Append to a list and (re)set the TTL; resolves to the new length. */
+  push(key: string, value: string, ttlSec: number): Promise<number>;
+  /** Every item of a list, oldest first. */
+  list(key: string): Promise<string[]>;
 };
 
 export type Log = {
@@ -21,16 +25,17 @@ type FetchFn = typeof fetch;
 
 export function createMemoryStore(now: () => number = Date.now): Store {
   const data = new Map<string, { value: string; expires: number }>();
-  const live = (key: string) => {
-    const hit = data.get(key);
+  const lists = new Map<string, { items: string[]; expires: number }>();
+  const live = <T extends { expires: number }>(map: Map<string, T>, key: string) => {
+    const hit = map.get(key);
     if (hit && hit.expires <= now()) {
-      data.delete(key);
+      map.delete(key);
       return undefined;
     }
     return hit;
   };
   const add = (key: string, delta: number, ttlSec: number) => {
-    const next = Number(live(key)?.value ?? 0) + delta;
+    const next = Number(live(data, key)?.value ?? 0) + delta;
     data.set(key, { value: String(next), expires: now() + ttlSec * 1000 });
     return next;
   };
@@ -38,7 +43,13 @@ export function createMemoryStore(now: () => number = Date.now): Store {
     kind: "memory",
     incr: async (key, ttlSec) => add(key, 1, ttlSec),
     incrByFloat: async (key, delta, ttlSec) => add(key, delta, ttlSec),
-    get: async (key) => live(key)?.value ?? null,
+    get: async (key) => live(data, key)?.value ?? null,
+    push: async (key, value, ttlSec) => {
+      const items = [...(live(lists, key)?.items ?? []), value];
+      lists.set(key, { items, expires: now() + ttlSec * 1000 });
+      return items.length;
+    },
+    list: async (key) => [...(live(lists, key)?.items ?? [])],
   };
 }
 
@@ -90,6 +101,12 @@ export function createUpstashStore({ url, token, fetch }: { url: string; token: 
     get: async (key) => {
       const [v] = await pipeline([["GET", key]]);
       return v === null || v === undefined ? null : String(v);
+    },
+    push: async (key, value, ttlSec) => toNumber((await pipeline([["RPUSH", key, value], ["EXPIRE", key, ttlSec]]))[0]),
+    list: async (key) => {
+      const [v] = await pipeline([["LRANGE", key, 0, -1]]);
+      if (!Array.isArray(v)) throw new StoreError("upstash returned a non-list");
+      return v.map(String);
     },
   };
 }

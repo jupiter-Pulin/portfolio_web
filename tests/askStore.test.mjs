@@ -13,8 +13,10 @@ import {
   dayKey,
   monthKey,
   recordCost,
+  visitorHash,
   visitorKey,
 } from '../src/server/ask/limits.ts';
+import { questionsKey } from '../src/server/ask/questions.ts';
 import { createMemoryStore, createUpstashStore, selectStore } from '../src/server/ask/store.ts';
 import { UPSTASH_URL, baseEnv, captureLog, fakeUpstash } from './fixtures/askHarness.mjs';
 
@@ -29,6 +31,8 @@ test('keys carry the UTC day or month, and a visitor key never carries the IP', 
   assert.ok(!key.includes('203.0.113.7'));
   assert.notEqual(visitorKey('203.0.113.7', 'other', NOW), key, 'the salt matters');
   assert.equal(visitorKey('203.0.113.7', 'salt', NOW), key, 'stable within a day');
+  assert.ok(key.endsWith(visitorHash('203.0.113.7', 'salt')), 'one hash names a visitor everywhere');
+  assert.equal(questionsKey(new Date('2026-09-14T23:59:59Z')), 'ask:questions:2026-09-14');
 });
 
 test('clientIp: first forwarded hop, then x-real-ip, then unknown', () => {
@@ -59,6 +63,21 @@ test('visitor limit and budget thresholds on the memory store', async () => {
   assert.equal(await store.get('ask:day:2026-09-14:requests'), '2');
 });
 
+test('memory lists keep order and expire with their TTL', async () => {
+  let t = 0;
+  const store = createMemoryStore(() => t);
+  assert.deepEqual(await store.list('q'), []);
+  assert.equal(await store.push('q', 'first', 10), 1);
+  assert.equal(await store.push('q', 'second', 10), 2);
+  assert.deepEqual(await store.list('q'), ['first', 'second']);
+  t = 9_999;
+  assert.equal(await store.push('q', 'third', 10), 3, 'a push renews the TTL');
+  t = 19_998;
+  assert.deepEqual(await store.list('q'), ['first', 'second', 'third']);
+  t = 19_999;
+  assert.deepEqual(await store.list('q'), [], 'gone 10 s after the last push');
+});
+
 test('the Upstash store speaks REST pipelines with a bearer token and sets TTLs', async () => {
   const upstash = fakeUpstash();
   const store = createUpstashStore({ url: `${UPSTASH_URL}/`, token: 'tok', fetch: upstash.handle });
@@ -77,6 +96,17 @@ test('the Upstash store speaks REST pipelines with a bearer token and sets TTLs'
     ['INCR', 'k'],
     ['EXPIRE', 'k', COUNTER_TTL_SEC],
   ]);
+
+  const before = upstash.requests.length;
+  assert.equal(await store.push('l', 'a', COUNTER_TTL_SEC), 1);
+  assert.equal(await store.push('l', 'b', COUNTER_TTL_SEC), 2);
+  assert.deepEqual(await store.list('l'), ['a', 'b']);
+  assert.deepEqual(await store.list('none'), []);
+  assert.deepEqual(JSON.parse(upstash.requests[before].body), [
+    ['RPUSH', 'l', 'a'],
+    ['EXPIRE', 'l', COUNTER_TTL_SEC],
+  ]);
+  assert.deepEqual(JSON.parse(upstash.requests[before + 2].body), [['LRANGE', 'l', 0, -1]]);
 
   for (const fail of ['reject', 500]) {
     const broken = createUpstashStore({ url: UPSTASH_URL, token: 'secret-token', fetch: fakeUpstash({ fail }).handle });

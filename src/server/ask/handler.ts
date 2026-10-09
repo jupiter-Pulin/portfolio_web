@@ -1,6 +1,7 @@
 // POST /api/ask, as a plain Request → Response function with every dependency
 // injectable. Order: validate → count → switch → config → store → visitor limit
-// → budget → retrieve → prompt → model (under a deadline) → cost → structure check.
+// → budget → retrieve → prompt → model (under a deadline) → cost → structure check,
+// and every question that reached the model is recorded with its outcome.
 // No failure path falls back to a scripted answer.
 import type { AnswerKey } from "../../content/guide.ts";
 import {
@@ -8,13 +9,15 @@ import {
   isScopeId,
   type AskRequest,
   type AskResponse,
+  type ModelOutput,
 } from "../../lib/askContract.ts";
 import { hashEmbed, topK, type Chunk } from "../../lib/askIndex.ts";
 import { askEnabled, isConfigError, maxQuestionChars, readConfig, type Env } from "./config.ts";
-import { bump, checkBudget, checkVisitor, clientIp, recordCost, type Metric } from "./limits.ts";
+import { bump, checkBudget, checkVisitor, clientIp, recordCost, visitorHash, type Metric } from "./limits.ts";
 import { readModelOutput } from "./output.ts";
 import { buildUserPrompt, normalizeQuestion, SYSTEM_PROMPT } from "./prompt.ts";
 import { costUsd, selectProvider, type Provider } from "./providers/index.ts";
+import { recordQuestion, type QuestionOutcome } from "./questions.ts";
 import { selectStore, type Log, type Store } from "./store.ts";
 
 /** Candidate passages sent with each question. */
@@ -119,11 +122,11 @@ export function createAskHandler(deps: AskDeps) {
       return system(503);
     }
 
+    const ip = clientIp(req.headers);
     const deadline = new AbortController();
     const timer = setTimeout(() => deadline.abort(), config.serverDeadlineMs);
     try {
       try {
-        const ip = clientIp(req.headers);
         if (!(await checkVisitor(store, ip, now, config))) {
           await count("limited:visitor");
           return json(429, { ok: false, error: "limited", reason: "visitor" });
@@ -140,6 +143,16 @@ export function createAskHandler(deps: AskDeps) {
       const langSample = body.langSample === undefined ? undefined : normalizeQuestion(body.langSample);
       const candidates = topK(deps.index, hashEmbed(`${question} ${langSample ?? ""}`), TOP_K);
       const user = buildUserPrompt({ question, scopeId: body.scopeId, intent: body.intent, langSample, candidates });
+      // Best effort: a lost record is a warning, never a failed answer.
+      const remember = (outcome: QuestionOutcome, output?: ModelOutput) =>
+        recordQuestion(store, now, {
+          visitor: visitorHash(ip, config.ipSalt),
+          question,
+          scopeId: body.scopeId,
+          ...(body.intent !== undefined ? { intent: body.intent } : {}),
+          outcome,
+          ...(output ? { key: output.key, answer: output.answer } : {}),
+        }).catch(() => log.warn("ask: question not recorded"));
 
       let result: Awaited<ReturnType<Provider["ask"]>>;
       const started = Date.now();
@@ -156,6 +169,7 @@ export function createAskHandler(deps: AskDeps) {
         const timedOut = err instanceof Timeout || deadline.signal.aborted;
         log.error(timedOut ? "ask: model call hit the server deadline" : "ask: model call failed");
         await count(timedOut ? "error:timeout" : "error:provider").catch(() => {});
+        await remember(timedOut ? "error:timeout" : "error:provider");
         return system(timedOut ? 504 : 502);
       }
 
@@ -170,6 +184,7 @@ export function createAskHandler(deps: AskDeps) {
       if (!result.usage) {
         log.warn("ask: model response carried no usage");
         await count("error:invalid").catch(() => {});
+        await remember("error:invalid");
         return system(502);
       }
       const read = readModelOutput(result.content);
@@ -180,11 +195,13 @@ export function createAskHandler(deps: AskDeps) {
           `ask: model output failed the structure check (${read.reason})${finish} · ${result.usage.outputTokens} output tokens`,
         );
         await count("error:invalid").catch(() => {});
+        await remember("error:invalid");
         return system(502);
       }
       const output = read.output;
 
       await count("answered").catch(() => {});
+      await remember("answered", output);
       return json(200, {
         ok: true,
         key: output.key,
